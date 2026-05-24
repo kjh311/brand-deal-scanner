@@ -1,9 +1,10 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
+import { createClient } from '@/lib/supabase/client'
 
 interface Audit {
   id: number
@@ -25,6 +26,21 @@ const initialAudits: Audit[] = [
 export default function HistoryPage() {
   const [audits, setAudits] = useState<Audit[]>(initialAudits)
   const [filter, setFilter] = useState<'All' | 'Low' | 'Medium' | 'High'>('All')
+  const [userName, setUserName] = useState<string>('Creator')
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        // Google typically provides full_name or name
+        const name = user.user_metadata?.full_name || 
+                     user.user_metadata?.name || 
+                     user.email?.split('@')[0] || 
+                     'Creator'
+        setUserName(name)
+      }
+    })
+  }, [])
 
   const filteredAudits = filter === 'All' 
     ? audits 
@@ -65,7 +81,7 @@ export default function HistoryPage() {
           {/* Sidebar */}
           <aside className="w-full lg:w-80 flex flex-col gap-6 shrink-0">
             <div>
-              <h1 className="font-headline text-3xl font-semibold tracking-tight">Welcome, Creator!</h1>
+              <h1 className="font-headline text-3xl font-semibold tracking-tight">Welcome, {userName}!</h1>
               <p className="text-on-surface-variant mt-1">Review recent audits or start a scan.</p>
             </div>
 

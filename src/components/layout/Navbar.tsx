@@ -21,12 +21,12 @@ export function Navbar() {
       if (user) {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('credit_balance')
+          .select('credits')
           .eq('id', user.id)
           .single()
 
         if (profile) {
-          setCredits(profile.credit_balance)
+          setCredits(profile.credits)
         }
       }
       setLoading(false)
@@ -60,26 +60,28 @@ export function Navbar() {
           </div>
         </Link>
 
-        <div className="hidden md:flex items-center gap-8">
-          <Link 
-            href="#how-it-works" 
-            className="text-primary font-bold border-b-2 border-primary text-xs uppercase tracking-wider"
-          >
-            How it Works
-          </Link>
-          <Link 
-            href="#pricing" 
-            className="text-on-surface-variant font-medium hover:text-primary transition-all duration-300 ease-in-out text-xs uppercase tracking-wider"
-          >
-            Pricing
-          </Link>
-          <Link 
-            href="#testimonials" 
-            className="text-on-surface-variant font-medium hover:text-primary transition-all duration-300 ease-in-out text-xs uppercase tracking-wider"
-          >
-            Success Stories
-          </Link>
-        </div>
+        {!user && (
+          <div className="hidden md:flex items-center gap-8">
+            <Link 
+              href="#how-it-works" 
+              className="text-primary font-bold border-b-2 border-primary text-xs uppercase tracking-wider"
+            >
+              How it Works
+            </Link>
+            <Link 
+              href="#pricing" 
+              className="text-on-surface-variant font-medium hover:text-primary transition-all duration-300 ease-in-out text-xs uppercase tracking-wider"
+            >
+              Pricing
+            </Link>
+            <Link 
+              href="#testimonials" 
+              className="text-on-surface-variant font-medium hover:text-primary transition-all duration-300 ease-in-out text-xs uppercase tracking-wider"
+            >
+              Success Stories
+            </Link>
+          </div>
+        )}
 
         <div className="flex items-center gap-4">
           {!loading && user ? (
@@ -87,7 +89,7 @@ export function Navbar() {
               {credits !== null && (
                 <div className="hidden sm:flex items-center gap-2 px-4 py-1.5 rounded-full bg-surface-container-high/60 border border-white/10 text-sm">
                   <span className="material-symbols-outlined text-primary text-lg">token</span>
-                  <span>{credits} Audits Remaining</span>
+                  <span>{credits ?? 0} credits remaining</span>
                 </div>
               )}
               <button 
