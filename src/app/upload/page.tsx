@@ -116,6 +116,16 @@ export default function UploadPage() {
 
   return (
     <>
+      {/* Colorful blurred glassmorphism background */}
+      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+        <div className="absolute inset-0 bg-[#0a0a0f]/60" />
+        <div className="absolute -top-1/4 -left-1/4 w-[750px] h-[750px] rounded-full bg-primary/50 blur-[150px]" />
+        <div className="absolute top-1/4 -right-1/3 w-[600px] h-[600px] rounded-full bg-secondary/45 blur-[130px]" />
+        <div className="absolute -bottom-1/3 left-1/5 w-[550px] h-[550px] rounded-full bg-tertiary/40 blur-[140px]" />
+        <div className="absolute top-1/2 left-1/3 w-[450px] h-[450px] rounded-full bg-primary/35 blur-[110px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-tertiary/30 blur-[120px]" />
+      </div>
+
       <Navbar />
 
       <main className="flex-1 py-10 px-6 md:px-10">
@@ -135,7 +145,7 @@ export default function UploadPage() {
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 className={`glass-panel rounded-2xl p-10 flex flex-col items-center justify-center gap-6 border-2 border-dashed transition-all cursor-pointer
-                  ${isDragging ? 'border-primary bg-primary/5' : 'border-white/15 hover:border-white/30'}`}
+                  ${isDragging ? 'border-primary bg-primary/5' : 'border-white/30 hover:border-white/50'}`}
               >
                 <div className="w-16 h-16 rounded-full bg-primary/15 flex items-center justify-center">
                   <span className="material-symbols-outlined text-primary text-4xl">cloud_upload</span>
@@ -163,7 +173,7 @@ export default function UploadPage() {
               </div>
 
               {file && (
-                <div className="glass-panel rounded-xl px-6 py-4 flex items-center justify-between">
+                <div className="glass-panel border border-white/30 rounded-xl px-6 py-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <span className="material-symbols-outlined text-primary">insert_drive_file</span>
                     <div>
@@ -185,7 +195,7 @@ export default function UploadPage() {
                 onChange={onFileChange}
               />
 
-              <div className="glass-panel rounded-2xl p-8 space-y-4">
+              <div className="glass-panel border border-white/30 rounded-2xl p-8 space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold text-lg">Or paste contract text</h3>
                   <span className="text-[10px] font-mono tracking-[1px] text-on-surface-variant">PASTE &amp; ANALYZE</span>
@@ -195,7 +205,7 @@ export default function UploadPage() {
                   value={pastedText}
                   onChange={(e) => setPastedText(e.target.value)}
                   placeholder="Paste the full contract text here..."
-                  className="w-full h-44 resize-y bg-black/30 border border-white/10 rounded-xl p-4 font-mono text-sm focus:outline-none focus:border-primary/60 placeholder:text-on-surface-variant/60"
+                   className="w-full h-44 resize-y bg-black/30 border border-white/20 rounded-xl p-4 font-mono text-sm focus:outline-none focus:border-primary/60 placeholder:text-on-surface-variant/60"
                 />
 
                 <div className="flex justify-end">
@@ -224,18 +234,18 @@ export default function UploadPage() {
             </div>
 
             <div className="lg:col-span-4 space-y-6">
-              <div className="glass-panel rounded-2xl p-7">
+              <div className="glass-panel border border-white/30 rounded-2xl p-7">
                 <h3 className="font-semibold mb-6 text-lg border-b border-white/10 pb-4">Audit Workflow</h3>
 
                 <div className="space-y-6 relative">
-                  <div className="absolute left-[15px] top-6 bottom-6 w-[2px] bg-white/10" />
+                  <div className="absolute left-[15px] top-6 bottom-6 w-[2px] bg-white/20" />
 
                   {workflow.map((step, index) => (
                     <div key={index} className="flex gap-4 items-start relative z-10">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-sm font-semibold
                         ${step.status === 'complete' ? 'bg-primary text-on-primary' : 
                           step.status === 'active' ? 'bg-primary/20 text-primary ring-1 ring-primary/50' : 
-                          'bg-white/5 border border-white/10 text-on-surface-variant'}`}>
+                                                     'bg-white/5 border border-white/20 text-on-surface-variant'}`}>
                         {step.number}
                       </div>
                       <div className="pt-0.5">
@@ -251,7 +261,7 @@ export default function UploadPage() {
                 </div>
               </div>
 
-              <div className="glass-panel rounded-2xl p-6 flex gap-4 items-start">
+              <div className="glass-panel border border-white/30 rounded-2xl p-6 flex gap-4 items-start">
                 <div className="w-10 h-10 rounded-xl bg-secondary/20 flex items-center justify-center shrink-0">
                   <span className="material-symbols-outlined text-secondary">verified_user</span>
                 </div>
@@ -267,7 +277,7 @@ export default function UploadPage() {
 
           {analysisComplete && (
             <div className="mt-10 max-w-[1280px] mx-auto">
-              <div className="glass-panel rounded-3xl p-8 md:p-10 space-y-8">
+              <div className="glass-panel border border-white/30 rounded-3xl p-8 md:p-10 space-y-8">
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="uppercase tracking-[1.5px] text-xs text-on-surface-variant">Analysis Complete</div>
@@ -306,7 +316,7 @@ export default function UploadPage() {
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-3 pt-4 border-t border-white/10">
+                 <div className="flex flex-wrap gap-3 pt-4 border-t border-white/20">
                   <button className="px-6 py-2.5 rounded-full bg-primary text-on-primary font-semibold text-sm">Generate Counter-Offer</button>
                   <button className="px-6 py-2.5 rounded-full border border-white/20 hover:bg-white/5 text-sm">Download PDF Report</button>
                   <button className="px-6 py-2.5 rounded-full border border-white/20 hover:bg-white/5 text-sm">Save to Audits</button>
