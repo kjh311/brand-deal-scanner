@@ -16,7 +16,7 @@ A privacy-focused web application designed to help influencers and creators audi
 
 ### 1. Brand Deal Scan
 - **Input Handling:** PDF, Word (docx), image (OCR), and raw text copy-paste.
-- **Analysis:** Identify legal jargon, obligations, and high-risk clauses.
+- **Analysis:** Identify legal jargon, obligations, and high-risk clauses. Finds missing clauses.
 - **Translation:** Plain-English summaries of complex legalese.
 - **Risk Highlighting:** Identify and explain "gotchas" and predatory terms.
 - **Counter-Offers:** AI-generated email templates with "Style Switchers" (Firm, Friendly, Casual).
