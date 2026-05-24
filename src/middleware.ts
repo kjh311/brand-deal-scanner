@@ -29,19 +29,16 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // IMPORTANT: Do not write any code between createServerClient and supabase.auth.getUser()
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Define protected routes
-  const protectedRoutes = ['/upload', '/analysis', '/history', '/plans']
+  const protectedRoutes = ['/upload', '/analysis', '/history']
 
   const isProtectedRoute = protectedRoutes.some((route) =>
     request.nextUrl.pathname.startsWith(route)
   )
 
-  // Redirect unauthenticated users to signup
   if (!user && isProtectedRoute) {
     const url = request.nextUrl.clone()
     url.pathname = '/signup'
@@ -53,12 +50,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }

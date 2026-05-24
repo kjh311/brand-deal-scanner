@@ -1,8 +1,10 @@
 'use client'
 
 import React from 'react'
+import { useRouter } from 'next/navigation'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
+import { createClient } from '@/lib/supabase/client'
 
 interface Plan {
   id: string
@@ -86,11 +88,22 @@ const plans: Plan[] = [
 ]
 
 export default function PlansPage() {
-  const handleSelect = (planId: string) => {
+  const router = useRouter()
+
+  const handleSelect = async (planId: string) => {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      // Not logged in → force sign up, pass the plan so we can resume after auth
+      router.push(`/signup?plan=${planId}`)
+      return
+    }
+
+    // User is logged in → proceed with plan selection / checkout
     // TODO: Connect to Stripe / Supabase checkout
     alert(`Selected plan: ${planId}. (Checkout integration coming soon)`)
-    // For now, redirect to upload
-    // window.location.href = '/upload'
+    // Example: router.push(`/checkout?plan=${planId}`)
   }
 
   return (
@@ -123,6 +136,7 @@ export default function PlansPage() {
             {plans.map((plan) => (
               <div
                 key={plan.id}
+                onClick={() => handleSelect(plan.id)}
                 className="glass-panel rounded-2xl p-6 flex flex-col h-full border-[3px] transition-all hover:-translate-y-1 hover:shadow-2xl relative cursor-pointer hover:shadow-[0_0_25px_var(--glow-color),_0_0_45px_var(--glow-color)]"
                 style={{ 
                   borderColor: plan.color + '60',
@@ -178,7 +192,10 @@ export default function PlansPage() {
                 </ul>
 
                 <button
-                  onClick={() => handleSelect(plan.id)}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleSelect(plan.id)
+                  }}
                   className="w-full py-3 rounded-xl font-semibold text-sm uppercase tracking-wider transition-all active:scale-[0.985] cursor-pointer"
                   style={{ backgroundColor: plan.color, color: '#131313' }}
                 >

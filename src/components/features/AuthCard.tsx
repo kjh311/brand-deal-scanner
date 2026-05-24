@@ -2,26 +2,122 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Eye, EyeOff, Github } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { createClient } from '@/lib/supabase/client'
 
 interface AuthCardProps {
   mode: 'login' | 'signup'
 }
 
 export function AuthCard({ mode }: AuthCardProps) {
+  const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [signUpSuccess, setSignUpSuccess] = useState(false)
 
   const isLogin = mode === 'login'
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError(null)
     setIsLoading(true)
-    // TODO: Implement Supabase Auth logic
-    setTimeout(() => setIsLoading(false), 1500)
+
+    const supabase = createClient()
+
+    try {
+      if (!isLogin) {
+        // === SIGN UP ===
+        const { error: signUpError } = await supabase.auth.signUp({
+          email: email.trim(),
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
+          },
+        })
+
+        if (signUpError) {
+          if (signUpError.message.includes('already registered')) {
+            setError('This email is already in use. Please log in instead.')
+          } else if (signUpError.message.includes('Password should be')) {
+            setError('Password must be at least 6 characters long.')
+          } else {
+            setError(signUpError.message)
+          }
+          return
+        }
+
+        // Success — show confirmation message (no redirect to dashboard)
+        setSignUpSuccess(true)
+
+      } else {
+        // === LOGIN ===
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: email.trim(),
+          password,
+        });
+
+        if (signInError) {
+          setError(signInError.message);
+          return;
+        }
+
+        // Successful login
+        router.push('/history');
+      }
+    } catch (err: any) {
+      setError(err.message || 'An unexpected error occurred.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  if (signUpSuccess) {
+    return (
+      <div className="w-full max-w-md">
+        <div className="glass-card rounded-3xl p-8 md:p-10 shadow-2xl text-center">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+            <span className="material-symbols-outlined text-primary text-3xl">mail</span>
+          </div>
+          <h2 className="font-headline text-2xl font-semibold tracking-tight text-on-surface mb-2">
+            Check your email
+          </h2>
+          <p className="text-on-surface-variant mb-6">
+            We’ve sent a confirmation link to <span className="font-medium text-on-surface">{email}</span>.
+            Please click the link to activate your account.
+          </p>
+          <p className="text-sm text-on-surface-variant">
+            Once confirmed, you can log in and access your dashboard.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  if (signUpSuccess) {
+    return (
+      <div className="w-full max-w-md">
+        <div className="glass-card rounded-3xl p-8 md:p-10 shadow-2xl text-center">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+            <span className="material-symbols-outlined text-primary text-3xl">mail</span>
+          </div>
+          <h2 className="font-headline text-2xl font-semibold tracking-tight text-on-surface mb-2">
+            Check your email
+          </h2>
+          <p className="text-on-surface-variant mb-6">
+            We’ve sent a confirmation link to <span className="font-medium text-on-surface">{email}</span>.
+            Please click the link to activate your account.
+          </p>
+          <p className="text-sm text-on-surface-variant">
+            Once confirmed, you can log in and access your dashboard.
+          </p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -80,6 +176,12 @@ export function AuthCard({ mode }: AuthCardProps) {
                 </button>
               </div>
             </div>
+
+            {error && (
+              <p className="text-sm text-error text-center bg-error/10 border border-error/20 rounded-lg py-2 px-3">
+                {error}
+              </p>
+            )}
 
             <button
               type="submit"
