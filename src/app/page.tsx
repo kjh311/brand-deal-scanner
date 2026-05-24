@@ -12,8 +12,8 @@ export default function LandingPage() {
       <Navbar />
       <main className="flex-grow">
         <Hero />
-        <TrustSection />
         <HowItWorks />
+        <TrustSection />
         <PricingSection />
         <TestimonialsSection />
       </main>

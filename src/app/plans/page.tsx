@@ -1,10 +1,11 @@
 'use client'
 
-import React from 'react'
+import { useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { createClient } from '@/lib/supabase/client'
+import gsap from 'gsap'
 
 interface Plan {
   id: string
@@ -89,6 +90,22 @@ const plans: Plan[] = [
 
 export default function PlansPage() {
   const router = useRouter()
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.to(".plan-card", {
+        opacity: 1,
+        y: 0,
+        duration: 0.8,
+        stagger: 0.15,
+        ease: "power3.out",
+        delay: 0.2
+      })
+    }, containerRef)
+
+    return () => ctx.revert()
+  }, [])
 
   const handleSelect = async (planId: string) => {
     const supabase = createClient()
@@ -120,7 +137,7 @@ export default function PlansPage() {
       <Navbar />
 
       <main className="flex-grow py-12 px-6">
-        <div className="max-w-[1120px] mx-auto">
+        <div ref={containerRef} className="max-w-[1120px] mx-auto">
           {/* Hero Title */}
           <div className="text-center mb-12">
             <h1 className="font-headline text-4xl md:text-5xl font-bold tracking-[-0.02em] uppercase mb-4">
@@ -137,7 +154,7 @@ export default function PlansPage() {
               <div
                 key={plan.id}
                 onClick={() => handleSelect(plan.id)}
-                className="glass-panel rounded-2xl p-6 flex flex-col h-full border-[3px] transition-all hover:-translate-y-1 hover:shadow-2xl relative cursor-pointer hover:shadow-[0_0_25px_var(--glow-color),_0_0_45px_var(--glow-color)]"
+                className="plan-card opacity-0 translate-y-[30px] glass-panel rounded-2xl p-6 flex flex-col h-full border-[3px] transition-[transform,shadow,border-color] duration-300 hover:-translate-y-1 hover:shadow-2xl relative cursor-pointer hover:shadow-[0_0_25px_var(--glow-color),_0_0_45px_var(--glow-color)]"
                 style={{ 
                   borderColor: plan.color + '60',
                   '--glow-color': plan.color + '55'

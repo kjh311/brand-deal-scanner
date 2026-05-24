@@ -13,13 +13,13 @@ export function HowItWorks() {
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger)
     const targetScore = 75
-    
+
     const ctx = gsap.context(() => {
       // Step animations
       gsap.from(".reveal-step", {
         scrollTrigger: {
           trigger: sectionRef.current,
-          start: "top 70%",
+          start: "top 88%",
         },
         opacity: 0,
         x: -30,
@@ -33,18 +33,18 @@ export function HowItWorks() {
       gsap.to(obj, {
         scrollTrigger: {
           trigger: ".gauge-svg",
-          start: "top 80%",
+          start: "top 88%",
         },
         val: targetScore,
-        duration: 2.5,
-        ease: "power3.out",
+        duration: 2,
+        ease: "none",
         onUpdate: () => {
           const current = Math.floor(obj.val)
           setScore(current)
           if (gaugeRef.current) {
             const dashOffset = 251.2 - (251.2 * obj.val / 100)
             gaugeRef.current.setAttribute('stroke-dashoffset', dashOffset.toString())
-            
+
             // Dynamic Color
             if (obj.val < 40) gaugeRef.current.setAttribute('stroke', '#ffb4ab')
             else if (obj.val < 70) gaugeRef.current.setAttribute('stroke', '#ffdad5')
@@ -57,7 +57,7 @@ export function HowItWorks() {
       gsap.from(".animate-float", {
         scrollTrigger: {
           trigger: ".animate-float",
-          start: "top 80%",
+          start: "top 88%",
         },
         opacity: 0,
         y: 40,
@@ -78,7 +78,7 @@ export function HowItWorks() {
             Audit Process in 60 Seconds
           </h2>
         </div>
-        
+
         <div className="grid lg:grid-cols-3 gap-8 relative">
           <div className="flex flex-col gap-12">
             {[
@@ -102,16 +102,16 @@ export function HowItWorks() {
             <div className="relative w-64 h-64 flex items-center justify-center">
               <svg className="w-full h-full -rotate-90 gauge-svg" viewBox="0 0 100 100">
                 <circle cx="50" cy="50" r="40" fill="transparent" stroke="#1C1C1E" strokeWidth="10" />
-                <circle 
+                <circle
                   ref={gaugeRef}
-                  cx="50" cy="50" r="40" 
-                  fill="transparent" 
-                  stroke="#53e16f" 
-                  strokeWidth="10" 
-                  strokeDasharray="251.2" 
-                  strokeDashoffset="251.2" 
+                  cx="50" cy="50" r="40"
+                  fill="transparent"
+                  stroke="#53e16f"
+                  strokeWidth="10"
+                  strokeDasharray="251.2"
+                  strokeDashoffset="251.2"
                   strokeLinecap="round"
-                  className="transition-all duration-300"
+                  className=""
                 />
               </svg>
               <div className="absolute flex flex-col items-center">

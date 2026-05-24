@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import Link from 'next/link'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
@@ -93,13 +94,16 @@ export function PricingSection() {
                   </li>
                 ))}
               </ul>
-              <button className={`mt-8 w-full py-3 rounded-full font-bold transition-all ${
-                plan.featured 
-                  ? 'bg-primary text-on-primary hover:brightness-110' 
-                  : 'border border-outline-variant hover:bg-surface-variant'
-              }`}>
+              <Link 
+                href="/plans" 
+                className={`mt-8 w-full py-3 rounded-full font-bold transition-all text-center block ${
+                  plan.featured 
+                    ? 'bg-primary text-on-primary hover:brightness-110' 
+                    : 'border border-outline-variant hover:bg-surface-variant'
+                }`}
+              >
                 {plan.cta}
-              </button>
+              </Link>
             </div>
           ))}
         </div>

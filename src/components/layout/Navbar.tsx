@@ -98,6 +98,20 @@ export function Navbar() {
               >
                 Logout
               </button>
+              <Link 
+                href="/settings"
+                className="w-10 h-10 rounded-full border border-primary/30 flex items-center justify-center overflow-hidden hover:border-primary transition-colors bg-surface-container"
+              >
+                {user.user_metadata?.avatar_url || user.user_metadata?.picture ? (
+                  <img 
+                    src={user.user_metadata.avatar_url || user.user_metadata.picture} 
+                    alt="Profile" 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="material-symbols-outlined text-primary">account_circle</span>
+                )}
+              </Link>
             </>
           ) : (
             <Link 
