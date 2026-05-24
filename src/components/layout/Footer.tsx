@@ -4,7 +4,11 @@ import { useEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
-export function Footer() {
+interface FooterProps {
+  showCTA?: boolean;
+}
+
+export function Footer({ showCTA = true }: FooterProps) {
   const ctaRef = useRef<HTMLElement>(null)
   const footerRef = useRef<HTMLElement>(null)
 
@@ -35,6 +39,7 @@ export function Footer() {
   return (
     <>
       {/* Final CTA */}
+      {showCTA && (
       <section ref={ctaRef} className="relative py-32 px-10 overflow-hidden" id="final-cta">
         <div className="max-w-[800px] mx-auto text-center relative z-10">
           <h2 className="font-headline text-4xl text-on-surface leading-tight font-semibold tracking-[-0.02em]">
@@ -56,7 +61,8 @@ export function Footer() {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] h-[150%] bg-[radial-gradient(circle_at_center,rgba(0,122,255,0.08)_0%,transparent_70%)]"></div>
         </div>
       </section>
-
+      )}
+ 
       {/* Main Footer */}
       <footer ref={footerRef} className="w-full py-16 border-t border-outline-variant bg-black" id="main-footer">
         <div className="max-w-[1280px] mx-auto px-10">
@@ -76,6 +82,12 @@ export function Footer() {
                 Contact
               </a>
             </div>
+          </div>
+
+          <div className="mt-8 pt-6 border-t border-white/10 text-center">
+            <p className="text-[10px] text-on-surface-variant/70 max-w-[700px] mx-auto">
+              LEGAL DISCLAIMER: Brand Deal Scanner is an AI analysis tool and does not provide legal advice.
+            </p>
           </div>
         </div>
       </footer>

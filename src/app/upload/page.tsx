@@ -2,6 +2,8 @@
 
 import React, { useState, useRef, useCallback } from 'react'
 import Link from 'next/link'
+import { Navbar } from '@/components/layout/Navbar'
+import { Footer } from '@/components/layout/Footer'
 
 interface WorkflowStep {
   number: number
@@ -113,35 +115,8 @@ export default function UploadPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background text-on-surface">
-      {/* Dashboard Nav */}
-      <nav className="glass-nav sticky top-0 z-50 border-b border-white/10">
-        <div className="max-w-[1280px] mx-auto flex items-center justify-between h-16 px-10">
-           <Link href="/" className="flex items-center gap-3">
-             <span className="material-symbols-outlined text-primary text-3xl">smart_toy</span>
-             <span className="font-headline text-xl font-bold tracking-tight text-primary">Brand Deal Scanner</span>
-           </Link>
-
-            <div className="hidden md:flex items-center gap-8 text-sm">
-            <Link href="/upload" className="text-primary font-semibold border-b-2 border-primary pb-0.5">Upload</Link>
-            <Link href="/audits" className="text-on-surface-variant hover:text-primary transition-colors font-medium">Audits</Link>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <div className="hidden sm:flex items-center gap-2 px-4 py-1.5 rounded-full bg-surface-container-high/60 border border-white/10 text-sm">
-              <span className="material-symbols-outlined text-primary text-lg">token</span>
-              <span>3 Audits Remaining</span>
-            </div>
-
-            <div className="flex items-center gap-2 cursor-pointer group">
-              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center ring-1 ring-outline-variant group-hover:ring-primary transition-all">
-                <span className="material-symbols-outlined text-primary text-lg">person</span>
-              </div>
-              <span className="material-symbols-outlined text-on-surface-variant group-hover:text-primary text-xl">expand_more</span>
-            </div>
-          </div>
-        </div>
-      </nav>
+    <>
+      <Navbar />
 
       <main className="flex-1 py-10 px-6 md:px-10">
         <div className="max-w-[1280px] mx-auto">
@@ -345,17 +320,7 @@ export default function UploadPage() {
           )}
         </div>
       </main>
-
-      <footer className="glass-footer border-t border-white/10 py-4 text-xs text-on-surface-variant">
-        <div className="max-w-[1280px] mx-auto px-10 flex flex-col md:flex-row gap-y-2 md:items-center md:justify-between">
-          <div className="flex gap-x-5">
-            <a href="#" className="hover:text-on-surface">How it Works</a>
-            <a href="#" className="hover:text-on-surface">Privacy</a>
-            <a href="#" className="hover:text-on-surface">Legal Disclaimer</a>
-          </div>
-          <div>© 2026 Brand Deal Scanner — Privacy-first contract intelligence</div>
-        </div>
-      </footer>
-    </div>
+      <Footer showCTA={false} />
+    </>
   )
 }

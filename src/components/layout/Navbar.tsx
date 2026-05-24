@@ -6,11 +6,12 @@ export function Navbar() {
   return (
     <header className="sticky top-0 w-full z-50 backdrop-blur-md border-b border-white/10 bg-surface/80 shadow-sm">
       <nav className="flex justify-between items-center max-w-[1280px] mx-auto px-10 py-4">
-        <div className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2">
+          <span className="material-symbols-outlined text-primary text-3xl">smart_toy</span>
           <div className="font-headline text-2xl font-bold tracking-tight text-on-surface">
             Brand Deal Scanner
           </div>
-        </div>
+        </Link>
         <div className="hidden md:flex items-center gap-8">
           <Link 
             href="#how-it-works" 
