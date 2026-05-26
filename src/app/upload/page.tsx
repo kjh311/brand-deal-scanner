@@ -4,6 +4,7 @@ import React, { useState, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
+import { uploadContract } from '@/lib/actions/contracts'
 
 interface WorkflowStep {
   number: number
@@ -87,9 +88,42 @@ export default function UploadPage() {
     resetWorkflow()
   }
 
-  const simulateAnalysis = async () => {
+  const handleRealAnalysis = async () => {
     if (!file && !pastedText.trim()) {
       alert('Please upload a file or paste contract text.')
+      return
+    }
+
+    setIsAnalyzing(true)
+    setAnalysisComplete(false)
+
+    try {
+      if (file) {
+        updateWorkflow(1)
+        await uploadContract(file)
+      }
+
+      updateWorkflow(2)
+      // Simulate AI analysis delay
+      await new Promise(r => setTimeout(r, 2000))
+
+      updateWorkflow(3)
+      await new Promise(r => setTimeout(r, 1000))
+
+      setIsAnalyzing(false)
+      setAnalysisComplete(true)
+    } catch (error: any) {
+      console.error('Upload error:', error)
+      alert(error.message || 'Something went wrong during the upload process.')
+      setIsAnalyzing(false)
+      resetWorkflow()
+    }
+  }
+
+  const simulateAnalysis = async () => {
+    // Legacy simulator for pasted text only now
+    if (!pastedText.trim()) {
+      alert('Please paste contract text.')
       return
     }
 
@@ -223,11 +257,11 @@ export default function UploadPage() {
               {file && !analysisComplete && (
                 <div className="flex justify-end">
                   <button
-                    onClick={simulateAnalysis}
+                    onClick={handleRealAnalysis}
                     disabled={isAnalyzing}
                     className="px-8 py-3 rounded-full bg-primary text-on-primary font-semibold disabled:opacity-60 flex items-center gap-2"
                   >
-                    {isAnalyzing ? 'Analyzing Contract...' : 'Scan Contract for Risks'}
+                    {isAnalyzing ? 'Processing & Analyzing...' : 'Scan Contract for Risks'}
                   </button>
                 </div>
               )}

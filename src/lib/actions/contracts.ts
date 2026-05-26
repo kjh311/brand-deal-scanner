@@ -1,0 +1,69 @@
+import { createClient } from '@/lib/supabase/client'
+
+/**
+ * Handle contract file upload to Supabase Storage and database registration.
+ * 
+ * @param file The file to upload
+ * @returns The inserted database row
+ * @throws Error with descriptive message if any step fails
+ */
+export async function uploadContract(file: File) {
+  const supabase = createClient()
+
+  // 1. Validation: Type and Size
+  const validTypes = [
+    'application/pdf',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  ]
+  const maxSize = 5 * 1024 * 1024 // 5MB
+
+  if (!validTypes.includes(file.type)) {
+    throw new Error('Invalid file type. Please upload a PDF or DOCX agreement.')
+  }
+
+  if (file.size > maxSize) {
+    throw new Error('File size exceeds the 5MB limit. Please compress your file or upload a smaller version.')
+  }
+
+  // 2. Auth Check
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  if (userError || !user) {
+    throw new Error('You must be signed in to upload contracts.')
+  }
+
+  // 3. Unique Filename Generation
+  const extension = file.name.split('.').pop()
+  const fileName = `${crypto.randomUUID()}.${extension}`
+  const filePath = `${user.id}/${fileName}`
+
+  // 4. Storage Upload
+  const { error: storageError } = await supabase.storage
+    .from('brand-contracts')
+    .upload(filePath, file, {
+      cacheControl: '3600',
+      upsert: false
+    })
+
+  if (storageError) {
+    throw new Error(`Storage upload failed: ${storageError.message}`)
+  }
+
+  // 5. Database Row Insertion
+  const { data: dbData, error: dbError } = await supabase
+    .from('contracts')
+    .insert({
+      user_id: user.id,
+      file_path: filePath,
+      status: 'pending',
+    })
+    .select()
+    .single()
+
+  if (dbError) {
+    // Cleanup storage if database registration fails to prevent orphan files
+    await supabase.storage.from('brand-contracts').remove([filePath])
+    throw new Error(`Database registration failed: ${dbError.message}`)
+  }
+
+  return dbData
+}
