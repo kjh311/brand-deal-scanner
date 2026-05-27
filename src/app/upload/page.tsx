@@ -312,59 +312,7 @@ export default function UploadPage() {
             </div>
           </div>
 
-          {analysisComplete && (
-            <div className="mt-10 max-w-[1280px] mx-auto">
-              <div className="glass-panel border border-white/30 rounded-3xl p-8 md:p-10 space-y-8">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="uppercase tracking-[1.5px] text-xs text-on-surface-variant">Analysis Complete</div>
-                    <h2 className="text-2xl font-semibold tracking-tight mt-1">Deal Health Score: <span className="text-primary">68/100</span></h2>
-                  </div>
-                  <button onClick={resetAll} className="text-sm text-on-surface-variant hover:text-on-surface flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-base">refresh</span> Start New Scan
-                  </button>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <div className="font-semibold mb-3 flex items-center gap-2 text-sm">
-                      <span className="material-symbols-outlined text-tertiary">warning</span> Top Red Flags
-                    </div>
-                    <ul className="space-y-3 text-sm">
-                      {[
-                        'Morality clause allows immediate termination for "public controversy"',
-                        'Unlimited usage rights across all platforms and territories in perpetuity',
-                        'Payment tied to performance metrics with no minimum guarantee',
-                        'Non-compete extends 24 months post-contract'
-                      ].map((flag, i) => (
-                        <li key={i} className="flex gap-3 text-on-surface-variant">
-                          <span className="text-tertiary mt-0.5">•</span> {flag}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div>
-                    <div className="font-semibold mb-3 text-sm">Plain English Summary</div>
-                    <p className="text-on-surface-variant text-sm leading-relaxed">
-                      This contract heavily favors the brand. You grant near-total rights to your content and likeness
-                      while receiving limited compensation and protection. Several clauses expose you to significant legal and financial risk.
-                    </p>
-                  </div>
-                </div>
-
-                 <div className="flex flex-wrap gap-3 pt-4 border-t border-white/20">
-                  <button className="px-6 py-2.5 rounded-full bg-primary text-on-primary font-semibold text-sm">Generate Counter-Offer</button>
-                  <button className="px-6 py-2.5 rounded-full border border-white/20 hover:bg-white/5 text-sm">Download PDF Report</button>
-                  <button className="px-6 py-2.5 rounded-full border border-white/20 hover:bg-white/5 text-sm">Save to Audits</button>
-                </div>
-
-                <div className="text-[10px] text-on-surface-variant/60 pt-2">
-                  This is not legal advice. Always consult a qualified attorney for contract review.
-                </div>
-              </div>
-            </div>
-          )}
+          {/* Analysis complete state transition could go here */}
         </div>
       </main>
       <Footer showCTA={false} />
