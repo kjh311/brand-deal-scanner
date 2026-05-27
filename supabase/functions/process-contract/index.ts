@@ -1,92 +1,103 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
-import PDFParse from "npm:pdf-parse"
+import { extractText, getDocumentProxy } from "npm:unpdf@latest"
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-serve(async (req) => {
-  // Handle CORS
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: CORS_HEADERS })
   }
 
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+  if (!supabaseUrl || !supabaseServiceKey) {
+    return new Response(JSON.stringify({ error: "Environment configuration error." }), { 
+      status: 500, 
+      headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } 
+    });
+  }
+
+  const supabase = createClient(supabaseUrl, supabaseServiceKey)
+  let recordId: string | null = null
+
   try {
-    const { record } = await req.json()
-    
-    if (!record || !record.id || !record.source_type) {
-      return new Response(JSON.stringify({ error: 'Invalid webhook payload: missing id or source_type' }), {
-        headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
-        status: 400,
-      })
+    const rawText = await req.text();
+    let body;
+    try {
+      body = JSON.parse(rawText);
+    } catch (e) {
+      throw new Error("Invalid JSON payload");
     }
 
-    const { id, source_type, file_path, extracted_text } = record
-    let finalExtractedText = ''
+    recordId = body.contract_id || body.record?.id || body.id;
+    if (!recordId) throw new Error("Missing record ID");
 
-    // Initialize Supabase client with Service Role Key
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    console.log(`[${recordId}] Fetching record...`);
+    const { data: record, error: fetchError } = await supabase
+      .from('contracts')
+      .select('*')
+      .eq('id', recordId)
+      .single();
 
-    console.log(`Processing contract ${id} via source: ${source_type}`)
+    if (fetchError || !record) throw new Error("Record not found");
+
+    const { source_type, file_path, extracted_text } = record;
+    let finalExtractedText = '';
 
     if (source_type === 'file') {
-      if (!file_path) {
-        throw new Error('source_type "file" requires a file_path.')
-      }
-
-      // 1. Download file from storage
+      console.log(`[${recordId}] Downloading file: ${file_path}`);
       const { data: fileBlob, error: downloadError } = await supabase.storage
         .from('brand-contracts')
-        .download(file_path)
+        .download(file_path);
 
-      if (downloadError) {
-        throw new Error(`Failed to download file: ${downloadError.message}`)
-      }
+      if (downloadError) throw downloadError;
 
-      // 2. Extract text from PDF
-      const arrayBuffer = await fileBlob.arrayBuffer()
-      const buffer = new Uint8Array(arrayBuffer)
+      const arrayBuffer = await fileBlob.arrayBuffer();
       
-      const pdfData = await PDFParse(buffer)
-      finalExtractedText = pdfData.text
-      console.log(`Successfully parsed PDF. Extracted ${finalExtractedText.length} characters.`)
-    } 
-    else if (source_type === 'text_input') {
-      // 1. Simply use the text provided in the database insert
-      finalExtractedText = extracted_text || ''
-      console.log(`Using manually entered text (${finalExtractedText.length} characters).`)
-    } 
-    else {
-      throw new Error(`Unsupported source_type: ${source_type}`)
+      console.log(`[${recordId}] Extracting text using unpdf engine...`);
+      
+      // 1. Load the PDF document proxy
+      const pdf = await getDocumentProxy(new Uint8Array(arrayBuffer));
+      
+      // 2. Extract text from all pages
+      const result = await extractText(pdf, { mergePages: true });
+      finalExtractedText = result.text;
+      
+      console.log(`[${recordId}] Extraction successful. Pages: ${result.totalPages}, Length: ${finalExtractedText.length}`);
+    } else {
+      finalExtractedText = extracted_text || '';
     }
 
-    // 3. Update the database record with the final text and status
-    const { error: updateError } = await supabase
+    await supabase
       .from('contracts')
-      .update({ 
-        extracted_text: finalExtractedText,
-        status: 'ready' 
-      })
-      .eq('id', id)
+      .update({ extracted_text: finalExtractedText, status: 'ready' })
+      .eq('id', recordId);
 
-    if (updateError) {
-      throw new Error(`Failed to update database: ${updateError.message}`)
-    }
+    console.log(`[${recordId}] Success.`);
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
       status: 200,
-    })
+    });
 
-  } catch (error) {
-    console.error(`Edge Function error: ${error.message}`)
-    return new Response(JSON.stringify({ error: error.message }), {
+  } catch (err: any) {
+    console.error(`[${recordId || 'SYSTEM'}] FATAL: ${err.message}`);
+    
+    if (recordId) {
+      supabase.from('contracts')
+        .update({ status: 'failed' })
+        .eq('id', recordId)
+        .then(() => {})
+        .catch((e) => console.error("Secondary error:", e.message));
+    }
+
+    return new Response(JSON.stringify({ error: err.message }), { 
       headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
-      status: 500,
-    })
+      status: 500 
+    });
   }
-})
+});

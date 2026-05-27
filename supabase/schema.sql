@@ -120,4 +120,43 @@ create policy "Users can delete their own contracts"
   using (auth.uid() = user_id);
 
 -- Index for performance
-create index contracts_user_id_idx on public.contracts(user_id);
+-- =============================================
+-- DIAGNOSTICS & AUTOMATION
+-- =============================================
+
+-- Table to track trigger execution for debugging
+create table if not exists public.trigger_debug (
+  id uuid default uuid_generate_v4() primary key,
+  contract_id uuid,
+  triggered_at timestamp with time zone default now()
+);
+
+-- Main function to handle contract processing via Edge Functions
+create or replace function public.handle_new_contract()
+returns trigger as $$
+declare
+  request_id bigint;
+begin
+  -- 1. Atomic Diagnostic log
+  insert into public.trigger_debug (contract_id, triggered_at)
+  values (new.id, now());
+
+  -- 2. Call Edge Function via pg_net
+  select net.http_post(
+    url := 'https://<YOUR_PROJECT_REF>.supabase.co/functions/v1/process-contract',
+    headers := jsonb_build_object(
+      'Content-Type', 'application/json',
+      'Authorization', 'Bearer <YOUR_SERVICE_ROLE_KEY>'
+    ),
+    body := jsonb_build_object('record', row_to_json(new))
+  ) into request_id;
+
+  return new;
+end;
+$$ language plpgsql security definer;
+
+-- Re-attach the trigger
+drop trigger if exists on_contract_created on public.contracts;
+create trigger on_contract_created
+  after insert on public.contracts
+  for each row execute procedure public.handle_new_contract();
