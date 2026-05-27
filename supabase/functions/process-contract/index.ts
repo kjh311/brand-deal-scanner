@@ -7,31 +7,61 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+/**
+ * DOCX Parser (Native ZIP/XML)
+ */
 async function extractTextFromDocx(arrayBuffer: ArrayBuffer): Promise<string> {
   const uint8Array = new Uint8Array(arrayBuffer);
-  if (uint8Array.length === 0) throw new Error("Empty file buffer");
-  
   const reader = new Uint8ArrayReader(uint8Array);
   const zipReader = new ZipReader(reader);
-  
   try {
     const entries = await zipReader.getEntries();
     const documentEntry = entries.find(entry => entry.filename === "word/document.xml");
-    if (!documentEntry) throw new Error("Invalid DOCX: Missing word/document.xml");
-
+    if (!documentEntry) throw new Error("Invalid DOCX");
     // @ts-ignore
     const xmlText = await documentEntry.getData(new TextWriter());
     const matches = xmlText.match(/<w:t[^>]*>(.*?)<\/w:t>/g);
     if (!matches) return "";
-    
-    return matches
-      .map(match => match.replace(/<[^>]+>/g, ''))
-      .join(' ')
+    return matches.map(match => match.replace(/<[^>]+>/g, '')).join(' ')
       .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&')
       .replace(/&quot;/g, '"').replace(/&apos;/g, "'");
   } finally {
     await zipReader.close();
   }
+}
+
+/**
+ * Image OCR Parser (Cloud Vision Wrapper)
+ * Uses a simple REST call to avoid heavy WASM overhead in Deno isolates.
+ */
+async function extractTextFromImage(arrayBuffer: ArrayBuffer): Promise<string> {
+  const apiKey = Deno.env.get('GOOGLE_VISION_API_KEY');
+  if (!apiKey) {
+    throw new Error("OCR Required: GOOGLE_VISION_API_KEY not set in Edge Function secrets.");
+  }
+
+  // Convert buffer to base64 for the API
+  const base64Image = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+
+  const response = await fetch(`https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      requests: [{
+        image: { content: base64Image },
+        features: [{ type: 'TEXT_DETECTION' }]
+      }]
+    })
+  });
+
+  const result = await response.json();
+  const text = result?.responses?.[0]?.fullTextAnnotation?.text || "";
+  
+  if (!text) {
+    console.warn("OCR complete but no text was detected in the image.");
+  }
+  
+  return text;
 }
 
 Deno.serve(async (req) => {
@@ -63,44 +93,53 @@ Deno.serve(async (req) => {
       const extension = file_path?.split('.').pop()?.toLowerCase();
       const mimeType = fileBlob.type;
 
+      // UNIVERSAL DISPATCHER LOGIC
       const isPdf = extension === 'pdf' || mimeType === 'application/pdf';
-      const isDocx = extension === 'docx' || mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || file_path.endsWith('.docx');
+      const isDocx = extension === 'docx' || mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+      const isTxt = extension === 'txt' || mimeType === 'text/plain';
+      const isImage = ['jpg', 'jpeg', 'png', 'webp'].includes(extension || '') || mimeType.startsWith('image/');
 
-      console.log(`[${recordId}] Processing ${extension} (${fileBlob.size} bytes)`);
+      console.log(`[${recordId}] Dispatching: ${extension || 'unknown'} (${fileBlob.size} bytes)`);
 
       try {
         if (isPdf) {
-          // unpdf in Deno typically prefers the Uint8Array directly or mapped precisely
-          // We wrap it in a new Uint8Array to ensure neutral binary context
-          const pdfData = new Uint8Array(arrayBuffer);
-          const pdf = await getDocumentProxy(pdfData); 
+          console.log(`[${recordId}] Logic: PDF (unpdf)`);
+          const pdf = await getDocumentProxy(new Uint8Array(arrayBuffer));
           const result = await extractText(pdf, { mergePages: true });
           finalExtractedText = result.text;
         } 
         else if (isDocx) {
+          console.log(`[${recordId}] Logic: DOCX (Native ZIP)`);
           finalExtractedText = await extractTextFromDocx(arrayBuffer);
         } 
+        else if (isTxt) {
+          console.log(`[${recordId}] Logic: TXT (UTF-8 direct)`);
+          finalExtractedText = new TextDecoder().decode(arrayBuffer);
+        } 
+        else if (isImage) {
+          console.log(`[${recordId}] Logic: IMAGE (OCR Vision)`);
+          finalExtractedText = await extractTextFromImage(arrayBuffer);
+        } 
         else {
-          throw new Error(`Unsupported format: ${extension}`);
+          throw new Error(`Unsupported document format: .${extension} / ${mimeType}`);
         }
       } catch (engineErr: any) {
-        throw new Error(`Engine crash: ${engineErr.message}`);
+        throw new Error(`Scanner Error: ${engineErr.message}`);
       }
     } else {
       finalExtractedText = extracted_text || '';
     }
 
+    // Success Update
     await supabase.from('contracts').update({ extracted_text: finalExtractedText, status: 'ready' }).eq('id', recordId);
-    return new Response(JSON.stringify({ success: true }), { headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify({ success: true, format: source_type }), { headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } });
 
   } catch (err: any) {
     console.error(`[${recordId || 'SYS'}] FAIL: ${err.message}`);
     if (recordId) {
       try {
         await supabase.from('contracts').update({ status: 'failed' }).eq('id', recordId);
-      } catch {
-        // Silently ignore secondary failures
-      }
+      } catch { /* Suppress secondary errors */ }
     }
     return new Response(JSON.stringify({ error: err.message }), { headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' }, status: 500 });
   }

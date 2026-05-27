@@ -13,12 +13,16 @@ export async function uploadContract(file: File) {
   // 1. Validation: Type and Size
   const validTypes = [
     'application/pdf',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'text/plain',
+    'image/jpeg',
+    'image/png',
+    'image/webp'
   ]
   const maxSize = 5 * 1024 * 1024 // 5MB
 
   if (!validTypes.includes(file.type)) {
-    throw new Error('Invalid file type. Please upload a PDF or DOCX agreement.')
+    throw new Error('Invalid file type. Please upload a PDF, DOCX, TXT, or Image (JPG, PNG, WEBP).')
   }
 
   if (file.size > maxSize) {

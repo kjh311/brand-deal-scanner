@@ -45,7 +45,14 @@ export default function UploadPage() {
   }
 
   const handleFile = (selectedFile: File) => {
-    const validTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain', 'image/jpeg', 'image/png']
+    const validTypes = [
+      'application/pdf', 
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 
+      'text/plain', 
+      'image/jpeg', 
+      'image/png', 
+      'image/webp'
+    ]
     if (!validTypes.includes(selectedFile.type)) {
       alert('Please upload PDF, DOCX, TXT, JPG, or PNG files only.')
       return
@@ -196,7 +203,7 @@ export default function UploadPage() {
                     Add Document
                   </button>
                   <p className="mt-3 text-sm font-medium">DRAG &amp; DROP or CLICK TO UPLOAD</p>
-                  <p className="text-xs text-on-surface-variant mt-1">PDF, DOCX, JPG, PNG, or TXT</p>
+                  <p className="text-xs text-on-surface-variant mt-1">PDF, DOCX, TXT, or IMAGE (JPG, PNG, WEBP)</p>
                 </div>
 
                 <div className="flex gap-6 text-center text-xs text-on-surface-variant">
@@ -228,7 +235,7 @@ export default function UploadPage() {
                 ref={fileInputRef}
                 type="file"
                 className="hidden"
-                accept=".pdf,.docx,.txt,.jpg,.jpeg,.png"
+                accept=".pdf,.docx,.txt,.jpg,.jpeg,.png,.webp"
                 onChange={onFileChange}
               />
 
