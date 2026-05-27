@@ -87,14 +87,37 @@ create index audits_user_id_idx on public.audits(user_id);
 create index audits_created_at_idx on public.audits(created_at desc);
 
 -- =============================================
--- Optional: Function to decrement credits
+-- CONTRACTS TABLE (File Management)
 -- =============================================
-create or replace function public.decrement_credits(user_id uuid, amount integer default 1)
-returns void as $$
-begin
-  update public.profiles
-  set credit_balance = greatest(credit_balance - amount, 0),
-      updated_at = now()
-  where id = user_id;
-end;
-$$ language plpgsql security definer;
+create table public.contracts (
+  id uuid default uuid_generate_v4() primary key,
+  user_id uuid references auth.users(id) on delete cascade not null,
+  file_path text, -- Nullable for manual text input
+  source_type text check (source_type in ('file', 'text_input')) not null,
+  extracted_text text,
+  status text default 'pending',
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Enable RLS
+alter table public.contracts enable row level security;
+
+-- Policies for contracts
+create policy "Users can view their own contracts" 
+  on public.contracts for select 
+  using (auth.uid() = user_id);
+
+create policy "Users can insert their own contracts" 
+  on public.contracts for insert 
+  with check (auth.uid() = user_id);
+
+create policy "Users can update their own contracts" 
+  on public.contracts for update 
+  using (auth.uid() = user_id);
+
+create policy "Users can delete their own contracts" 
+  on public.contracts for delete 
+  using (auth.uid() = user_id);
+
+-- Index for performance
+create index contracts_user_id_idx on public.contracts(user_id);

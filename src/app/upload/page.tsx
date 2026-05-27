@@ -4,7 +4,7 @@ import React, { useState, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
-import { uploadContract } from '@/lib/actions/contracts'
+import { uploadContract, registerManualContract } from '@/lib/actions/contracts'
 
 interface WorkflowStep {
   number: number
@@ -101,6 +101,9 @@ export default function UploadPage() {
       if (file) {
         updateWorkflow(1)
         await uploadContract(file)
+      } else if (pastedText.trim()) {
+        updateWorkflow(1)
+        await registerManualContract(pastedText.trim())
       }
 
       updateWorkflow(2)
@@ -244,7 +247,7 @@ export default function UploadPage() {
 
                 <div className="flex justify-end">
                   <button
-                    onClick={simulateAnalysis}
+                    onClick={handleRealAnalysis}
                     disabled={isAnalyzing}
                     className="flex items-center gap-2 px-6 py-2.5 rounded-full border border-white/20 hover:bg-white/5 active:bg-white/10 disabled:opacity-50 transition text-sm font-medium"
                   >

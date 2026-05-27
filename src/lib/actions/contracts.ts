@@ -54,6 +54,7 @@ export async function uploadContract(file: File) {
     .insert({
       user_id: user.id,
       file_path: filePath,
+      source_type: 'file',
       status: 'pending',
     })
     .select()
@@ -63,6 +64,38 @@ export async function uploadContract(file: File) {
     // Cleanup storage if database registration fails to prevent orphan files
     await supabase.storage.from('brand-contracts').remove([filePath])
     throw new Error(`Database registration failed: ${dbError.message}`)
+  }
+
+  return dbData
+}
+
+/**
+ * Register a manually pasted contract.
+ * 
+ * @param text The pasted contract content
+ * @returns The inserted database row
+ */
+export async function registerManualContract(text: string) {
+  const supabase = createClient()
+
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  if (userError || !user) {
+    throw new Error('You must be signed in to analyze contracts.')
+  }
+
+  const { data: dbData, error: dbError } = await supabase
+    .from('contracts')
+    .insert({
+      user_id: user.id,
+      extracted_text: text,
+      source_type: 'text_input',
+      status: 'ready', // Immediately ready since text is already available
+    })
+    .select()
+    .single()
+
+  if (dbError) {
+    throw new Error(`Manual entry registration failed: ${dbError.message}`)
   }
 
   return dbData
