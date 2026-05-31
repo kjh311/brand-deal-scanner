@@ -10,11 +10,11 @@ const CORS_HEADERS = {
 /**
  * AI ANALYZER: PRIORITIZED ENGINE
  */
-async function analyzeContract(contractText: string) {
+async function analyzeContract(contractText: string, customPrompt?: string) {
   const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
   const vertexProjId = Deno.env.get('GOOGLE_PROJECT_ID');
   
-  const prompt = `Act as a senior talent analyst. Analyze the provided contract and respond ONLY with a single valid JSON object.
+  const defaultPrompt = `Act as a senior talent analyst. Analyze the provided contract and respond ONLY with a single valid JSON object.
     SCHEMA: { 
       "summary": "string", 
       "legalese_translation": [{"original": "string", "translation": "string"}], 
@@ -25,7 +25,9 @@ async function analyzeContract(contractText: string) {
     }
     CONTENT: ${contractText.substring(0, 30000)}`;
 
-  // --- ENGINE 1: GOOGLE AI STUDIO ---
+  const prompt = customPrompt || defaultPrompt;
+
+  // --- ENGINE 1: GOOGLE AI STUDIO (PRIORITY) ---
   if (geminiApiKey) {
     console.log("[AI] Priority Engine: Google AI Studio");
     const studioUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${geminiApiKey}`;
@@ -43,7 +45,7 @@ async function analyzeContract(contractText: string) {
     return JSON.parse(text);
   }
 
-  // --- ENGINE 2: VERTEX AI ---
+  // --- ENGINE 2: VERTEX AI (FALLBACK) ---
   if (vertexProjId) {
     const clientEmail = Deno.env.get('GOOGLE_CLIENT_EMAIL') || '';
     const privateKey = Deno.env.get('GOOGLE_PRIVATE_KEY')?.replace(/\\n/g, '\n') || '';
@@ -108,8 +110,16 @@ Deno.serve(async (req) => {
     recordId = body.contract_id || body.record?.id;
     if (!recordId) throw new Error("No ID");
 
+    // Fetch the contract record
     const { data: record } = await supabase.from('contracts').select('*').eq('id', recordId).single();
     if (!record) throw new Error("Record not found");
+
+    // 1. Fetch User Identity for personalized sign-off
+    const { data: profile } = await supabase.from('profiles').select('*').eq('id', record.user_id).single();
+    
+    // Try multiple common name fields in case of variations
+    const userName = profile?.full_name || profile?.name || profile?.display_name || '[YOUR NAME]';
+    console.log(`[AUDIT] Resolved User Identity (Prioritizing Name over Email): ${userName}`);
 
     const { source_type, file_path, extracted_text: existingText } = record;
     let text = existingText || '';
@@ -131,7 +141,29 @@ Deno.serve(async (req) => {
 
     await supabase.from('contracts').update({ extracted_text: text, status: 'analyzing' }).eq('id', recordId);
 
-    const analysis = await analyzeContract(text);
+    // 2. Updated Prompt for Placeholder Strategy
+    const customPrompt = `Act as a senior talent attorney and legal analyst. 
+      First, identify the BRAND NAME (the other party in the contract). If no specific company name is found, use '[BRAND NAME]'.
+      
+      CRITICAL INSTRUCTION: Your 'suggested_response' MUST be a pre-written, ready-to-send message addressed to the brand.
+      It MUST:
+      - Start with: "Dear [Brand Name] Team," (Replace [Brand Name] with identify name or '[BRAND NAME]').
+      - Detail the predatory/cautionary clauses found and why they are problematic.
+      - Explicitly list the protections that are currently missing and request their inclusion.
+      - Sign off with: "Best, ${userName === '[YOUR NAME]' ? '[YOUR NAME]' : userName}".
+      
+      SCHEMA: { 
+        "summary": "string", 
+        "brand_name": "string",
+        "legalese_translation": [{"original": "string", "translation": "string"}], 
+        "predatory_clauses": [{"snippet": "string", "explanation": "string"}], 
+        "cautionary_clauses": [{"snippet": "string", "explanation": "string"}], 
+        "missing_protections": [{"protection": "string", "importance": "string"}], 
+        "suggested_response": "string" 
+      }
+      CONTENT: ${text.substring(0, 30000)}`;
+
+    const analysis = await analyzeContract(text, customPrompt);
 
     await supabase.from('contracts').update({ 
       status: 'ready',
