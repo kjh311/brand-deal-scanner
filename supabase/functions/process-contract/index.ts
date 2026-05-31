@@ -177,6 +177,16 @@ Deno.serve(async (req) => {
       suggested_response: analysis.suggested_response
     }).eq('id', recordId);
 
+    // 3. Privacy Cleanup: Remove source file and clear extracted text
+    if (source_type === 'file' && file_path) {
+      console.log(`[PRIVACY] Deleting source file from storage: ${file_path}`);
+      const { error: deleteError } = await supabase.storage.from('brand-contracts').remove([file_path]);
+      if (deleteError) console.error(`[PRIVACY] Failed to delete file: ${deleteError.message}`);
+    }
+
+    console.log(`[PRIVACY] Clearing extracted text for record: ${recordId}`);
+    await supabase.from('contracts').update({ extracted_text: null }).eq('id', recordId);
+
     return new Response(JSON.stringify({ success: true }), { headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } });
   } catch (err: any) {
     console.error(`[CRITICAL] ${err.message}`);
