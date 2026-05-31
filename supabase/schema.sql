@@ -96,6 +96,13 @@ create table public.contracts (
   source_type text check (source_type in ('file', 'text_input')) not null,
   extracted_text text,
   status text default 'pending',
+  health_score integer,
+  summary text,
+  legalese_translation jsonb,
+  predatory_clauses jsonb,
+  cautionary_clauses jsonb,
+  missing_protections jsonb,
+  suggested_response text,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
