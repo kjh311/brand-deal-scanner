@@ -1,11 +1,12 @@
 'use client'
 
-import React, { useState, useEffect, Suspense } from 'react'
+import React, { useState, useEffect, Suspense, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { Loader2, AlertCircle, CheckCircle2, Flag, ShieldAlert, FileText, Copy, Check, Download, History, Share2 } from 'lucide-react'
+import { ReportTemplate } from '@/components/analysis/ReportTemplate'
 
 function AnalysisContent() {
   const searchParams = useSearchParams()
@@ -16,6 +17,7 @@ function AnalysisContent() {
   const [copied, setCopied] = useState(false)
   const [displayScore, setDisplayScore] = useState(0)
   const [ringOffset, setRingOffset] = useState(263.9)
+  const reportRef = useRef<HTMLDivElement>(null)
   
   const supabase = createClient()
 
@@ -74,6 +76,48 @@ function AnalysisContent() {
     }
   }
 
+  const handleExport = async () => {
+    if (!reportRef.current || !contract) return
+    
+    try {
+      const html2pdf = (await import('html2pdf.js')).default
+      
+      const rawName = contract.file_path?.split('/').pop() || '';
+      const docName = rawName.includes('_') && rawName.indexOf('_') === 36
+        ? rawName.substring(37).split('.')[0]
+        : rawName.split('.')[0] || 'contract';
+
+      const opt = {
+        margin: 0,
+        filename: `${docName}_scan_results.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { 
+          scale: 2, 
+          useCORS: true, 
+          letterRendering: true,
+        },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      } as const
+      
+      const worker = html2pdf().from(reportRef.current).set(opt);
+      
+      // Handle page numbers via jsPDF hook
+      worker.toPdf().get('pdf').then((pdf: any) => {
+        const totalPages = pdf.internal.getNumberOfPages();
+        for (let i = 1; i <= totalPages; i++) {
+          pdf.setPage(i);
+          pdf.setFontSize(8);
+          pdf.setTextColor(150);
+          pdf.text(`Page ${i} of ${totalPages}`, pdf.internal.pageSize.getWidth() - 30, pdf.internal.pageSize.getHeight() - 10);
+        }
+        pdf.save(`${docName}_scan_results.pdf`);
+      });
+
+    } catch (err) {
+      console.error('PDF Export failed:', err)
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
@@ -109,16 +153,29 @@ function AnalysisContent() {
             Security Audit Active
           </div>
           <h2 className="text-2xl font-bold text-white tracking-tight">
-            {contract.file_path?.split('/').pop()?.split('.')[0].replace(/_/g, ' ') || 'Untitled Report'}
+            {(() => {
+              const fileName = contract.file_path?.split('/').pop() || '';
+              // If it has our UUID_ prefix, strip it (UUID is 36 chars)
+              const displayName = fileName.includes('_') && fileName.indexOf('_') === 36
+                ? fileName.substring(37)
+                : fileName;
+              return displayName.split('.')[0].replace(/_/g, ' ') || 'Untitled Report';
+            })()}
           </h2>
           <p className="text-slate-500 text-xs font-semibold">Processed on {new Date(contract.created_at).toLocaleDateString()}</p>
         </div>
 
-        <button className="flex items-center gap-2 px-6 py-2 rounded-xl bg-slate-800 border-2 border-white/10 hover:border-blue-500/30 transition text-xs font-bold text-white shadow-xl">
+        <button 
+          onClick={handleExport}
+          className="flex items-center gap-2 px-6 py-2 rounded-xl bg-slate-800 border-2 border-white/10 hover:border-blue-500/30 transition text-xs font-bold text-white shadow-xl cursor-pointer"
+        >
           <Download className="w-4 h-4" />
-          EXPORT
+          Download Scan Results
         </button>
       </header>
+
+      {/* Hidden Report Template for PDF Generation */}
+      <ReportTemplate ref={reportRef} contract={contract} />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-8 space-y-12">

@@ -36,8 +36,8 @@ export async function uploadContract(file: File) {
   }
 
   // 3. Unique Filename Generation
-  const extension = file.name.split('.').pop()
-  const fileName = `${crypto.randomUUID()}.${extension}`
+  const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
+  const fileName = `${crypto.randomUUID()}_${sanitizedName}`
   const filePath = `${user.id}/${fileName}`
 
   // 4. Storage Upload
