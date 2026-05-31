@@ -166,7 +166,7 @@ Deno.serve(async (req) => {
     const analysis = await analyzeContract(text, customPrompt);
 
     await supabase.from('contracts').update({ 
-      status: 'ready',
+      status: 'completed',
       summary: analysis.summary,
       legalese_translation: analysis.legalese_translation,
       predatory_clauses: analysis.predatory_clauses,
