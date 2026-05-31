@@ -297,7 +297,7 @@ export default function UploadPage() {
               {analysisComplete && (
                 <div className="animate-in slide-in-from-bottom-5 duration-700">
                    <Link
-                      href={`/dashboard`} 
+                      href={`/analysis?id=${currentContractId}`} 
                       className="flex items-center justify-center w-full px-8 py-4 space-x-2 font-bold text-white transition-all rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:shadow-xl hover:shadow-emerald-500/20 active:scale-95"
                     >
                       <span>View Detailed Report</span>

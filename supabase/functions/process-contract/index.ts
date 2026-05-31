@@ -21,7 +21,7 @@ async function analyzeContract(contractText: string, customPrompt?: string) {
       "predatory_clauses": [{"snippet": "string", "explanation": "string"}], 
       "cautionary_clauses": [{"snippet": "string", "explanation": "string"}], 
       "missing_protections": [{"protection": "string", "importance": "string"}], 
-      "suggested_response": "string" 
+      "suggested_response": "string (Start with 'Dear [Brand Name],' followed by two empty lines. End with two empty lines then 'Best, [User Name]' on one line)" 
     }
     CONTENT: ${contractText.substring(0, 30000)}`;
 
@@ -147,10 +147,10 @@ Deno.serve(async (req) => {
       
       CRITICAL INSTRUCTION: Your 'suggested_response' MUST be a pre-written, ready-to-send message addressed to the brand.
       It MUST:
-      - Start with: "Dear [Brand Name] Team," (Replace [Brand Name] with identify name or '[BRAND NAME]').
+      - Start with: "Dear [Brand Name]," followed by THREE newlines (creating TWO empty lines of space).
       - Detail the predatory/cautionary clauses found and why they are problematic.
       - Explicitly list the protections that are currently missing and request their inclusion.
-      - Sign off with: "Best, ${userName === '[YOUR NAME]' ? '[YOUR NAME]' : userName}".
+      - End with: THREE newlines (creating TWO empty lines of space), then "Best, ${userName === '[YOUR NAME]' ? '[YOUR NAME]' : userName}".
       
       SCHEMA: { 
         "summary": "string", 
