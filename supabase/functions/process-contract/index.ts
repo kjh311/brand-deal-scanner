@@ -154,6 +154,7 @@ Deno.serve(async (req) => {
       
       SCHEMA: { 
         "summary": "string", 
+        "health_score": number,
         "brand_name": "string",
         "legalese_translation": [{"original": "string", "translation": "string"}], 
         "predatory_clauses": [{"snippet": "string", "explanation": "string"}], 
@@ -167,6 +168,7 @@ Deno.serve(async (req) => {
 
     await supabase.from('contracts').update({ 
       status: 'completed',
+      health_score: analysis.health_score,
       summary: analysis.summary,
       legalese_translation: analysis.legalese_translation,
       predatory_clauses: analysis.predatory_clauses,
