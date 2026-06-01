@@ -27,6 +27,22 @@ async function analyzeContract(contractText: string, customPrompt?: string) {
 
   const prompt = customPrompt || defaultPrompt;
 
+  // Helper to safely extract JSON from potentially messy AI responses
+  const cleanAndParse = (text: string) => {
+    try {
+      // 1. First, try to find the start and end of the JSON object
+      const start = text.indexOf('{');
+      const end = text.lastIndexOf('}');
+      if (start === -1 || end === -1) throw new Error("No JSON object found");
+      
+      const jsonStr = text.substring(start, end + 1);
+      return JSON.parse(jsonStr);
+    } catch (err) {
+      console.error("[AI] JSON Parse Failed. Raw Text Segment:", text.substring(0, 100));
+      throw new Error(`JSON Cleanup Error: ${err.message}`);
+    }
+  };
+
   // --- ENGINE 1: GOOGLE AI STUDIO (PRIORITY) ---
   if (geminiApiKey) {
     console.log("[AI] Priority Engine: Google AI Studio");
@@ -42,7 +58,7 @@ async function analyzeContract(contractText: string, customPrompt?: string) {
     const data = await response.json();
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!text) throw new Error("AI Studio returned empty response");
-    return JSON.parse(text);
+    return cleanAndParse(text);
   }
 
   // --- ENGINE 2: VERTEX AI (FALLBACK) ---
@@ -60,7 +76,8 @@ async function analyzeContract(contractText: string, customPrompt?: string) {
     });
     if (vRes.ok) {
       const vData = await vRes.json();
-      return JSON.parse(vData[0]?.candidates?.[0]?.content?.parts?.[0]?.text);
+      const text = vData[0]?.candidates?.[0]?.content?.parts?.[0]?.text;
+      return cleanAndParse(text);
     }
   }
 

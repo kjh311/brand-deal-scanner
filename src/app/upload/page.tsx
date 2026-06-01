@@ -177,7 +177,7 @@ export default function UploadPage() {
                   <span className="material-symbols-outlined text-primary text-5xl">cloud_upload</span>
                 </div>
                 <div>
-                  <button className="px-10 py-4 rounded-2xl bg-primary text-on-primary font-bold text-lg shadow-2xl hover:scale-105 active:scale-95 transition-all">
+                  <button className="px-10 py-4 rounded-2xl bg-primary text-on-primary font-bold text-lg shadow-2xl hover:scale-105 active:scale-95 transition-all cursor-pointer">
                     Add Document
                   </button>
                   <p className="mt-6 text-slate-400 font-medium tracking-wide uppercase text-xs">Drag & Drop or Click to Upload</p>
@@ -263,12 +263,12 @@ export default function UploadPage() {
                 </div>
               </div>
               <div className="flex items-center gap-4">
-                <button onClick={removeFile} className="text-slate-500 hover:text-white transition text-xs font-bold uppercase tracking-widest px-4">
+                <button onClick={removeFile} className="text-slate-500 hover:text-white transition text-xs font-bold uppercase tracking-widest px-4 cursor-pointer">
                   Cancel
                 </button>
                 <button
                   onClick={handleRealAnalysis}
-                  className="px-8 py-3 rounded-xl bg-white text-slate-950 font-black text-sm shadow-xl active:scale-95 transition-all"
+                  className="px-8 py-3 rounded-xl bg-white text-slate-950 font-black text-sm shadow-xl active:scale-95 transition-all cursor-pointer"
                 >
                   Scan Contract
                 </button>
@@ -276,8 +276,8 @@ export default function UploadPage() {
             </div>
           )}
 
-          {!isAnalyzing && !analysisComplete && (
-             <div className="glass-panel border border-white/20 rounded-[3rem] p-10 space-y-6">
+          {!file && !isAnalyzing && !analysisComplete && (
+             <div className="glass-panel border border-white/20 rounded-[3rem] p-10 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <h3 className="font-bold text-xl text-white">Or paste contract text</h3>
                 <textarea
                   value={pastedText}
@@ -288,7 +288,7 @@ export default function UploadPage() {
                 <div className="flex justify-end">
                   <button
                     onClick={handleRealAnalysis}
-                    className="flex items-center gap-2 px-8 py-3 rounded-xl border-2 border-white/10 hover:bg-white/5 active:scale-95 transition-all font-bold text-sm"
+                    className="flex items-center gap-2 px-8 py-3 rounded-xl border-2 border-white/10 hover:bg-white/5 active:scale-95 transition-all font-bold text-sm cursor-pointer"
                   >
                     <span className="material-symbols-outlined text-lg">analytics</span>
                     Analyze Text
