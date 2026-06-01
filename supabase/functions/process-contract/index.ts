@@ -161,13 +161,26 @@ Deno.serve(async (req) => {
       - Exclusivity/Scope: Unlimited Revisions, Vague Competitors, Broad Non-Compete, Vague SOW, Right of First Refusal.
       - Termination: Unilateral Rights, Morals Clauses, No Termination for Cause.
 
-      MISSING PROTECTIONS CHECKLIST (Flag if absent):
-      1. Kill Fee, 2. Payment Timeline (Net-x), 3. Content Approval, 4. Usage Expiration, 5. Reimbursement, 6. Force Majeure, 7. Limited Indemnity, 8. Exclusivity Scope, 9. Portfolio Rights, 10. Dispute Resolution.
+      MISSING PROTECTIONS CHECKLIST (Flag if any are missing/vague):
+      1. Kill Fee (Early cancellation compensation).
+      2. Payment Timeline (Hard net terms, e.g., Net-30).
+      3. Content Approval Rights (Sign-off on brand edits).
+      4. Usage Expiration (Specific end date for IP rights).
+      5. Reimbursement Clause (Coverage for shipping/taxes/production).
+      6. Force Majeure (Illness/travel acts of God protection).
+      7. Limited Indemnity (Liability limited to own actions).
+      8. Exclusivity Scope (Narrow competitor lists, not categories).
+      9. Portfolio Rights (Right to showcase in media kit).
+      10. Dispute Resolution (Local/affordable mediation process).
+      * Also flag any other standard talent agreement protections that are absent.
 
       INSTRUCTIONS:
-      - 'suggested_response' MUST iterate through EVERY identified risk (predatory/cautionary) and EVERY missing protection. Do not omit or summarize the list.
-      - Address each item individually in a dedicated sentence or paragraph.
-      - Tone: Professional and firm. Start: "Dear [Brand Name]," + 3 newlines. End: 3 newlines + "Best, ${userName}".
+      - Identify the BRAND NAME (or use '[Brand Name]').
+      - 'suggested_response' MUST: 
+        1. Start: "Dear [Brand Name]," + 2 newlines.
+        2. Reference found risks and missing gaps professionally.
+        3. Explicitly reference missing protections as 'mandatory additions' to the contract.
+        4. End: 2 newlines + "Best, ${userName}".
 
       SCHEMA: { 
         "summary": "string", 
