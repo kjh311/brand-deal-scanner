@@ -11,10 +11,11 @@ export function Navbar() {
   const [credits, setCredits] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
 
+  // 1. Handle Authentication and Initial Fetch
   useEffect(() => {
     const supabase = createClient()
 
-    const getUserAndCredits = async () => {
+    const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       setUser(user)
 
@@ -32,16 +33,55 @@ export function Navbar() {
       setLoading(false)
     }
 
-    getUserAndCredits()
+    getUser()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-      getUserAndCredits()
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+      if (session?.user) {
+        getUser()
+      } else {
+        setCredits(null)
+      }
     })
 
     return () => {
       subscription.unsubscribe()
     }
   }, [])
+
+  // 2. Handle Real-time Credit Updates
+  useEffect(() => {
+    if (!user?.id) return
+
+    const supabase = createClient()
+    
+    const channel = supabase
+      .channel(`profile-updates-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${user.id}`,
+        },
+        (payload: any) => {
+          if (payload.new && payload.new.credits !== undefined) {
+            setCredits(payload.new.credits)
+          }
+        }
+      )
+      .subscribe((status: string) => {
+        if (status === 'SUBSCRIBED') {
+          console.log(`[REALTIME] Connected to profile updates for ${user.id}`)
+        }
+      })
+
+    return () => {
+      console.log(`[REALTIME] Cleaning up profile channel for ${user.id}`)
+      supabase.removeChannel(channel)
+    }
+  }, [user?.id])
 
   const handleLogout = async () => {
     const supabase = createClient()

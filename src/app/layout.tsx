@@ -37,6 +37,7 @@ export default function RootLayout({
       </head>
       <body
         className={`${inter.variable} ${hankenGrotesk.variable} ${jetbrainsMono.variable} font-sans bg-background text-on-surface antialiased`}
+        suppressHydrationWarning
       >
         {children}
       </body>

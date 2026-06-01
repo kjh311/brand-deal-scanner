@@ -13,7 +13,7 @@ const CORS_HEADERS = {
 async function analyzeContract(contractText: string, customPrompt?: string) {
   const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
   const vertexProjId = Deno.env.get('GOOGLE_PROJECT_ID');
-  
+
   const defaultPrompt = `Act as a senior talent analyst. Analyze the provided contract and respond ONLY with a single valid JSON object.
     SCHEMA: { 
       "summary": "string", 
@@ -31,13 +31,13 @@ async function analyzeContract(contractText: string, customPrompt?: string) {
   if (geminiApiKey) {
     console.log("[AI] Priority Engine: Google AI Studio");
     const studioUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${geminiApiKey}`;
-    
+
     const response = await fetch(studioUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseMimeType: "application/json" } })
     });
-    
+
     if (!response.ok) throw new Error(`AI Studio Error: ${await response.text()}`);
     const data = await response.json();
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
@@ -52,7 +52,7 @@ async function analyzeContract(contractText: string, customPrompt?: string) {
     const token = await getVertexAccessToken(clientEmail, privateKey);
     const region = "us-central1";
     const vUrl = `https://${region}-aiplatform.googleapis.com/v1/projects/${vertexProjId}/locations/${region}/publishers/google/models/gemini-3.1-flash-lite:streamGenerateContent`;
-    
+
     const vRes = await fetch(vUrl, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
@@ -99,7 +99,7 @@ async function extractTextFromDocx(arrayBuffer: ArrayBuffer): Promise<string> {
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS_HEADERS });
-  
+
   const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
   const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
   const supabase = createClient(supabaseUrl, supabaseKey);
@@ -116,7 +116,7 @@ Deno.serve(async (req) => {
 
     // 1. Fetch User Identity for personalized sign-off
     const { data: profile } = await supabase.from('profiles').select('*').eq('id', record.user_id).single();
-    
+
     // Try multiple common name fields in case of variations
     const userName = profile?.full_name || profile?.name || profile?.display_name || '[YOUR NAME]';
     console.log(`[AUDIT] Resolved User Identity (Prioritizing Name over Email): ${userName}`);
@@ -141,20 +141,37 @@ Deno.serve(async (req) => {
 
     await supabase.from('contracts').update({ extracted_text: text, status: 'analyzing' }).eq('id', recordId);
 
-    // 2. Updated Prompt for Placeholder Strategy
-    const customPrompt = `Act as a senior talent attorney and legal analyst. 
-      First, identify the BRAND NAME (the other party in the contract). If no specific company name is found, use '[BRAND NAME]'.
+    // 2. Auditor Prompt: Compensation Audit & Forced Comprehensiveness
+    const customPrompt = `Act as a Senior Legal AI Architect & Auditor. Scan for deviations from creator industry standards. 
+      PRUNING LOGIC: Ignore standard/fair clauses. Only report risks or unfavorable deviations.
       
-      CRITICAL INSTRUCTION: Your 'suggested_response' MUST be a pre-written, ready-to-send message addressed to the brand.
-      It MUST:
-      - Start with: "Dear [Brand Name]," followed by THREE newlines (creating TWO empty lines of space).
-      - Detail the predatory/cautionary clauses found and why they are problematic.
-      - Explicitly list the protections that are currently missing and request their inclusion.
-      - End with: THREE newlines (creating TWO empty lines of space), then "Best, ${userName === '[YOUR NAME]' ? '[YOUR NAME]' : userName}".
+      STRICT CATEGORIZATION:
+      - predatory_clauses: ONLY include unfavorable/harmful clauses found in the text.
+      - missing_protections: ONLY include items that ARE NOT in the text but should be.
+      - legalese_translation: Identify the 3-5 most complex/complex legal clauses and provide plain-English summaries.
       
+      COMPENSATION AUDIT:
+      - Analyze compensation against professional market rates.
+      - In 'summary', state if pay is 'Fair', 'Below Market', or 'Exposure-based'.
+      - If product-only or vague, include: "Terms should be compared against your established rate card."
+
+      RISK CHECKLIST:
+      - Financial: Unlimited Indemnification, Unclear Payment Triggers, Net-90+ Terms, Unpaid Product/Shipping, No Kill Fees.
+      - Rights/IP: Perpetual/Worldwide/Irrevocable, Work-for-Hire, Editing without approval, Loss of Portfolio Rights.
+      - Exclusivity/Scope: Unlimited Revisions, Vague Competitors, Broad Non-Compete, Vague SOW, Right of First Refusal.
+      - Termination: Unilateral Rights, Morals Clauses, No Termination for Cause.
+
+      MISSING PROTECTIONS CHECKLIST (Flag if absent):
+      1. Kill Fee, 2. Payment Timeline (Net-x), 3. Content Approval, 4. Usage Expiration, 5. Reimbursement, 6. Force Majeure, 7. Limited Indemnity, 8. Exclusivity Scope, 9. Portfolio Rights, 10. Dispute Resolution.
+
+      INSTRUCTIONS:
+      - 'suggested_response' MUST iterate through EVERY identified risk (predatory/cautionary) and EVERY missing protection. Do not omit or summarize the list.
+      - Address each item individually in a dedicated sentence or paragraph.
+      - Tone: Professional and firm. Start: "Dear [Brand Name]," + 3 newlines. End: 3 newlines + "Best, ${userName}".
+
       SCHEMA: { 
         "summary": "string", 
-        "health_score": number,
+        "health_score": number (0-100),
         "brand_name": "string",
         "legalese_translation": [{"original": "string", "translation": "string"}], 
         "predatory_clauses": [{"snippet": "string", "explanation": "string"}], 
@@ -166,7 +183,7 @@ Deno.serve(async (req) => {
 
     const analysis = await analyzeContract(text, customPrompt);
 
-    await supabase.from('contracts').update({ 
+    await supabase.from('contracts').update({
       status: 'completed',
       health_score: analysis.health_score,
       summary: analysis.summary,
@@ -186,6 +203,17 @@ Deno.serve(async (req) => {
 
     console.log(`[PRIVACY] Clearing extracted text for record: ${recordId}`);
     await supabase.from('contracts').update({ extracted_text: null }).eq('id', recordId);
+
+    // 4. Credit System: Subtract 1 credit from user profile
+    console.log(`[CREDITS] Subtracting 1 credit from user: ${record.user_id}`);
+    const { data: profileData } = await supabase.from('profiles').select('credits').eq('id', record.user_id).single();
+    if (profileData) {
+      const { error: updateError } = await supabase.from('profiles')
+        .update({ credits: (profileData.credits || 0) - 1 })
+        .eq('id', record.user_id);
+
+      if (updateError) console.error(`[CREDITS] Failed to update credits: ${updateError.message}`);
+    }
 
     return new Response(JSON.stringify({ success: true }), { headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } });
   } catch (err: any) {

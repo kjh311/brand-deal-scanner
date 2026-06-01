@@ -182,7 +182,7 @@ export default function UploadPage() {
                 <div className="text-center">
                   <button
                     onClick={(e) => { e.stopPropagation(); openFilePicker() }}
-                    className="px-8 py-3 rounded-full bg-primary text-on-primary font-semibold active:scale-[0.985] transition-all"
+                    className="px-8 py-3 rounded-full bg-primary text-on-primary font-semibold active:scale-[0.985] transition-all cursor-pointer"
                   >
                     Add Document
                   </button>
@@ -202,6 +202,18 @@ export default function UploadPage() {
                   </div>
                   <button onClick={removeFile} className="text-on-surface-variant hover:text-error text-sm flex items-center gap-1">
                     <span className="material-symbols-outlined text-base">close</span> Remove
+                  </button>
+                </div>
+              )}
+
+              {file && !analysisComplete && (
+                <div className="flex justify-end animate-in fade-in slide-in-from-top-2 duration-500">
+                  <button
+                    onClick={handleRealAnalysis}
+                    disabled={isAnalyzing}
+                    className="px-8 py-3 rounded-full bg-primary text-on-primary font-semibold transition-all hover:shadow-lg active:scale-95 cursor-pointer shadow-primary/20"
+                  >
+                    {isAnalyzing ? 'Processing & Analyzing...' : 'Scan Contract for Risks'}
                   </button>
                 </div>
               )}
@@ -230,7 +242,7 @@ export default function UploadPage() {
                   <button
                     onClick={handleRealAnalysis}
                     disabled={isAnalyzing}
-                    className="flex items-center gap-2 px-6 py-2.5 rounded-full border border-white/20 hover:bg-white/5 active:bg-white/10"
+                    className="flex items-center gap-2 px-6 py-2.5 rounded-full border border-white/20 hover:bg-white/5 active:bg-white/10 cursor-pointer"
                   >
                     <span className="material-symbols-outlined text-lg">analytics</span>
                     {isAnalyzing ? 'Analyzing...' : 'Analyze Pasted Text'}
@@ -238,17 +250,7 @@ export default function UploadPage() {
                 </div>
               </div>
 
-              {file && !analysisComplete && (
-                <div className="flex justify-end">
-                  <button
-                    onClick={handleRealAnalysis}
-                    disabled={isAnalyzing}
-                    className="px-8 py-3 rounded-full bg-primary text-on-primary font-semibold transition-all hover:shadow-lg active:scale-95"
-                  >
-                    {isAnalyzing ? 'Processing & Analyzing...' : 'Scan Contract for Risks'}
-                  </button>
-                </div>
-              )}
+
             </div>
 
             <div className="lg:col-span-4 space-y-6">

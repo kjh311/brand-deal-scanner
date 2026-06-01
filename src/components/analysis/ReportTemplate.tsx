@@ -147,48 +147,100 @@ export const ReportTemplate = React.forwardRef<HTMLDivElement, ReportTemplatePro
             </div>
           </section>
 
-          {/* Section 3: Clause Breakdown Table */}
-          <section>
-            <h3 style={{ fontSize: '14px', fontWeight: 900, color: colors.slate400, textTransform: 'uppercase', letterSpacing: '0.1em', display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
-              <span style={{ marginRight: '8px' }}>02.</span> Detailed Breakdown
-            </h3>
-            <div style={{ border: `1px solid ${colors.slate200}`, borderRadius: '12px', overflow: 'hidden' }}>
-              <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
-                <thead style={{ backgroundColor: colors.slate50 }}>
-                  <tr>
-                    <th style={{ padding: '16px', fontSize: '10px', fontWeight: 'bold', color: colors.slate400, textTransform: 'uppercase', borderBottom: `1px solid ${colors.slate200}` }}>Category</th>
-                    <th style={{ padding: '16px', fontSize: '10px', fontWeight: 'bold', color: colors.slate400, textTransform: 'uppercase', borderBottom: `1px solid ${colors.slate200}` }}>Status</th>
-                    <th style={{ padding: '16px', fontSize: '10px', fontWeight: 'bold', color: colors.slate400, textTransform: 'uppercase', borderBottom: `1px solid ${colors.slate200}` }}>Impact Analysis</th>
-                  </tr>
-                </thead>
-                <tbody style={{ verticalAlign: 'top' }}>
-                  {contract.cautionary_clauses?.map((clause: any, i: number) => (
-                    <tr key={i} style={{ borderBottom: `1px solid ${colors.slate100}`, breakInside: 'avoid' }}>
-                      <td style={{ padding: '16px', fontSize: '12px', fontWeight: 'bold', color: colors.slate800 }}>Cautionary Provision</td>
-                      <td style={{ padding: '16px' }}>
-                        <span style={{ fontSize: '9px', fontWeight: 'bold', color: colors.amber600, backgroundColor: colors.amber50, padding: '4px 8px', borderRadius: '999px', textTransform: 'uppercase' }}>Warning</span>
-                      </td>
-                      <td style={{ padding: '16px', fontSize: '12px', color: colors.slate600 }}>{clause.explanation}</td>
+          {/* Section 3: Cautionary Risks */}
+          {contract.cautionary_clauses?.length > 0 && (
+            <section style={{ marginBottom: '32px' }}>
+              <h3 style={{ fontSize: '14px', fontWeight: 900, color: colors.slate400, textTransform: 'uppercase', letterSpacing: '0.1em', display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
+                <span style={{ marginRight: '8px' }}>02.</span> Cautionary Risks
+              </h3>
+              <div style={{ border: `1px solid ${colors.slate200}`, borderRadius: '12px', overflow: 'hidden' }}>
+                <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
+                  <thead style={{ backgroundColor: colors.slate50 }}>
+                    <tr>
+                      <th style={{ padding: '16px', fontSize: '10px', fontWeight: 'bold', color: colors.slate400, textTransform: 'uppercase', borderBottom: `1px solid ${colors.slate200}` }}>Category</th>
+                      <th style={{ padding: '16px', fontSize: '10px', fontWeight: 'bold', color: colors.slate400, textTransform: 'uppercase', borderBottom: `1px solid ${colors.slate200}` }}>Status</th>
+                      <th style={{ padding: '16px', fontSize: '10px', fontWeight: 'bold', color: colors.slate400, textTransform: 'uppercase', borderBottom: `1px solid ${colors.slate200}` }}>Impact Analysis</th>
                     </tr>
-                  ))}
-                  {contract.missing_protections?.map((item: any, i: number) => (
-                    <tr key={i} style={{ borderBottom: `1px solid ${colors.slate100}`, breakInside: 'avoid' }}>
-                      <td style={{ padding: '16px', fontSize: '12px', fontWeight: 'bold', color: colors.slate800 }}>{item.protection}</td>
-                      <td style={{ padding: '16px' }}>
-                        <span style={{ fontSize: '9px', fontWeight: 'bold', color: colors.rose600, backgroundColor: colors.rose50, padding: '4px 8px', borderRadius: '999px', textTransform: 'uppercase' }}>Missing</span>
-                      </td>
-                      <td style={{ padding: '16px', fontSize: '12px', color: colors.slate600 }}>{item.importance}</td>
+                  </thead>
+                  <tbody style={{ verticalAlign: 'top' }}>
+                    {contract.cautionary_clauses?.map((clause: any, i: number) => (
+                      <tr key={i} style={{ borderBottom: `1px solid ${colors.slate100}`, breakInside: 'avoid' }}>
+                        <td style={{ padding: '16px', fontSize: '12px', fontWeight: 'bold', color: colors.slate800 }}>Cautionary Provision</td>
+                        <td style={{ padding: '16px' }}>
+                          <span style={{ fontSize: '9px', fontWeight: 'bold', color: colors.amber600, backgroundColor: colors.amber50, padding: '4px 8px', borderRadius: '999px', textTransform: 'uppercase' }}>Warning</span>
+                        </td>
+                        <td style={{ padding: '16px', fontSize: '12px', color: colors.slate600 }}>{clause.explanation}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )}
+
+          {/* Section 4: Missing Safeguards */}
+          {contract.missing_protections?.length > 0 && (
+            <section style={{ marginBottom: '32px' }}>
+              <h3 style={{ fontSize: '14px', fontWeight: 900, color: colors.slate400, textTransform: 'uppercase', letterSpacing: '0.1em', display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
+                <span style={{ marginRight: '8px' }}>03.</span> Missing Safeguards
+              </h3>
+              <div style={{ border: `1px solid ${colors.slate200}`, borderRadius: '12px', overflow: 'hidden' }}>
+                <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
+                  <thead style={{ backgroundColor: colors.slate50 }}>
+                    <tr>
+                      <th style={{ padding: '16px', fontSize: '10px', fontWeight: 'bold', color: colors.slate400, textTransform: 'uppercase', borderBottom: `1px solid ${colors.slate200}` }}>Required Protection</th>
+                      <th style={{ padding: '16px', fontSize: '10px', fontWeight: 'bold', color: colors.slate400, textTransform: 'uppercase', borderBottom: `1px solid ${colors.slate200}` }}>Status</th>
+                      <th style={{ padding: '16px', fontSize: '10px', fontWeight: 'bold', color: colors.slate400, textTransform: 'uppercase', borderBottom: `1px solid ${colors.slate200}` }}>Why It Matters</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
+                  </thead>
+                  <tbody style={{ verticalAlign: 'top' }}>
+                    {contract.missing_protections?.map((item: any, i: number) => (
+                      <tr key={i} style={{ borderBottom: `1px solid ${colors.slate100}`, breakInside: 'avoid' }}>
+                        <td style={{ padding: '16px', fontSize: '12px', fontWeight: 'bold', color: colors.slate800 }}>{item.protection}</td>
+                        <td style={{ padding: '16px' }}>
+                          <span style={{ fontSize: '9px', fontWeight: 'bold', color: colors.rose600, backgroundColor: colors.rose50, padding: '4px 8px', borderRadius: '999px', textTransform: 'uppercase' }}>Missing</span>
+                        </td>
+                        <td style={{ padding: '16px', fontSize: '12px', color: colors.slate600 }}>{item.importance}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )}
+
+          {/* Section 5: Legalese Translator */}
+          {contract.legalese_translation?.length > 0 && (
+            <section style={{ marginBottom: '32px' }}>
+              <h3 style={{ fontSize: '14px', fontWeight: 900, color: colors.slate400, textTransform: 'uppercase', letterSpacing: '0.1em', display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
+                <span style={{ marginRight: '8px' }}>04.</span> Legalese Translator
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {contract.legalese_translation?.map((item: any, i: number) => (
+                  <div key={i} style={{ border: `1px solid ${colors.slate200}`, borderRadius: '12px', padding: '16px', backgroundColor: colors.slate50, breakInside: 'avoid' }}>
+                    <div style={{ display: 'flex', gap: '16px' }}>
+                      <div style={{ flex: 1 }}>
+                        <p style={{ fontSize: '9px', fontWeight: 'bold', color: colors.slate400, textTransform: 'uppercase', marginBottom: '8px' }}>Original Text</p>
+                        <p style={{ fontSize: '11px', color: colors.slate500, fontStyle: 'italic', margin: 0 }}>"{item.original}"</p>
+                      </div>
+                      <div style={{ width: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <span className="material-symbols-outlined" style={{ color: colors.emerald600 }}>arrow_forward</span>
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <p style={{ fontSize: '9px', fontWeight: 'bold', color: colors.emerald600, textTransform: 'uppercase', marginBottom: '8px' }}>Plain English</p>
+                        <p style={{ fontSize: '12px', color: colors.slate800, fontWeight: 600, margin: 0 }}>{item.translation}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
           {/* Section 4: Suggested Response Draft */}
           {contract.suggested_response && (
-            <section style={{ breakInside: 'avoid' }}>
+            <section style={{ breakInside: 'avoid', marginBottom: '32px' }}>
               <h3 style={{ fontSize: '14px', fontWeight: 900, color: colors.slate400, textTransform: 'uppercase', letterSpacing: '0.1em', display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '16px' }}>
-                <span style={{ marginRight: '8px' }}>03.</span> Suggested Response Draft
+                <span style={{ marginRight: '8px' }}>05.</span> Suggested Response Draft
               </h3>
               <div style={{ border: `1px solid ${colors.slate200}`, borderRadius: '16px', padding: '32px', backgroundColor: colors.slate50, textAlign: 'center' }}>
                 <div style={{ fontSize: '12px', color: colors.slate800, lineHeight: 1.8, whiteSpace: 'pre-wrap', fontStyle: 'normal', margin: 0, fontWeight: 500 }}>
