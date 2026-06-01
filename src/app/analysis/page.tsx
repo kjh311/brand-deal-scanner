@@ -334,7 +334,7 @@ export default function AnalysisPage() {
       </div>}>
         <AnalysisContent />
       </Suspense>
-      <Footer showCTA={false} />
+      <Footer  />
     </div>
   )
 }

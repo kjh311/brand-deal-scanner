@@ -282,7 +282,7 @@ export default function HistoryPage() {
         </div>
       </main>
 
-      <Footer showCTA={false} />
+      <Footer  />
     </div>
   )
 }

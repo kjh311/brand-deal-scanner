@@ -11,6 +11,7 @@ interface WorkflowStep {
   number: number
   label: string
   status: 'complete' | 'active' | 'locked'
+  subtext?: string
 }
 
 export default function UploadPage() {
@@ -22,26 +23,26 @@ export default function UploadPage() {
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [analysisComplete, setAnalysisComplete] = useState(false)
   const [workflow, setWorkflow] = useState<WorkflowStep[]>([
-    { number: 1, label: 'Upload Contract', status: 'active' },
-    { number: 2, label: 'AI Analysis', status: 'locked' },
-    { number: 3, label: 'Get Report', status: 'locked' },
+    { number: 1, label: 'Upload Contract', status: 'active', subtext: 'Awaiting Upload' },
+    { number: 2, label: 'AI Analysis', status: 'locked', subtext: 'Pending...' },
+    { number: 3, label: 'Get Report', status: 'locked', subtext: 'Locked' },
   ])
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const resetWorkflow = () => {
     setWorkflow([
-      { number: 1, label: 'Upload Contract', status: 'active' },
-      { number: 2, label: 'AI Analysis', status: 'locked' },
-      { number: 3, label: 'Get Report', status: 'locked' },
+      { number: 1, label: 'Upload Contract', status: 'active', subtext: 'Awaiting Upload' },
+      { number: 2, label: 'AI Analysis', status: 'locked', subtext: 'Pending...' },
+      { number: 3, label: 'Get Report', status: 'locked', subtext: 'Locked' },
     ])
   }
 
   const updateWorkflow = (step: number) => {
     setWorkflow(prev =>
       prev.map(s => {
-        if (s.number < step) return { ...s, status: 'complete' }
-        if (s.number === step) return { ...s, status: 'active' }
+        if (s.number < step) return { ...s, status: 'complete', subtext: 'Finished' }
+        if (s.number === step) return { ...s, status: 'active', subtext: 'In Progress...' }
         return { ...s, status: 'locked' }
       })
     )
@@ -137,179 +138,192 @@ export default function UploadPage() {
   }
 
   return (
-    <>
-      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute inset-0 bg-[#0a0a0f]/60" />
-        <div className="absolute -top-1/4 -left-1/4 w-[750px] h-[750px] rounded-full bg-primary/50 blur-[150px]" />
-        <div className="absolute top-1/4 -right-1/3 w-[600px] h-[600px] rounded-full bg-secondary/45 blur-[130px]" />
-        <div className="absolute -bottom-1/3 left-1/5 w-[550px] h-[550px] rounded-full bg-tertiary/40 blur-[140px]" />
+    <div className="min-h-screen relative bg-black overflow-x-hidden text-slate-200">
+      {/* CINEMATIC BACKGROUND IMAGE */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <img 
+          src="/background.png" 
+          alt="background" 
+          className="absolute inset-0 w-full h-full object-cover blur-[40px] opacity-40 scale-110"
+        />
+        {/* Radial Vignette to darken area behind cards */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,black_100%)] opacity-80" />
+        <div className="absolute inset-0 bg-black/40" />
       </div>
 
       <Navbar />
 
-      <main className="flex-1 py-10 px-6 md:px-10">
-        <div className="max-w-[800px] mx-auto space-y-12">
+      <main className="relative z-10 flex-1 pt-32 pb-20 px-6 md:px-10 max-w-[850px] mx-auto">
+        <div className="space-y-10">
           
-          <div className="text-center space-y-4">
-            <h1 className="font-headline text-4xl font-bold tracking-tight text-white">Contract Security Scan</h1>
-            <p className="text-on-surface-variant text-lg max-w-xl mx-auto">
-              Upload your agreement to identify predatory clauses and missing legal safeguards.
-            </p>
-          </div>
+          {/* MAIN UPLOAD CARD */}
+          <section className="bg-slate-900/80 backdrop-blur-md border border-slate-700/50 rounded-[2.5rem] p-10 md:p-12 shadow-[0_20px_50px_rgba(0,0,0,0.8)] space-y-10">
+            <div className="space-y-4 text-center">
+              <h1 className="font-headline text-4xl font-bold tracking-tight text-white">Contract Analysis & Risk Detection</h1>
+              <p className="text-slate-400 text-lg leading-relaxed max-w-xl mx-auto">
+                Upload your influencer or talent agreement to scan for hidden traps and unfavorable clauses.
+              </p>
+            </div>
 
-          <div
-            onClick={analysisComplete || isAnalyzing ? undefined : openFilePicker}
-            onDrop={analysisComplete || isAnalyzing ? undefined : handleDrop}
-            onDragOver={analysisComplete || isAnalyzing ? undefined : handleDragOver}
-            onDragLeave={analysisComplete || isAnalyzing ? undefined : handleDragLeave}
-            className={`glass-panel rounded-[3rem] p-12 flex flex-col items-center justify-center gap-8 border-2 border-dashed transition-all min-h-[400px] relative overflow-hidden
-              ${isDragging ? 'border-primary bg-primary/5' : 'border-white/20 hover:border-white/40'}
-              ${analysisComplete || isAnalyzing ? 'cursor-default border-solid border-blue-500/30' : 'cursor-pointer'}`}
-          >
-            {/* Background Glow */}
-            {(isAnalyzing || analysisComplete) && (
-               <div className="absolute inset-0 bg-blue-500/5 animate-pulse" />
-            )}
-
-            {!isAnalyzing && !analysisComplete ? (
-              <div className="text-center space-y-8 animate-in fade-in zoom-in duration-500">
-                <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mx-auto ring-8 ring-primary/5">
-                  <span className="material-symbols-outlined text-primary text-5xl">cloud_upload</span>
+            <div
+              onClick={analysisComplete || isAnalyzing ? undefined : openFilePicker}
+              onDrop={analysisComplete || isAnalyzing ? undefined : handleDrop}
+              onDragOver={analysisComplete || isAnalyzing ? undefined : handleDragOver}
+              onDragLeave={analysisComplete || isAnalyzing ? undefined : handleDragLeave}
+              className={`flex flex-col items-center justify-center gap-8 border-2 border-dashed rounded-[2rem] min-h-[380px] transition-all relative overflow-hidden
+                ${isDragging ? 'border-blue-500 bg-blue-500/5' : 'border-slate-700 hover:border-slate-500'}
+                ${analysisComplete || isAnalyzing ? 'cursor-default border-solid border-blue-500/10' : 'cursor-pointer'}`}
+            >
+              {!isAnalyzing && !analysisComplete ? (
+                <div className="text-center space-y-6">
+                  <div className="w-20 h-20 rounded-3xl bg-slate-800 flex items-center justify-center mx-auto shadow-xl border border-slate-700/50">
+                    <span className="material-symbols-outlined text-slate-400 text-4xl">cloud_upload</span>
+                  </div>
+                  <div>
+                    <button className="px-10 py-4 rounded-2xl bg-blue-600 text-white font-bold text-lg shadow-lg shadow-blue-900/40 hover:scale-105 active:scale-95 transition-all cursor-pointer">
+                      Add Document
+                    </button>
+                    <p className="mt-6 text-white font-black uppercase tracking-[2px] text-[10px]">DRAG & DROP OR CLICK TO UPLOAD</p>
+                    <p className="text-slate-500 text-[11px] mt-2 font-medium uppercase tracking-widest">PDF, DOCX, JPG, PNG, or Text</p>
+                  </div>
+                  <div className="flex gap-6 justify-center pt-2 opacity-40">
+                     <span className="material-symbols-outlined text-red-400 scale-75">picture_as_pdf</span>
+                     <span className="material-symbols-outlined text-blue-400 scale-75">description</span>
+                     <span className="material-symbols-outlined text-emerald-400 scale-75">image</span>
+                     <span className="material-symbols-outlined text-slate-400 scale-75">subject</span>
+                  </div>
                 </div>
-                <div>
-                  <button className="px-10 py-4 rounded-2xl bg-primary text-on-primary font-bold text-lg shadow-2xl hover:scale-105 active:scale-95 transition-all cursor-pointer">
-                    Add Document
+              ) : isAnalyzing && !analysisComplete ? (
+                <div className="w-full max-w-sm space-y-8 p-10 animate-in fade-in duration-700">
+                   {/* Audit Workflow embedded when analyzing */}
+                   <div className="space-y-6">
+                      <div className="text-center mb-8">
+                         <div className="w-12 h-12 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                         <p className="text-sm font-bold text-white uppercase tracking-widest">Audit in Transit</p>
+                      </div>
+                      <div className="space-y-6 relative">
+                        <div className="absolute left-[15px] top-6 bottom-6 w-[2px] bg-slate-800" />
+                        {workflow.map((step, idx) => (
+                           <div key={idx} className="flex gap-6 items-start relative z-10">
+                              <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-xs font-black transition-all duration-500
+                                ${step.status === 'complete' ? 'bg-blue-600 text-white' : 
+                                  step.status === 'active' ? 'bg-white text-slate-950 shadow-xl' : 
+                                  'bg-slate-800 border border-slate-700 text-slate-600'}`}>
+                                {step.status === 'complete' ? <span className="material-symbols-outlined text-sm">check</span> : step.number}
+                              </div>
+                              <div className="space-y-0.5">
+                                 <p className={`text-xs font-bold ${step.status === 'locked' ? 'text-slate-600' : 'text-slate-200'}`}>{step.label}</p>
+                                 <p className="text-[9px] font-black uppercase tracking-[1px] text-slate-500">
+                                   STATUS: <span className={step.status === 'active' ? 'text-blue-500' : ''}>{step.subtext}</span>
+                                 </p>
+                                 {step.status === 'active' && step.number === 2 && currentContractId && (
+                                   <div className="mt-2 scale-75 origin-left">
+                                      <ContractMonitor 
+                                        contractId={currentContractId} 
+                                        initialStatus="analyzing"
+                                        onComplete={handleAnalysisComplete}
+                                      />
+                                   </div>
+                                 )}
+                              </div>
+                           </div>
+                        ))}
+                      </div>
+                   </div>
+                </div>
+              ) : (
+                <div className="text-center space-y-8 animate-in zoom-in fade-in duration-500">
+                  <div className="w-20 h-20 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto border border-emerald-500/20">
+                    <span className="material-symbols-outlined text-emerald-500 text-4xl">verified</span>
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="text-3xl font-black text-white tracking-tighter uppercase">Scanned & Secured</h3>
+                    <p className="text-slate-400 text-sm">Your professional risk report is ready for review.</p>
+                  </div>
+                  <button
+                    onClick={() => currentContractId && (window.location.href = `/analysis?id=${currentContractId}`)} 
+                    className="inline-flex items-center justify-center px-10 py-4 space-x-3 font-black text-slate-950 transition-all rounded-xl bg-white hover:scale-105 active:scale-95 text-base shadow-2xl cursor-pointer"
+                  >
+                    <span>VIEW DETAILED REPORT</span>
+                    <span className="material-symbols-outlined">analytics</span>
                   </button>
-                  <p className="mt-6 text-slate-400 font-medium tracking-wide uppercase text-xs">Drag & Drop or Click to Upload</p>
-                  <p className="text-[10px] text-slate-500 mt-2 font-mono uppercase tracking-[2px]">PDF, DOCX, TXT, or IMAGE</p>
                 </div>
-              </div>
-            ) : isAnalyzing && !analysisComplete ? (
-              <div className="w-full max-w-md space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                <div className="text-center space-y-2">
-                  <h3 className="text-xl font-bold text-white tracking-tight">Audit in Progress</h3>
-                  <p className="text-sm text-slate-400">Our AI Architect is scanning your contract for risks.</p>
-                </div>
+              )}
+            </div>
+          </section>
 
-                <div className="space-y-6 relative">
-                  <div className="absolute left-[15px] top-6 bottom-6 w-[2px] bg-white/10" />
-                  {workflow.map((step, index) => (
-                    <div key={index} className="flex gap-4 items-start relative z-10">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-sm font-semibold transition-all duration-500
-                        ${step.status === 'complete' ? 'bg-primary text-on-primary shadow-lg shadow-primary/20' : 
-                          step.status === 'active' ? 'bg-primary/20 text-primary ring-2 ring-primary/50' : 
-                                                     'bg-white/5 border border-white/10 text-on-surface-variant'}`}>
-                        {step.status === 'complete' ? <span className="material-symbols-outlined text-sm">check</span> : step.number}
-                      </div>
-                      <div className="pt-0.5 flex-1">
-                        <div className={`font-medium text-sm ${step.status === 'locked' ? 'text-slate-500' : 'text-slate-200'}`}>
-                          {step.label}
-                        </div>
-                        {step.status === 'active' && (
-                          <div className="text-xs text-primary/80 font-medium mt-1">
-                            {step.number === 1 && (isUploading ? 'Securing document...' : 'Validating...')}
-                            {step.number === 2 && currentContractId && (
-                              <ContractMonitor 
-                                contractId={currentContractId} 
-                                initialStatus="analyzing"
-                                onComplete={handleAnalysisComplete}
-                              />
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div className="text-center space-y-8 animate-in zoom-in fade-in duration-1000 relative z-20">
-                <div className="w-24 h-24 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto border-2 border-emerald-500/30">
-                  <span className="material-symbols-outlined text-emerald-500 text-5xl">verified</span>
-                </div>
-                <div className="space-y-2">
-                  <h3 className="text-2xl font-bold text-white tracking-tight">Analysis Complete</h3>
-                  <p className="text-slate-400">Your professional risk report is ready.</p>
-                </div>
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log("[NAV] Navigating to report:", currentContractId);
-                    if (currentContractId) {
-                      window.location.href = `/analysis?id=${currentContractId}`;
-                    } else {
-                      console.error("[NAV] Missing Contract ID");
-                    }
-                  }} 
-                  className="inline-flex items-center justify-center px-10 py-5 space-x-3 font-bold text-white transition-all rounded-3xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:shadow-2xl hover:shadow-emerald-500/40 active:scale-95 text-lg cursor-pointer relative z-30"
-                >
-                  <span>View Detailed Report</span>
-                  <span className="material-symbols-outlined">arrow_forward</span>
-                </button>
-              </div>
-            )}
-          </div>
-
+          {/* PASTE SECTION / FILE PREVIEW */}
           {file && !isAnalyzing && !analysisComplete && (
-            <div className="glass-panel border border-white/20 rounded-[2rem] p-6 flex items-center justify-between animate-in slide-in-from-top-4 duration-500">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-primary">insert_drive_file</span>
-                </div>
-                <div>
-                  <div className="font-bold text-white">{file.name}</div>
-                  <div className="text-xs text-slate-500 font-mono uppercase tracking-widest">{(file.size / 1024).toFixed(1)} KB</div>
-                </div>
-              </div>
-              <div className="flex items-center gap-4">
-                <button onClick={removeFile} className="text-slate-500 hover:text-white transition text-xs font-bold uppercase tracking-widest px-4 cursor-pointer">
-                  Cancel
-                </button>
-                <button
-                  onClick={handleRealAnalysis}
-                  className="px-8 py-3 rounded-xl bg-white text-slate-950 font-black text-sm shadow-xl active:scale-95 transition-all cursor-pointer"
-                >
-                  Scan Contract
-                </button>
-              </div>
+            <div className="bg-slate-900/80 backdrop-blur-md border border-slate-700/50 rounded-[2rem] p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-[0_20px_40px_rgba(0,0,0,0.6)] border-blue-500/20">
+               <div className="flex items-center gap-5">
+                  <div className="w-14 h-14 rounded-2xl bg-blue-600/10 flex items-center justify-center border border-blue-600/20">
+                     <span className="material-symbols-outlined text-blue-500 text-2xl">insert_drive_file</span>
+                  </div>
+                  <div>
+                     <p className="font-bold text-white leading-tight">{file.name}</p>
+                     <p className="text-xs text-slate-500 font-mono tracking-widest mt-1">{(file.size / 1024).toFixed(1)} KB — READY</p>
+                  </div>
+               </div>
+               <div className="flex items-center gap-4 w-full md:w-auto">
+                  <button 
+                    onClick={removeFile}
+                    className="flex-1 md:flex-none px-6 py-3 rounded-xl border border-slate-700 text-slate-400 font-bold text-xs uppercase tracking-widest hover:text-white transition-colors cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    onClick={handleRealAnalysis}
+                    className="flex-1 md:flex-none px-8 py-3 rounded-xl bg-blue-600 text-white font-black text-xs uppercase tracking-[2px] shadow-lg shadow-blue-600/20 active:scale-95 transition-all cursor-pointer"
+                  >
+                    Scan Contract
+                  </button>
+               </div>
             </div>
           )}
 
           {!file && !isAnalyzing && !analysisComplete && (
-             <div className="glass-panel border border-white/20 rounded-[3rem] p-10 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <h3 className="font-bold text-xl text-white">Or paste contract text</h3>
-                <textarea
-                  value={pastedText}
-                  onChange={(e) => setPastedText(e.target.value)}
-                  placeholder="Paste legal text here..."
-                  className="w-full h-44 resize-none bg-black/40 border border-white/10 rounded-2xl p-6 font-mono text-sm text-slate-300 focus:outline-none focus:border-primary/50 transition-all placeholder:text-slate-600"
-                />
-                <div className="flex justify-end">
-                  <button
-                    onClick={handleRealAnalysis}
-                    className="flex items-center gap-2 px-8 py-3 rounded-xl border-2 border-white/10 hover:bg-white/5 active:scale-95 transition-all font-bold text-sm cursor-pointer"
-                  >
-                    <span className="material-symbols-outlined text-lg">analytics</span>
-                    Analyze Text
-                  </button>
-                </div>
-              </div>
+            <section className="bg-slate-900/80 backdrop-blur-md border border-slate-700/50 rounded-[2.5rem] p-10 bg-white/[0.02] space-y-8 shadow-[0_20px_50px_rgba(0,0,0,0.8)]">
+               <div className="flex items-center justify-between">
+                 <h3 className="text-xl font-bold text-white">Alternative: Copy-Paste Text</h3>
+                 <span className="text-[10px] font-black uppercase tracking-[2px] text-slate-500">MANUAL ENTRY</span>
+               </div>
+               <textarea
+                 value={pastedText}
+                 onChange={(e) => setPastedText(e.target.value)}
+                 placeholder="Insert your contract text here for immediate AI processing..."
+                 className="w-full h-44 bg-black/40 border border-slate-700/50 rounded-2xl p-8 font-mono text-sm text-slate-300 focus:outline-none focus:border-blue-500/50 transition-all placeholder:text-slate-600 resize-none"
+               />
+               <div className="flex justify-end">
+                 <button
+                   onClick={handleRealAnalysis}
+                   className="flex items-center gap-3 px-8 py-4 rounded-xl border border-slate-700 hover:bg-white/5 active:scale-95 transition-all font-black text-white text-xs uppercase tracking-[2px] cursor-pointer"
+                 >
+                   <span className="material-symbols-outlined text-slate-400 text-lg">content_paste</span>
+                   Paste Text & Analyze
+                 </button>
+               </div>
+            </section>
           )}
 
-          <div className="flex flex-col md:flex-row items-center justify-center gap-8 opacity-40">
+          {/* Footer Metrics */}
+          <div className="flex flex-wrap items-center justify-center gap-10 pt-4 opacity-30">
              <div className="flex items-center gap-3">
-               <span className="material-symbols-outlined text-secondary">verified_user</span>
-               <span className="text-[10px] font-black uppercase tracking-[3px]">Privacy Secured</span>
+               <span className="material-symbols-outlined text-emerald-500 text-sm">enhanced_encryption</span>
+               <span className="text-[9px] font-black uppercase tracking-[3px]">Bank-Level Security</span>
              </div>
              <div className="flex items-center gap-3">
-               <span className="material-symbols-outlined text-primary">token</span>
-               <span className="text-[10px] font-black uppercase tracking-[3px]">1 Credit / Scan</span>
+               <span className="material-symbols-outlined text-blue-500 text-sm">bolt</span>
+               <span className="text-[9px] font-black uppercase tracking-[3px]">Real-time auditing</span>
+             </div>
+             <div className="flex items-center gap-3">
+               <span className="material-symbols-outlined text-indigo-500 text-sm">token</span>
+               <span className="text-[9px] font-black uppercase tracking-[3px]">1 Credit Per Scan</span>
              </div>
           </div>
         </div>
       </main>
-      <Footer showCTA={false} />
+
+      <Footer />
       
       <input
         ref={fileInputRef}
@@ -318,6 +332,6 @@ export default function UploadPage() {
         accept=".pdf,.docx,.txt,.jpg,.jpeg,.png,.webp"
         onChange={onFileChange}
       />
-    </>
+    </div>
   )
 }

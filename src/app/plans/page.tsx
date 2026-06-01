@@ -231,7 +231,7 @@ export default function PlansPage() {
         </div>
       </main>
 
-      <Footer showCTA={false} />
+      <Footer  />
     </div>
   )
 }
