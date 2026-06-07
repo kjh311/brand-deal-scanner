@@ -13,7 +13,7 @@ export const runtime = 'nodejs';
 
 export async function POST(req: NextRequest) {
   try {
-    const { priceId, mode, credits } = await req.json();
+    const { priceId, mode, credits, isPortalOnly } = await req.json();
 
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
-    if (!priceId) {
+    if (!priceId && !isPortalOnly) {
       return NextResponse.json({ error: 'Price ID or Product ID is required' }, { status: 400 });
     }
 
@@ -31,10 +31,12 @@ export async function POST(req: NextRequest) {
     }
 
     let finalPriceId = priceId;
+    let finalProductId = '';
 
-    // Resolve Product ID to its Default Price ID if necessary
-    if (priceId.startsWith('prod_')) {
+    // 1. Resolve Product ID to its Default Price ID if necessary
+    if (priceId && priceId.startsWith('prod_')) {
       const product = await stripe.products.retrieve(priceId);
+      finalProductId = product.id;
       
       if (!product.default_price) {
         return NextResponse.json(
@@ -46,11 +48,25 @@ export async function POST(req: NextRequest) {
       finalPriceId = typeof product.default_price === 'string' 
         ? product.default_price 
         : product.default_price.id;
+    } else if (priceId && priceId.startsWith('price_')) {
+      // If they passed a price ID directly, retrieve the product to get the ID
+      const price = await stripe.prices.retrieve(priceId);
+      finalProductId = typeof price.product === 'string' ? price.product : price.product.id;
     }
+
+    // 2. CHECK FOR EXISTING CUSTOMER ID
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('stripe_customer_id')
+      .eq('id', user.id)
+      .single();
+
+    const customerId = profile?.stripe_customer_id || undefined;
 
     // Create the checkout session
     const session = await stripe.checkout.sessions.create({
       client_reference_id: user.id, // Attach user ID for webhook identification
+      customer: customerId,
       line_items: [
         {
           price: finalPriceId,
@@ -61,9 +77,10 @@ export async function POST(req: NextRequest) {
       success_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/plans`,
       metadata: {
-        priceId: finalPriceId,
-        originalId: priceId,
-        credits: credits.toString(),
+        priceId: finalPriceId || '',
+        productId: finalProductId || '',
+        originalId: priceId || '',
+        credits: credits?.toString() || '0',
       },
     });
 

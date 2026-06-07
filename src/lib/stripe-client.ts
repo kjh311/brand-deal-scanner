@@ -22,6 +22,24 @@ export async function handleCheckout(priceId: string, mode: CheckoutMode = 'subs
     }
   } catch (err) {
     console.error('Checkout error:', err);
-    alert(err instanceof Error ? err.message : 'Something went wrong');
+    alert(err instanceof Error ? err.message : 'An unexpected error occurred while initiating checkout. Please try again.');
+  }
+}
+
+export async function handlePortal() {
+  try {
+    const response = await fetch('/api/create-portal-session', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Failed to open billing portal');
+    if (data.url) window.location.assign(data.url);
+  } catch (err) {
+    console.error('Portal error:', err);
+    alert(err instanceof Error ? err.message : 'An unexpected error occurred while accessing the billing portal. Please try again.');
   }
 }

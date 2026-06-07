@@ -113,10 +113,10 @@ export function Navbar() {
         
         {/* Brand */}
         <Link href="/" className="flex items-center gap-3 active:scale-95 transition-transform group">
-          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20 group-hover:border-primary/50 transition-all shadow-lg shadow-primary/5">
-            <span className="material-symbols-outlined text-primary text-2xl">smart_toy</span>
+          <div className="w-14 h-14 flex items-center justify-center group-hover:scale-110 transition-all duration-300 pointer-events-none drop-shadow-[0_0_15px_rgba(255,188,43,0.3)]">
+            <img src="/logo.png" alt="Logo" className="w-12 h-12 object-contain" />
           </div>
-          <div className="font-headline text-xl font-black tracking-tighter text-white">
+          <div className="font-headline text-2xl font-black tracking-tighter text-white">
             Brand Deal <span className="text-primary tracking-normal font-bold">Scanner</span>
           </div>
         </Link>

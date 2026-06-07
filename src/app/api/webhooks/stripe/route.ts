@@ -11,8 +11,17 @@ const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 // Define the events we specifically care about
 const RELEVANT_EVENTS = new Set([
   'checkout.session.completed',
-  'invoice.payment_succeeded'
+  'invoice.payment_succeeded',
+  'customer.subscription.updated',
+  'customer.subscription.deleted'
 ]);
+
+// Map Product IDs to their credit counts for proration logic
+const PLAN_CREDITS: Record<string, number> = {
+  'prod_Uezx3sCcamylDq': 5,    // Plus
+  'prod_Uf01XdkL0cOXn6': 20,   // Professional
+  'prod_Uf03Msy5G3OZn2': 100,  // Agency
+};
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
@@ -34,7 +43,6 @@ export async function POST(req: NextRequest) {
 
   // Filter early: Ignore events we don't care about with a 200 status
   if (!RELEVANT_EVENTS.has(event.type)) {
-    console.log(`ℹ️ Skipping non-target event: ${event.type}`);
     return NextResponse.json({ received: true });
   }
 
@@ -48,14 +56,17 @@ export async function POST(req: NextRequest) {
       case 'invoice.payment_succeeded':
         await handleInvoicePaymentSucceeded(event.data.object as Stripe.Invoice);
         break;
+      case 'customer.subscription.updated':
+        await handleSubscriptionUpdated(event.data.object as Stripe.Subscription, (event.data as any).previous_attributes);
+        break;
+      case 'customer.subscription.deleted':
+        await handleSubscriptionDeleted(event.data.object as Stripe.Subscription);
+        break;
       default:
         console.warn(`⚠️ Unhandled relevant event: ${event.type}`);
     }
   } catch (err: any) {
     console.error(`❌ Handler Error (${event.type}):`, err.message);
-    // We still return a 200 in some cases to stop Stripe from retrying 
-    // if the error is "expected" or non-recoverable, but here we'll 
-    // let it fail with 500 if the DB is actually down.
     return NextResponse.json({ error: 'Webhook handler failed' }, { status: 500 });
   }
 
@@ -82,11 +93,14 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     console.log(`✅ One-time payment: Credits incremented for user ${userId}`);
   } 
   
-    if (mode === 'subscription') {
+  if (mode === 'subscription') {
+      const productId = session.metadata?.productId; 
+      const creditsToGrant = parseInt(session.metadata?.credits || '5');
+
       const { error: profileError } = await supabaseAdmin
         .from('profiles')
         .update({
-          plan: 'professional', // Should be dynamic based on priceId meta
+          plan: productId === 'prod_Uf03Msy5G3OZn2' ? 'agency' : (productId === 'prod_Uf01XdkL0cOXn6' ? 'professional' : 'plus'),
           stripe_customer_id: customerId,
           updated_at: new Date().toISOString(),
         })
@@ -94,9 +108,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       
       if (profileError) throw new Error(`Supabase error (subscription profile): ${profileError.message}`);
 
-      // Grant credits based on metadata or fallback
-      const creditsToGrant = parseInt(session.metadata?.credits || '50');
-      
+      // Grant initial credits
       const { error: creditError } = await supabaseAdmin.rpc('increment_credits', {
         user_id: userId,
         amount: creditsToGrant,
@@ -104,20 +116,84 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
 
       if (creditError) throw new Error(`Supabase error (subscription credits): ${creditError.message}`);
       
-      console.log(`✅ Subscription created: User ${userId} updated and 50 credits granted`);
+      console.log(`✅ Subscription created: User ${userId} updated and ${creditsToGrant} credits granted`);
     }
 }
 
+async function handleSubscriptionUpdated(subscription: Stripe.Subscription, previousAttributes?: any) {
+  const customerId = subscription.customer as string;
+  const status = subscription.status;
+  const newPriceId = subscription.items.data[0].plan.id;
+  const newProductId = subscription.items.data[0].plan.product as string;
+
+  console.log(`🔄 Handling Subscription Update: ${subscription.id} | Customer: ${customerId} | Status: ${status}`);
+
+  // Find user by stripe_customer_id
+  const { data: profile, error: findError } = await supabaseAdmin
+    .from('profiles')
+    .select('id, plan')
+    .eq('stripe_customer_id', customerId)
+    .single();
+
+  if (findError || !profile) {
+    console.error(`❌ User with customer ID ${customerId} not found`);
+    return;
+  }
+
+  const oldPlan = profile.plan;
+  const newPlan = newProductId === 'prod_Uf03Msy5G3OZn2' ? 'agency' : (newProductId === 'prod_Uf01XdkL0cOXn6' ? 'professional' : 'plus');
+
+  // 1. Sync Plan Status & Name
+  const { error: updateError } = await supabaseAdmin
+    .from('profiles')
+    .update({
+      plan: status === 'active' ? newPlan : 'Free',
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', profile.id);
+
+  if (updateError) throw new Error(`Sync error: ${updateError.message}`);
+
+  // 2. Proration Logic (Top-up credits if upgrading)
+  // Check if the plan actually changed in a way that warrants more credits
+  if (previousAttributes?.items && oldPlan !== newPlan) {
+    const oldCredits = oldPlan === 'agency' ? 100 : (oldPlan === 'professional' ? 20 : (oldPlan === 'plus' ? 5 : 0));
+    const newCredits = PLAN_CREDITS[newProductId] || 0;
+
+    if (newCredits > oldCredits) {
+      const topUp = newCredits - oldCredits;
+      console.log(`🎁 Upgrading user ${profile.id}: Granting ${topUp} additional credits`);
+      
+      const { error: creditError } = await supabaseAdmin.rpc('increment_credits', {
+        user_id: profile.id,
+        amount: topUp,
+      });
+      if (creditError) console.error(`❌ Credit top-up failed: ${creditError.message}`);
+    }
+  }
+}
+
+async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
+  const customerId = subscription.customer as string;
+  console.log(`🗑️ Handling Subscription Deletion: ${subscription.id} | Customer: ${customerId}`);
+
+  const { error } = await supabaseAdmin
+    .from('profiles')
+    .update({
+      plan: 'Free',
+      updated_at: new Date().toISOString(),
+    })
+    .eq('stripe_customer_id', customerId);
+
+  if (error) throw new Error(`Deletion sync error: ${error.message}`);
+  console.log(`✅ Subscription removed for customer ${customerId}`);
+}
+
 async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
-  // Useful for subscription renewals
   const customerId = invoice.customer as string;
   const subscriptionId = (invoice as any).subscription as string;
   
   console.log(`📄 Handling Invoice Payment: ${invoice.id} | Customer: ${customerId}`);
-
   if (!subscriptionId) return;
-
-  // You can add logic here to extend the user's subscription end date 
-  // or simply log the successful renewal.
   console.log(`✅ Recurring payment succeeded for sub: ${subscriptionId}`);
 }

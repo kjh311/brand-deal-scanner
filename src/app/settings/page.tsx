@@ -4,11 +4,18 @@ import React, { useState, useEffect } from 'react'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { createClient } from '@/lib/supabase/client'
+import { handlePortal } from '@/lib/stripe-client'
+
+import { useRouter } from 'next/navigation'
 
 export default function SettingsPage() {
+  const router = useRouter()
+  const [updating, setUpdating] = useState(false)
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [credits, setCredits] = useState<number>(0)
+  const [plan, setPlan] = useState<string>('Free')
+  const [hasActivePlan, setHasActivePlan] = useState(false)
 
   useEffect(() => {
     const supabase = createClient()
@@ -16,22 +23,39 @@ export default function SettingsPage() {
       const { data: { user } } = await supabase.auth.getUser()
       setUser(user)
       if (user) {
-        const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
-        if (profile) setCredits(profile.credits)
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('credits, plan, stripe_customer_id')
+          .eq('id', user.id)
+          .single()
+          
+        if (profile) {
+          setCredits(profile.credits || 0)
+          setPlan(profile.plan || 'Free')
+          setHasActivePlan(!!profile.stripe_customer_id)
+        }
       }
       setLoading(false)
     }
     getData()
   }, [])
 
-  const handleCancelSubscription = () => {
-    if (confirm('Are you sure you want to cancel your Creator Pro subscription? You will lose access to unlimited scans at the end of your current billing cycle.')) {
-      alert('Subscription cancellation request sent. Our team will process this shortly.')
+  const handleUpdatePlan = async () => {
+    if (!hasActivePlan) {
+      router.push('/plans')
+      return
+    }
+
+    setUpdating(true)
+    try {
+      await handlePortal()
+    } finally {
+      setUpdating(false)
     }
   }
 
-  const handleUpdatePlan = () => {
-    alert('Plan management portal coming soon. For now, please contact support for upgrades.')
+  const handleCancelSubscription = async () => {
+    // Implementation for cancellation
   }
 
   return (
@@ -88,7 +112,7 @@ export default function SettingsPage() {
                 <div className="grid grid-cols-2 gap-4">
                    <div className="p-6 rounded-3xl bg-black/40 border border-white/5">
                       <p className="text-[10px] font-black uppercase tracking-[3px] text-slate-500 mb-2">Current Plan</p>
-                      <p className="text-xl font-bold text-emerald-400">Creator Pro</p>
+                      <p className="text-xl font-bold text-emerald-400 capitalize">{plan}</p>
                    </div>
                    <div className="p-6 rounded-3xl bg-black/40 border border-white/5">
                       <p className="text-[10px] font-black uppercase tracking-[3px] text-slate-500 mb-2">Available Credits</p>
@@ -102,7 +126,9 @@ export default function SettingsPage() {
                  <div className="flex items-center justify-between mb-8">
                     <div>
                       <h3 className="text-xl font-bold text-white">Subscription Management</h3>
-                      <p className="text-sm text-slate-500">Your next billing date is Nov 01, 2026</p>
+                      <p className="text-sm text-slate-500">
+                        {hasActivePlan ? 'Manage your billing and tier' : 'Upgrade to a paid plan to get more scans'}
+                      </p>
                     </div>
                     <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
                        <span className="material-symbols-outlined text-emerald-500">payments</span>
@@ -112,9 +138,17 @@ export default function SettingsPage() {
                  <div className="space-y-4">
                     <button 
                       onClick={handleUpdatePlan}
-                      className="w-full py-4 rounded-2xl bg-white text-slate-950 font-black text-sm hover:scale-[1.01] transition-transform shadow-xl"
+                      disabled={updating}
+                      className="w-full py-4 rounded-2xl bg-white text-slate-950 font-black text-sm hover:scale-[1.01] transition-transform shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
-                      Modify Subscription
+                      {updating ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+                          Connecting...
+                        </>
+                      ) : (
+                        hasActivePlan ? 'Modify Subscription' : 'Upgrade Plan'
+                      )}
                     </button>
                     <button 
                       onClick={handleCancelSubscription}

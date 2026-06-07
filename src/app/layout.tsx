@@ -21,8 +21,8 @@ export const metadata: Metadata = {
   title: "Brand Deal Scanner | Professional Brand Contract Analysis",
   description: "AI-powered risk audit and counter-offer generator for influencer brand deals.",
   icons: {
-    icon: "/favicon.png",
-    apple: "/apple-touch-icon.png",
+    icon: "/logo.png",
+    apple: "/logo.png",
   },
 };
 
