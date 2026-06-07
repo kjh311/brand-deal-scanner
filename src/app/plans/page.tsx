@@ -104,7 +104,21 @@ export default function PlansPage() {
   const containerRef = useRef<HTMLDivElement>(null)
   const [loadingPlanId, setLoadingPlanId] = useState<string | null>(null)
 
+  const isRedirecting = useRef(false)
+
   useEffect(() => {
+    // Force reset everything on mount/visibility change
+    const reset = () => {
+      console.log('Plans: Resetting state')
+      isRedirecting.current = false
+      setLoadingPlanId(null)
+    }
+
+    reset()
+
+    window.addEventListener('pageshow', reset)
+    window.addEventListener('focus', reset)
+
     const ctx = gsap.context(() => {
       // Set initial state
       gsap.set(".plan-card", { opacity: 0, y: 30 });
@@ -116,29 +130,44 @@ export default function PlansPage() {
         duration: 0.6,
         stagger: 0.1,
         ease: "power2.out",
-        clearProps: "opacity,transform" // Hand off to CSS for hover effects
+        clearProps: "all"
       })
     }, containerRef)
 
-    return () => ctx.revert()
+    return () => {
+      window.removeEventListener('pageshow', reset)
+      window.removeEventListener('focus', reset)
+      ctx.revert()
+    }
   }, [])
 
   const handleSelect = async (plan: Plan) => {
-    if (loadingPlanId) return
+    console.log('Plans: Attempting to select plan', plan.id)
+    if (loadingPlanId || isRedirecting.current) {
+      console.log('Plans: Selection blocked - already loading or redirecting')
+      return
+    }
 
     const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
 
-    if (!user) {
+    if (userError || !user) {
+      console.log('Plans: No user found, redirecting to signup')
       router.push(`/signup?plan=${plan.id}`)
       return
     }
 
+    console.log('Plans: Starting checkout for', plan.id)
+    isRedirecting.current = true
     setLoadingPlanId(plan.id)
+
     try {
       await handleCheckout(plan.priceId, plan.mode)
-    } finally {
+      // Note: If redirect happens, execution might stop here
+    } catch (err) {
+      console.error('Plans: Checkout failed', err)
       setLoadingPlanId(null)
+      isRedirecting.current = false
     }
   }
 
