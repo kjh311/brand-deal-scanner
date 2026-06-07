@@ -1,10 +1,11 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { createClient } from '@/lib/supabase/client'
+import { handleCheckout, CheckoutMode } from '@/lib/stripe-client'
 import gsap from 'gsap'
 
 interface Plan {
@@ -17,6 +18,8 @@ interface Plan {
   icon: string
   scans: string
   features: string[]
+  priceId: string
+  mode: CheckoutMode
   popular?: boolean
 }
 
@@ -24,7 +27,7 @@ const plans: Plan[] = [
   {
     id: 'individual',
     name: 'INDIVIDUAL CREATOR',
-    price: '$10',
+    price: '$5',
     period: 'PER SCAN',
     color: '#FF4D4D',
     icon: 'build',
@@ -36,6 +39,8 @@ const plans: Plan[] = [
       'Advanced Missing Clause Detection AI',
       'Brand-Specific Insight Reports',
     ],
+    priceId: 'prod_Ueztggr15cNscz',
+    mode: 'payment',
   },
   {
     id: 'plus',
@@ -52,6 +57,8 @@ const plans: Plan[] = [
       'Advanced Missing Clause Detection AI',
       'Brand-Specific Insight Reports',
     ],
+    priceId: 'prod_Uezx3sCcamylDq',
+    mode: 'subscription',
   },
   {
     id: 'professional',
@@ -68,6 +75,8 @@ const plans: Plan[] = [
       'Advanced Missing Clause Detection AI',
       'Brand-Specific Insight Reports',
     ],
+    priceId: 'prod_Uf01XdkL0cOXn6',
+    mode: 'subscription',
     popular: true,
   },
   {
@@ -85,42 +94,52 @@ const plans: Plan[] = [
       'Advanced Missing Clause Detection AI',
       'Full Dashboard History Access',
     ],
+    priceId: 'prod_Uf03Msy5G3OZn2',
+    mode: 'subscription',
   },
 ]
 
 export default function PlansPage() {
   const router = useRouter()
   const containerRef = useRef<HTMLDivElement>(null)
+  const [loadingPlanId, setLoadingPlanId] = useState<string | null>(null)
 
   useEffect(() => {
     const ctx = gsap.context(() => {
+      // Set initial state
+      gsap.set(".plan-card", { opacity: 0, y: 30 });
+      
+      // Animate to final state
       gsap.to(".plan-card", {
         opacity: 1,
         y: 0,
-        duration: 0.8,
-        stagger: 0.15,
-        ease: "power3.out",
-        delay: 0.2
+        duration: 0.6,
+        stagger: 0.1,
+        ease: "power2.out",
+        clearProps: "opacity,transform" // Hand off to CSS for hover effects
       })
     }, containerRef)
 
     return () => ctx.revert()
   }, [])
 
-  const handleSelect = async (planId: string) => {
+  const handleSelect = async (plan: Plan) => {
+    if (loadingPlanId) return
+
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
-      // Not logged in → force sign up, pass the plan so we can resume after auth
-      router.push(`/signup?plan=${planId}`)
+      router.push(`/signup?plan=${plan.id}`)
       return
     }
 
-    // User is logged in → proceed with plan selection / checkout
-    // TODO: Connect to Stripe / Supabase checkout
-    alert(`Selected plan: ${planId}. (Checkout integration coming soon)`)
-    // Example: router.push(`/checkout?plan=${planId}`)
+    setLoadingPlanId(plan.id)
+    try {
+      await handleCheckout(plan.priceId, plan.mode)
+    } finally {
+      setLoadingPlanId(null)
+    }
   }
 
   return (
@@ -136,14 +155,14 @@ export default function PlansPage() {
 
       <Navbar />
 
-      <main className="flex-grow py-12 px-6">
+      <main className="flex-grow py-12 px-6 shadow-2xl">
         <div ref={containerRef} className="max-w-[1120px] mx-auto">
           {/* Hero Title */}
           <div className="text-center mb-12">
-            <h1 className="font-headline text-4xl md:text-5xl font-bold tracking-[-0.02em] uppercase mb-4">
+            <h1 className="font-headline text-4xl md:text-5xl font-bold tracking-[-0.02em] uppercase mb-4 text-white">
               Brand Deal Scanner: Premier Plans
             </h1>
-            <p className="text-on-surface-variant max-w-2xl mx-auto text-lg">
+            <p className="text-on-surface-variant max-w-2xl mx-auto text-lg leading-relaxed">
               Precise legal analysis and AI-driven risk assessment for high-volume content creators and agencies.
             </p>
           </div>
@@ -153,9 +172,9 @@ export default function PlansPage() {
             {plans.map((plan) => (
               <div
                 key={plan.id}
-                onClick={() => handleSelect(plan.id)}
-                className="plan-card opacity-0 translate-y-[30px] glass-panel rounded-2xl p-6 flex flex-col h-full border-[3px] transition-[transform,shadow,border-color] duration-300 hover:-translate-y-1 hover:shadow-2xl relative cursor-pointer hover:shadow-[0_0_25px_var(--glow-color),_0_0_45px_var(--glow-color)]"
-                style={{ 
+                onClick={() => handleSelect(plan)}
+                className="plan-card glass-panel rounded-2xl p-6 flex flex-col h-full border-[3px] shadow-2xl relative cursor-pointer hover:shadow-[0_0_25px_var(--glow-color),_0_0_45px_var(--glow-color)] transition-shadow duration-300"
+                style={{
                   borderColor: plan.color + '60',
                   '--glow-color': plan.color + '55'
                 } as any}
@@ -173,7 +192,7 @@ export default function PlansPage() {
 
                 <div className="mb-6 text-center">
                   <span
-                    className="material-symbols-outlined text-[40px] mb-3 block"
+                    className="material-symbols-outlined text-[40px] mb-3 block animate-pulse"
                     style={{ color: plan.color }}
                   >
                     {plan.icon}
@@ -182,11 +201,11 @@ export default function PlansPage() {
                     {plan.name}
                   </h3>
                   <div className="flex items-baseline justify-center gap-1">
-                    <span className="font-headline text-4xl font-semibold tracking-tight">{plan.price}</span>
-                    <span className="text-on-surface-variant text-sm">{plan.period}</span>
+                    <span className="font-headline text-4xl font-semibold tracking-tight text-white">{plan.price}</span>
+                    <span className="text-on-surface-variant text-sm font-medium">{plan.period}</span>
                   </div>
                   {plan.period.includes('/mo') && (
-                    <p className="text-[10px] text-on-surface-variant/60 mt-0.5">(Billed monthly)</p>
+                    <p className="text-[10px] text-on-surface-variant/60 mt-0.5 font-medium">(Billed monthly)</p>
                   )}
                 </div>
 
@@ -200,10 +219,10 @@ export default function PlansPage() {
                 <ul className="flex-grow space-y-3 mb-8 text-sm">
                   {plan.features.map((feature, i) => (
                     <li key={i} className="flex items-start gap-2.5">
-                      <span className="material-symbols-outlined text-base mt-0.5" style={{ color: plan.color }}>
+                      <span className="material-symbols-outlined text-sm mt-0.5" style={{ color: plan.color }}>
                         check_circle
                       </span>
-                      <span className="text-on-surface-variant">{feature}</span>
+                      <span className="text-on-surface-variant font-medium">{feature}</span>
                     </li>
                   ))}
                 </ul>
@@ -211,27 +230,35 @@ export default function PlansPage() {
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
-                    handleSelect(plan.id)
+                    handleSelect(plan)
                   }}
-                  className="w-full py-3 rounded-xl font-semibold text-sm uppercase tracking-wider transition-all active:scale-[0.985] cursor-pointer"
+                  disabled={loadingPlanId !== null}
+                  className="w-full py-3 rounded-xl font-bold text-sm uppercase tracking-wider transition-all active:scale-[0.985] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 hover:brightness-110 active:brightness-90 transition-all"
                   style={{ backgroundColor: plan.color, color: '#131313' }}
                 >
-                  Select Plan
+                  {loadingPlanId === plan.id ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-[#131313] border-t-transparent rounded-full animate-spin" />
+                      <span>Processing...</span>
+                    </>
+                  ) : (
+                    'Select Plan'
+                  )}
                 </button>
               </div>
             ))}
           </div>
 
           <div className="mt-12 text-center">
-            <p className="text-xs text-on-surface-variant/60 max-w-md mx-auto">
-              All plans include encrypted processing. No contracts. Cancel anytime. 
+            <p className="text-xs text-on-surface-variant/60 max-w-md mx-auto font-medium">
+              All plans include encrypted processing. No contracts. Cancel anytime.
               One-time scans never expire.
             </p>
           </div>
         </div>
       </main>
 
-      <Footer  />
+      <Footer />
     </div>
   )
 }
