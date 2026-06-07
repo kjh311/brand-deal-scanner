@@ -94,10 +94,12 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       
       if (profileError) throw new Error(`Supabase error (subscription profile): ${profileError.message}`);
 
-      // Grant initial 50 credits for the new subscription
+      // Grant credits based on metadata or fallback
+      const creditsToGrant = parseInt(session.metadata?.credits || '50');
+      
       const { error: creditError } = await supabaseAdmin.rpc('increment_credits', {
         user_id: userId,
-        amount: 50,
+        amount: creditsToGrant,
       });
 
       if (creditError) throw new Error(`Supabase error (subscription credits): ${creditError.message}`);

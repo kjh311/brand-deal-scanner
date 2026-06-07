@@ -1,13 +1,13 @@
 export type CheckoutMode = 'payment' | 'subscription';
 
-export async function handleCheckout(priceId: string, mode: CheckoutMode = 'subscription') {
+export async function handleCheckout(priceId: string, mode: CheckoutMode = 'subscription', credits: number = 0) {
   try {
     const response = await fetch('/api/create-checkout-session', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ priceId, mode }),
+      body: JSON.stringify({ priceId, mode, credits }),
     });
 
     const data = await response.json();

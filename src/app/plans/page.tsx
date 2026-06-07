@@ -20,6 +20,7 @@ interface Plan {
   features: string[]
   priceId: string
   mode: CheckoutMode
+  credits: number
   popular?: boolean
 }
 
@@ -41,6 +42,7 @@ const plans: Plan[] = [
     ],
     priceId: 'prod_Ueztggr15cNscz',
     mode: 'payment',
+    credits: 1,
   },
   {
     id: 'plus',
@@ -59,6 +61,7 @@ const plans: Plan[] = [
     ],
     priceId: 'prod_Uezx3sCcamylDq',
     mode: 'subscription',
+    credits: 5,
   },
   {
     id: 'professional',
@@ -77,6 +80,7 @@ const plans: Plan[] = [
     ],
     priceId: 'prod_Uf01XdkL0cOXn6',
     mode: 'subscription',
+    credits: 20,
     popular: true,
   },
   {
@@ -96,6 +100,7 @@ const plans: Plan[] = [
     ],
     priceId: 'prod_Uf03Msy5G3OZn2',
     mode: 'subscription',
+    credits: 100,
   },
 ]
 
@@ -162,7 +167,7 @@ export default function PlansPage() {
     setLoadingPlanId(plan.id)
 
     try {
-      await handleCheckout(plan.priceId, plan.mode)
+      await handleCheckout(plan.priceId, plan.mode, plan.credits)
       // Note: If redirect happens, execution might stop here
     } catch (err) {
       console.error('Plans: Checkout failed', err)

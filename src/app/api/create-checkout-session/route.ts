@@ -13,7 +13,7 @@ export const runtime = 'nodejs';
 
 export async function POST(req: NextRequest) {
   try {
-    const { priceId, mode } = await req.json();
+    const { priceId, mode, credits } = await req.json();
 
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -63,6 +63,7 @@ export async function POST(req: NextRequest) {
       metadata: {
         priceId: finalPriceId,
         originalId: priceId,
+        credits: credits.toString(),
       },
     });
 
