@@ -12,6 +12,7 @@ const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 const RELEVANT_EVENTS = new Set([
   'checkout.session.completed',
   'invoice.payment_succeeded',
+  'customer.subscription.created',
   'customer.subscription.updated',
   'customer.subscription.deleted'
 ]);
@@ -56,6 +57,7 @@ export async function POST(req: NextRequest) {
       case 'invoice.payment_succeeded':
         await handleInvoicePaymentSucceeded(event.data.object as Stripe.Invoice);
         break;
+      case 'customer.subscription.created':
       case 'customer.subscription.updated':
         await handleSubscriptionUpdated(event.data.object as Stripe.Subscription, (event.data as any).previous_attributes);
         break;
@@ -157,8 +159,13 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription, prev
     - cancellation_details: ${JSON.stringify(subscription.cancellation_details)}
   `);
   
+  const periodEnd = (subscription as any).current_period_end || (subscription as any).currentPeriodEnd;
+  console.log(`🧐 current_period_end raw:`, (subscription as any).current_period_end, `currentPeriodEnd raw:`, (subscription as any).currentPeriodEnd);
+  const nextBillingDate = periodEnd ? new Date(periodEnd * 1000).toISOString() : new Date().toISOString();
+  
   const updateData: any = {
     plan: status === 'active' ? newPlan : 'Free',
+    next_billing_date: nextBillingDate,
     updated_at: new Date().toISOString(),
   };
 
@@ -191,6 +198,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription, prev
     throw new Error(`Sync error: ${updateError.message}`);
   }
 
+  console.log(`Billing date synchronized for Customer ${customerId}: ${nextBillingDate}`);
   console.log(`✅ Supabase update finished. Rows affected: ${updateResult?.length || 0}`);
 
   // 2. Proration Logic (Top-up credits if upgrading)
@@ -223,11 +231,13 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     .update({
       plan: 'Free',
       cancellation_reason: cancellationReason,
+      next_billing_date: null,
       updated_at: new Date().toISOString(),
     })
     .eq('stripe_customer_id', customerId);
 
   if (error) throw new Error(`Deletion sync error: ${error.message}`);
+  console.log(`Billing date synchronized for Customer ${customerId}: null`);
   console.log(`✅ Cancellation captured for Customer ${customerId}: ${cancellationReason}`);
 }
 

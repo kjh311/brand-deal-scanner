@@ -37,7 +37,8 @@ export async function GET(req: NextRequest) {
       });
 
       if (subscriptions.data.length > 0) {
-        currentPeriodEnd = (subscriptions.data[0] as any).current_period_end;
+        const sub = subscriptions.data[0] as any;
+        currentPeriodEnd = sub.current_period_end || sub.currentPeriodEnd || null;
       }
     }
 

@@ -9,6 +9,7 @@ export function Navbar() {
   const router = useRouter()
   const [user, setUser] = useState<any>(null)
   const [credits, setCredits] = useState<number | null>(null)
+  const [plan, setPlan] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -24,12 +25,13 @@ export function Navbar() {
       if (user) {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('credits')
+          .select('credits, plan')
           .eq('id', user.id)
           .single()
 
         if (profile) {
           setCredits(profile.credits)
+          setPlan(profile.plan)
         }
       }
       setLoading(false)
@@ -124,10 +126,13 @@ export function Navbar() {
         {/* Action Center */}
         <div className="flex items-center gap-4 relative" ref={menuRef}>
           {!loading && user && (
-            <div className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/5 border border-white/10 text-xs font-black uppercase tracking-[2px] text-slate-400">
+            <Link 
+              href="/upload"
+              className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/5 border border-white/10 hover:border-primary/50 text-xs font-black uppercase tracking-[2px] text-slate-400 cursor-pointer transition-all"
+            >
               <span className="material-symbols-outlined text-primary text-sm">token</span>
               <span>{credits ?? 0} Credits</span>
-            </div>
+            </Link>
           )}
 
           {/* User Profile & Menu Trigger */}
