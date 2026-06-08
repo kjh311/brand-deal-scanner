@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { createClient } from '@/lib/supabase/client'
-import { handleCheckout, CheckoutMode } from '@/lib/stripe-client'
+import { handleCheckout, CheckoutMode, handlePortal } from '@/lib/stripe-client'
 import gsap from 'gsap'
 
 interface Plan {
@@ -108,6 +108,7 @@ export default function PlansPage() {
   const router = useRouter()
   const containerRef = useRef<HTMLDivElement>(null)
   const [loadingPlanId, setLoadingPlanId] = useState<string | null>(null)
+  const [userPlan, setUserPlan] = useState<string | null>(null)
 
   const isRedirecting = useRef(false)
 
@@ -120,6 +121,20 @@ export default function PlansPage() {
     }
 
     reset()
+
+    const checkStatus = async () => {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('plan')
+          .eq('id', user.id)
+          .single()
+        setUserPlan(profile?.plan || 'Free')
+      }
+    }
+    checkStatus()
 
     window.addEventListener('pageshow', reset)
     window.addEventListener('focus', reset)
@@ -148,17 +163,25 @@ export default function PlansPage() {
 
   const handleSelect = async (plan: Plan) => {
     console.log('Plans: Attempting to select plan', plan.id)
-    if (loadingPlanId || isRedirecting.current) {
-      console.log('Plans: Selection blocked - already loading or redirecting')
-      return
-    }
+    if (loadingPlanId || isRedirecting.current) return
 
     const supabase = createClient()
     const { data: { user }, error: userError } = await supabase.auth.getUser()
 
     if (userError || !user) {
-      console.log('Plans: No user found, redirecting to signup')
       router.push(`/signup?plan=${plan.id}`)
+      return
+    }
+
+    // NEW: If they already have a paid plan, send them to the portal to update instead of checkout
+    if (userPlan && userPlan !== 'Free' && userPlan !== 'none') {
+      console.log('Plans: User has active plan, redirecting to update portal')
+      setLoadingPlanId(plan.id)
+      try {
+        await handlePortal('update')
+      } finally {
+        setLoadingPlanId(null)
+      }
       return
     }
 
@@ -168,7 +191,6 @@ export default function PlansPage() {
 
     try {
       await handleCheckout(plan.priceId, plan.mode, plan.credits)
-      // Note: If redirect happens, execution might stop here
     } catch (err) {
       console.error('Plans: Checkout failed', err)
       setLoadingPlanId(null)

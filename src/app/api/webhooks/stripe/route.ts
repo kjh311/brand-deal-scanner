@@ -85,12 +85,17 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
   }
 
   if (mode === 'payment') {
+    // Retrieve the actual quantity the user selected
+    const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
+    const firstItem = lineItems.data[0];
+    const quantity = firstItem?.quantity || 1;
+
     const { error } = await supabaseAdmin.rpc('increment_credits', {
       user_id: userId,
-      amount: 1,
+      amount: quantity,
     });
     if (error) throw new Error(`Supabase error (credits): ${error.message}`);
-    console.log(`✅ One-time payment: Credits incremented for user ${userId}`);
+    console.log(`Top-up successful: ${quantity} items purchased, ${quantity} credits granted to User ${userId}`);
   } 
   
   if (mode === 'subscription') {

@@ -13,7 +13,7 @@ export const runtime = 'nodejs';
 
 export async function POST(req: NextRequest) {
   try {
-    const { priceId, mode, credits, isPortalOnly } = await req.json();
+    const { priceId, mode, credits, isPortalOnly, quantity = 1 } = await req.json();
 
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -70,7 +70,14 @@ export async function POST(req: NextRequest) {
       line_items: [
         {
           price: finalPriceId,
-          quantity: 1,
+          quantity: quantity,
+          ...(mode === 'payment' ? {
+            adjustable_quantity: {
+              enabled: true,
+              minimum: 1,
+              maximum: 100,
+            }
+          } : {})
         },
       ],
       mode: mode || 'subscription',
