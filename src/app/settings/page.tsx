@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation'
 export default function SettingsPage() {
   const router = useRouter()
   const [updating, setUpdating] = useState(false)
+  const [cancelling, setCancelling] = useState(false)
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [credits, setCredits] = useState<number>(0)
@@ -48,14 +49,21 @@ export default function SettingsPage() {
 
     setUpdating(true)
     try {
-      await handlePortal()
+      await handlePortal('update')
     } finally {
       setUpdating(false)
     }
   }
 
   const handleCancelSubscription = async () => {
-    // Implementation for cancellation
+    if (!hasActivePlan) return
+
+    setCancelling(true)
+    try {
+      await handlePortal('manage')
+    } finally {
+      setCancelling(false)
+    }
   }
 
   return (
@@ -80,13 +88,13 @@ export default function SettingsPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Sidebar Controls */}
             <nav className="space-y-2">
-              <button className="w-full text-left px-6 py-4 rounded-2xl bg-white/10 text-white font-bold border border-white/10 shadow-lg transition-all">
+              <button className="w-full text-left px-6 py-4 rounded-2xl bg-white/10 text-white font-bold border border-white/10 shadow-lg transition-all cursor-pointer">
                 Plan & Billing
               </button>
-              <button className="w-full text-left px-6 py-4 rounded-2xl hover:bg-white/5 text-slate-400 font-medium transition-all">
+              <button className="w-full text-left px-6 py-4 rounded-2xl hover:bg-white/5 text-slate-400 font-medium transition-all cursor-pointer">
                 Security
               </button>
-              <button className="w-full text-left px-6 py-4 rounded-2xl hover:bg-white/5 text-slate-400 font-medium transition-all">
+              <button className="w-full text-left px-6 py-4 rounded-2xl hover:bg-white/5 text-slate-400 font-medium transition-all cursor-pointer">
                 Preference
               </button>
             </nav>
@@ -139,7 +147,7 @@ export default function SettingsPage() {
                     <button 
                       onClick={handleUpdatePlan}
                       disabled={updating}
-                      className="w-full py-4 rounded-2xl bg-white text-slate-950 font-black text-sm hover:scale-[1.01] transition-transform shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      className="w-full py-4 rounded-2xl bg-white text-slate-950 font-black text-sm hover:scale-[1.01] transition-transform shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
                     >
                       {updating ? (
                         <>
@@ -152,9 +160,17 @@ export default function SettingsPage() {
                     </button>
                     <button 
                       onClick={handleCancelSubscription}
-                      className="w-full py-4 rounded-2xl border border-rose-500/20 text-rose-500 font-bold text-sm hover:bg-rose-500/5 transition-all"
+                      disabled={cancelling}
+                      className="w-full py-4 rounded-2xl border border-rose-500/20 text-rose-500 font-bold text-sm hover:bg-rose-500/5 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
                     >
-                      Cancel Subscription
+                      {cancelling ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-rose-500 border-t-transparent rounded-full animate-spin" />
+                          Redirecting...
+                        </>
+                      ) : (
+                        'Cancel Subscription'
+                      )}
                     </button>
                  </div>
                  

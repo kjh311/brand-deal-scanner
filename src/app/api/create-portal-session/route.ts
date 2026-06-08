@@ -8,6 +8,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
 
 export async function POST(req: NextRequest) {
   try {
+    const { intent } = await req.json().catch(() => ({ intent: 'manage' }));
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -37,13 +38,13 @@ export async function POST(req: NextRequest) {
 
     const hasActiveSub = activeSubs.data.length > 0;
 
-    // Create the portal session
+    // Create the portal session with intent-based flow
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: profile.stripe_customer_id,
       return_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/settings`,
-      // If they have an active sub, try to send them to the update screen.
-      // Note: This requires "Subscription Updates" to be enabled in Stripe Dashboard.
-      ...(hasActiveSub ? {
+      // If intent is 'update' and they have a sub, go to update flow.
+      // Otherwise, the default is the manage flow (dashboard).
+      ...(intent === 'update' && hasActiveSub ? {
         flow_data: {
           type: 'subscription_update',
           subscription_update: {

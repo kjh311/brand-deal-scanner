@@ -144,15 +144,49 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription, prev
   const newPlan = newProductId === 'prod_Uf03Msy5G3OZn2' ? 'agency' : (newProductId === 'prod_Uf01XdkL0cOXn6' ? 'professional' : 'plus');
 
   // 1. Sync Plan Status & Name
-  const { error: updateError } = await supabaseAdmin
-    .from('profiles')
-    .update({
-      plan: status === 'active' ? newPlan : 'Free',
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', profile.id);
+  console.log(`🧐 Diagnostic: 
+    - cancel_at_period_end: ${subscription.cancel_at_period_end}
+    - status: ${status}
+    - cancel_at: ${subscription.cancel_at}
+    - canceled_at: ${subscription.canceled_at}
+    - cancellation_details: ${JSON.stringify(subscription.cancellation_details)}
+  `);
+  
+  const updateData: any = {
+    plan: status === 'active' ? newPlan : 'Free',
+    updated_at: new Date().toISOString(),
+  };
 
-  if (updateError) throw new Error(`Sync error: ${updateError.message}`);
+  // Capture cancellation reason if ANY cancellation markers are present
+  if (subscription.cancel_at || subscription.canceled_at || subscription.cancellation_details) {
+    const feedback = subscription.cancellation_details?.feedback;
+    const comment = subscription.cancellation_details?.comment;
+    const reasonCode = subscription.cancellation_details?.reason;
+
+    // Combine feedback and comment if both exist, otherwise fallback to reason codes
+    let reason = 'User cancelled';
+    if (feedback && comment) {
+      reason = `${feedback}: ${comment}`;
+    } else {
+      reason = comment || feedback || reasonCode || 'User cancelled';
+    }
+      
+    updateData.cancellation_reason = reason;
+    console.log(`📉 Churn marker detected. Combined Reason: ${reason}`);
+  }
+
+  const { error: updateError, data: updateResult } = await supabaseAdmin
+    .from('profiles')
+    .update(updateData)
+    .eq('id', profile.id)
+    .select();
+
+  if (updateError) {
+    console.error(`❌ Supabase update failed: ${updateError.message}`);
+    throw new Error(`Sync error: ${updateError.message}`);
+  }
+
+  console.log(`✅ Supabase update finished. Rows affected: ${updateResult?.length || 0}`);
 
   // 2. Proration Logic (Top-up credits if upgrading)
   // Check if the plan actually changed in a way that warrants more credits
@@ -175,18 +209,21 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription, prev
 
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   const customerId = subscription.customer as string;
+  const cancellationReason = subscription.cancellation_details?.comment || subscription.cancellation_details?.reason || 'User cancelled';
+
   console.log(`🗑️ Handling Subscription Deletion: ${subscription.id} | Customer: ${customerId}`);
 
   const { error } = await supabaseAdmin
     .from('profiles')
     .update({
       plan: 'Free',
+      cancellation_reason: cancellationReason,
       updated_at: new Date().toISOString(),
     })
     .eq('stripe_customer_id', customerId);
 
   if (error) throw new Error(`Deletion sync error: ${error.message}`);
-  console.log(`✅ Subscription removed for customer ${customerId}`);
+  console.log(`✅ Cancellation captured for Customer ${customerId}: ${cancellationReason}`);
 }
 
 async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {

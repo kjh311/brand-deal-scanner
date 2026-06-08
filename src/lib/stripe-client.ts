@@ -26,13 +26,14 @@ export async function handleCheckout(priceId: string, mode: CheckoutMode = 'subs
   }
 }
 
-export async function handlePortal() {
+export const handlePortal = async (intent: 'update' | 'manage' = 'manage') => {
   try {
     const response = await fetch('/api/create-portal-session', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
+      body: JSON.stringify({ intent }),
     });
 
     const data = await response.json();
