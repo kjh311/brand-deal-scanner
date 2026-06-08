@@ -20,10 +20,6 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "Brand Deal Scanner | Professional Brand Contract Analysis",
   description: "AI-powered risk audit and counter-offer generator for influencer brand deals.",
-  icons: {
-    icon: "/logo.png",
-    apple: "/logo.png",
-  },
 };
 
 export default function RootLayout({
