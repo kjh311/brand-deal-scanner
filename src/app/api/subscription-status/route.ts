@@ -15,10 +15,10 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
-    // Fetch the customer ID, plan, and credits from the database
+    // Fetch the customer ID, plan, credits, and next billing date from the database
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('stripe_customer_id, plan, credits')
+      .select('stripe_customer_id, plan, credits, next_billing_date')
       .eq('id', user.id)
       .single();
 
@@ -46,6 +46,7 @@ export async function GET(req: NextRequest) {
       plan: profile.plan || 'Free',
       credits: profile.credits || 0,
       currentPeriodEnd,
+      nextBillingDate: profile.next_billing_date,
     });
   } catch (err: any) {
     console.error('Subscription Status Route Error:', err);

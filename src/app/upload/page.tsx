@@ -29,12 +29,25 @@ export default function UploadPage() {
     { number: 3, label: 'Get Report', status: 'locked', subtext: 'Locked' },
   ])
 
-  const [subStatus, setSubStatus] = useState<{ plan: string; credits: number; currentPeriodEnd: number | null } | null>(null)
+  const [subStatus, setSubStatus] = useState<{ plan: string; credits: number; currentPeriodEnd: number | null; nextBillingDate: string | null } | null>(null)
   const [isLoadingSub, setIsLoadingSub] = useState(true)
   const [loadingTopUp, setLoadingTopUp] = useState(false)
   const [selectedQuantity, setSelectedQuantity] = useState(5)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const getTierQuotaCredits = (tier: string) => {
+    switch (tier.toLowerCase()) {
+      case 'agency':
+        return 100;
+      case 'professional':
+        return 20;
+      case 'plus':
+        return 5;
+      default:
+        return 0;
+    }
+  }
 
   useEffect(() => {
     const fetchStatus = async () => {
@@ -237,11 +250,16 @@ export default function UploadPage() {
               <div className="space-y-3">
                 <h2 className="font-headline text-3xl font-black text-white tracking-tight uppercase">Out of Credits</h2>
                 <p className="text-slate-400 text-sm leading-relaxed">
-                  You have used all available contract scans.
-                  {subStatus.currentPeriodEnd && (
-                    <span> Your monthly quota renews on {new Date(subStatus.currentPeriodEnd * 1000).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}.</span>
+                  You have used all available contract scans.{" "}
+                  {subStatus.nextBillingDate && getTierQuotaCredits(subStatus.plan) > 0 ? (
+                    <span>
+                      You will receive {getTierQuotaCredits(subStatus.plan)} new credits on{" "}
+                      {new Date(subStatus.nextBillingDate).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}.
+                      {" "}Would you like to purchase top ups in the meantime?
+                    </span>
+                  ) : (
+                    <span>Select the number of top-up scans you would like below to continue auditing.</span>
                   )}
-                  {" "}Select the number of top-up scans you would like below to continue auditing.
                 </p>
               </div>
 
