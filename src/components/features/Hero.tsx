@@ -46,7 +46,7 @@ export function Hero() {
 
       {/* Curved Wave Bottom Divider */}
       <div className="absolute bottom-0 left-0 right-0 w-full overflow-hidden leading-none z-10 translate-y-[1px]">
-        <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="relative block w-full h-[60px] fill-current text-[#F8FAFC]">
+        <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="relative block w-full h-[60px] fill-current text-transparent">
           <path d="M0,0 C300,90 900,10 1200,90 L1200,120 L0,120 Z"></path>
         </svg>
       </div>

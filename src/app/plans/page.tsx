@@ -199,15 +199,7 @@ export default function PlansPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-transparent text-on-surface">
-      {/* Colorful blurred glassmorphism background */}
-      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute inset-0 bg-[#0a0a0f]/75" />
-        <div className="absolute -top-1/4 -left-1/4 w-[700px] h-[700px] rounded-full bg-primary/35 blur-[140px]" />
-        <div className="absolute top-1/3 -right-1/4 w-[550px] h-[550px] rounded-full bg-secondary/30 blur-[120px]" />
-        <div className="absolute -bottom-1/4 left-1/4 w-[500px] h-[500px] rounded-full bg-tertiary/25 blur-[130px]" />
-        <div className="absolute top-1/2 left-1/3 w-[400px] h-[400px] rounded-full bg-primary/20 blur-[100px]" />
-      </div>
+    <div className="min-h-screen flex flex-col bg-gradient-to-r from-[#221A7F] via-[#7B2CBF] to-[#D84C9F] text-white">
 
       <Navbar />
 

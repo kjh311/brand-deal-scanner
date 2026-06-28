@@ -67,13 +67,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-transparent text-slate-200">
-      {/* Dynamic Background */}
-      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute inset-0 bg-[#0a0a0f]/60" />
-        <div className="absolute -top-1/4 -right-1/4 w-[750px] h-[750px] rounded-full bg-secondary/50 blur-[150px]" />
-        <div className="absolute bottom-1/4 -left-1/3 w-[600px] h-[600px] rounded-full bg-primary/45 blur-[130px]" />
-      </div>
+    <div className="min-h-screen flex flex-col bg-gradient-to-r from-[#221A7F] via-[#7B2CBF] to-[#D84C9F] text-white">
 
       <Navbar />
 

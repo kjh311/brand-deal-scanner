@@ -321,7 +321,7 @@ export default function UploadPage() {
                   ${isDragging ? 'border-[#D84C9F] bg-[#FDF2F8]' : 'border-[#CBD5E1] hover:border-[#D84C9F] bg-[#F8FAFC]'}
                   ${analysisComplete || isAnalyzing ? 'cursor-default border-solid border-[#E2E8F0]' : 'cursor-pointer animate-in fade-in zoom-in duration-500'}`}
               >
-                {!isAnalyzing && !analysisComplete ? (
+                {!isAnalyzing && !analysisComplete && !file ? (
                   <div className="text-center space-y-8">
                     <div className="w-24 h-24 rounded-[2rem] bg-gradient-to-br from-[#2E1E96] to-[#D84C9F] flex items-center justify-center mx-auto shadow-lg group-hover/drop:scale-110 transition-transform duration-500">
                       <span className="material-symbols-outlined text-white text-5xl">cloud_upload</span>
@@ -339,6 +339,33 @@ export default function UploadPage() {
                       <span className="material-symbols-outlined text-blue-500 scale-110">description</span>
                       <span className="material-symbols-outlined text-emerald-500 scale-110">image</span>
                       <span className="material-symbols-outlined text-slate-100 scale-110">subject</span>
+                    </div>
+                  </div>
+                ) : !isAnalyzing && !analysisComplete && file ? (
+                  <div className="w-full max-w-sm space-y-10 p-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    <div className="text-center mb-10">
+                      <div className="relative w-20 h-20 mx-auto mb-6">
+                        <div className="w-20 h-20 rounded-[2rem] bg-gradient-to-br from-[#2E1E96] to-[#D84C9F] flex items-center justify-center shadow-lg">
+                          <span className="material-symbols-outlined text-white text-5xl">insert_drive_file</span>
+                        </div>
+                      </div>
+                      <p className="text-sm font-bold text-[#1E1A5F] uppercase tracking-[4px]">Document Ready</p>
+                      <p className="text-xs text-[#64748B] font-mono mt-2 break-all">{file.name}</p>
+                    </div>
+
+                    <div className="flex gap-4">
+                      <button
+                        onClick={removeFile}
+                        className="flex-1 px-6 py-4 rounded-xl border border-[#E2E8F0] text-[#64748B] font-bold text-xs uppercase tracking-[2px] hover:bg-[#F8FAFC] transition-all cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleRealAnalysis}
+                        className="flex-1 px-6 py-4 rounded-xl bg-gradient-to-r from-[#D84C9F] to-[#DE5298] text-white font-bold text-xs uppercase tracking-[3px] hover:brightness-105 active:scale-95 transition-all cursor-pointer shadow-md"
+                      >
+                        Scan Contract
+                      </button>
                     </div>
                   </div>
                 ) : isAnalyzing && !analysisComplete ? (
@@ -408,35 +435,6 @@ export default function UploadPage() {
                 )}
               </div>
             </section>
-
-            {/* PASTE SECTION / FILE PREVIEW */}
-            {file && !isAnalyzing && !analysisComplete && (
-              <div className="bg-white border border-[#E2E8F0] rounded-[2.5rem] p-8 flex flex-col md:flex-row items-center justify-between gap-8 shadow-lg animate-in slide-in-from-bottom-8 duration-700">
-                <div className="flex items-center gap-6">
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#2E1E96] to-[#D84C9F] flex items-center justify-center shadow-md">
-                    <span className="material-symbols-outlined text-white text-3xl">insert_drive_file</span>
-                  </div>
-                  <div>
-                    <p className="font-bold text-[#1E1A5F] text-lg tracking-tight leading-tight">{file.name}</p>
-                    <p className="text-xs text-[#64748B] font-mono tracking-widest mt-1 uppercase">{(file.size / 1024).toFixed(1)} KB — VERIFIED</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4 w-full md:w-auto">
-                  <button
-                    onClick={removeFile}
-                    className="flex-1 md:flex-none px-8 py-4 rounded-xl border border-[#E2E8F0] text-[#64748B] font-bold text-xs uppercase tracking-[2px] hover:bg-[#F8FAFC] transition-all cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleRealAnalysis}
-                    className="flex-1 md:flex-none px-10 py-4 rounded-xl bg-gradient-to-r from-[#D84C9F] to-[#DE5298] text-white font-bold text-xs uppercase tracking-[3px] hover:brightness-105 active:scale-95 transition-all cursor-pointer shadow-md"
-                  >
-                    Scan Contract
-                  </button>
-                </div>
-              </div>
-            )}
 
             {!file && !isAnalyzing && !analysisComplete && (
               <section className="bg-white border border-[#E2E8F0] rounded-[3rem] p-10 md:p-12 space-y-10 shadow-lg relative overflow-hidden">
