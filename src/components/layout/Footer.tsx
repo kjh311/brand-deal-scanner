@@ -44,15 +44,15 @@ export function Footer({ className = '' }: FooterProps) {
                 Admin
               </Link>
             )}
-            <a href="#" className="text-[10px] font-black uppercase tracking-[3px] text-white/80 hover:text-white transition-colors duration-200">
+            <Link href="/privacy" className="text-[10px] font-black uppercase tracking-[3px] text-white/80 hover:text-white transition-colors duration-200">
               Privacy Policy
-            </a>
-            <a href="#" className="text-[10px] font-black uppercase tracking-[3px] text-white/80 hover:text-white transition-colors duration-200">
+            </Link>
+            <Link href="/terms" className="text-[10px] font-black uppercase tracking-[3px] text-white/80 hover:text-white transition-colors duration-200">
               Terms
-            </a>
-            <a href="#" className="text-[10px] font-black uppercase tracking-[3px] text-white/80 hover:text-white transition-colors duration-200">
+            </Link>
+            <Link href="/support" className="text-[10px] font-black uppercase tracking-[3px] text-white/80 hover:text-white transition-colors duration-200">
               Support
-            </a>
+            </Link>
           </div>
         </div>
 
