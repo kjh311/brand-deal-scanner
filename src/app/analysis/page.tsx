@@ -7,6 +7,7 @@ import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { Loader2, AlertCircle, CheckCircle2, Copy, Check, Download } from 'lucide-react'
 import { ReportTemplate } from '@/components/analysis/ReportTemplate'
+import { FeedbackSection } from '@/components/features/FeedbackSection'
 
 function AnalysisContent() {
   const searchParams = useSearchParams()
@@ -319,6 +320,8 @@ function AnalysisContent() {
             </div>
           </div>
         </section>
+
+        <FeedbackSection contractId={contractId} />
       </div>
     </main>
   )

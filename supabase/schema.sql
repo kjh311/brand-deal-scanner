@@ -11,6 +11,7 @@ create table public.profiles (
   avatar_url text,
   credit_balance integer default 0 not null,
   subscription_tier text default 'free' not null,
+  admin boolean default false not null,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
@@ -127,6 +128,51 @@ create policy "Users can delete their own contracts"
   using (auth.uid() = user_id);
 
 -- Index for performance
+-- =============================================
+-- SCAN FEEDBACK TABLE
+-- =============================================
+create table public.scan_feedback (
+  id uuid default uuid_generate_v4() primary key,
+  profile_id uuid references public.profiles(id) on delete cascade not null,
+  contract_id uuid references public.contracts(id) on delete set null,
+  rating integer not null check (rating >= 1 and rating <= 5),
+  feedback_text text,
+  dismissed boolean default false not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Enable RLS
+alter table public.scan_feedback enable row level security;
+
+-- Policies for scan_feedback
+create policy "Users can insert their own feedback" 
+  on public.scan_feedback for insert 
+  with check (auth.uid() = profile_id);
+
+create policy "Admins can view all feedback" 
+  on public.scan_feedback for select 
+  using (
+    exists (
+      select 1 from public.profiles 
+      where profiles.id = auth.uid() 
+      and profiles.admin = true
+    )
+  );
+
+create policy "Admins can dismiss feedback" 
+  on public.scan_feedback for update 
+  using (
+    exists (
+      select 1 from public.profiles 
+      where profiles.id = auth.uid() 
+      and profiles.admin = true
+    )
+  );
+
+create index scan_feedback_profile_id_idx on public.scan_feedback(profile_id);
+create index scan_feedback_dismissed_idx on public.scan_feedback(dismissed);
+create index scan_feedback_created_at_idx on public.scan_feedback(created_at desc);
+
 -- =============================================
 -- DIAGNOSTICS & AUTOMATION
 -- =============================================

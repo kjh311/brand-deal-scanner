@@ -10,8 +10,10 @@ export function Navbar() {
   const [user, setUser] = useState<any>(null)
   const [credits, setCredits] = useState<number | null>(null)
   const [plan, setPlan] = useState<string | null>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [unreadCount, setUnreadCount] = useState(0)
   const menuRef = useRef<HTMLDivElement>(null)
 
   // 1. Handle Authentication and Initial Fetch
@@ -25,13 +27,14 @@ export function Navbar() {
       if (user) {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('credits, plan')
+          .select('credits, plan, admin')
           .eq('id', user.id)
           .single()
 
         if (profile) {
           setCredits(profile.credits)
           setPlan(profile.plan)
+          setIsAdmin(profile.admin || false)
         }
       }
       setLoading(false)
@@ -90,6 +93,36 @@ export function Navbar() {
       supabase.removeChannel(channel)
     }
   }, [user?.id])
+
+  const fetchUnreadCount = async () => {
+    const supabase = createClient()
+    const { count } = await supabase
+      .from('scan_feedback')
+      .select('*', { count: 'exact', head: true })
+      .eq('dismissed', false)
+    setUnreadCount(count || 0)
+  }
+
+  useEffect(() => {
+    if (!isAdmin) return
+    fetchUnreadCount()
+
+    const supabase = createClient()
+    const channel = supabase
+      .channel('feedback-count')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'scan_feedback',
+      }, () => {
+        fetchUnreadCount()
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [isAdmin])
 
   const handleLogout = async () => {
     const supabase = createClient()
@@ -152,7 +185,19 @@ export function Navbar() {
                   ) : (
                     <span className="material-symbols-outlined text-primary/60">account_circle</span>
                   )}
-                </Link>
+                 </Link>
+
+                 {isAdmin && unreadCount > 0 && (
+                   <Link
+                     href="/admin"
+                     className="relative flex items-center justify-center w-10 h-10 rounded-full border border-white/10 bg-white/5 hover:border-primary/50 transition-all cursor-pointer"
+                   >
+                     <span className="material-symbols-outlined text-white text-xl">notifications</span>
+                     <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                       {unreadCount}
+                     </span>
+                   </Link>
+                 )}
 
                 <button
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
