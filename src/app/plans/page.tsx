@@ -203,7 +203,7 @@ export default function PlansPage() {
 
       <Navbar />
 
-      <main className="flex-grow py-12 px-6 shadow-2xl">
+      <main className="flex-grow pt-32 pb-12 px-6 shadow-2xl">
         <div ref={containerRef} className="max-w-[1120px] mx-auto">
           {/* Hero Title */}
           <div className="text-center mb-12">

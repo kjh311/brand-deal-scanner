@@ -143,7 +143,7 @@ function AnalysisContent() {
   const scoreBadge = contract.health_score > 70 ? 'bg-[#3fb950]/10 text-[#3fb950] border-2 border-[#3fb950]/20' : contract.health_score > 40 ? 'bg-[#d29922]/10 text-[#d29922] border-2 border-[#d29922]/20' : 'bg-[#f85149]/10 text-[#f85149] border-2 border-[#f85149]/20';
 
   return (
-    <main className="max-w-[1000px] mx-auto px-6 md:px-10 py-12 space-y-12 animate-in fade-in duration-500">
+    <main className="max-w-[1000px] mx-auto px-6 md:px-10 pt-32 pb-12 space-y-12 animate-in fade-in duration-500">
       
       {/* Header */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-white/10 pb-8">

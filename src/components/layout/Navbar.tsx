@@ -136,6 +136,7 @@ export function Navbar() {
     { label: 'New Scan', icon: 'upload_file', href: '/upload' },
     { label: 'Scan History', icon: 'inventory_2', href: '/history' },
     { label: 'Settings', icon: 'settings', href: '/settings' },
+    ...(isAdmin ? [{ label: 'Admin', icon: 'admin_panel_settings', href: '/admin' }] : []),
   ] : [
     { label: 'How it Works', icon: 'lightbulb', href: '/#how-it-works' },
     { label: 'Pricing', icon: 'payments', href: '/#pricing' },

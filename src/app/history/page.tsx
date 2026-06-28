@@ -120,7 +120,7 @@ export default function HistoryPage() {
 
       <Navbar />
 
-      <main className="pt-24 pb-12 px-6 md:px-10 max-w-[1280px] mx-auto w-full">
+      <main className="pt-32 pb-12 px-6 md:px-10 max-w-[1280px] mx-auto w-full">
         <div className="flex flex-col lg:flex-row gap-12">
           
           {/* Sidebar Stats */}

@@ -35,7 +35,7 @@ export default async function AdminPage() {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-r from-[#221A7F] via-[#7B2CBF] to-[#D84C9F] text-white">
       <Navbar />
-      <div className="flex-1 flex items-center justify-center p-6">
+      <div className="flex-1 flex items-center justify-center pt-32 p-6">
         <div className="max-w-2xl w-full space-y-8">
           <div className="text-center mb-8">
             <h1 className="font-headline text-4xl font-bold tracking-tight mb-2">
