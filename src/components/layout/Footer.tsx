@@ -6,7 +6,7 @@ export function Footer() {
   const footerRef = useRef<HTMLElement>(null)
 
   return (
-    <footer ref={footerRef} className="w-full py-16 border-t border-white/5 bg-black" id="main-footer">
+    <footer ref={footerRef} className="w-full py-16 z-[100] border-t border-white/5 bg-black" id="main-footer">
       <div className="max-w-[1280px] mx-auto px-10">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="font-headline text-2xl font-bold text-white tracking-tighter">

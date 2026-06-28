@@ -199,7 +199,7 @@ export default function UploadPage() {
   }
 
   return (
-    <div className="min-h-screen relative bg-gradient-to-r from-[#221A7F] via-[#7B2CBF] to-[#D84C9F] overflow-x-hidden text-slate-100">
+    <div className="min-h-screen flex flex-col relative bg-gradient-to-r from-[#221A7F] via-[#7B2CBF] to-[#D84C9F] overflow-x-hidden text-slate-100">
       {/* RICH LIGHT THEMED BACKGROUND INSPIRED BY IMAGE */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
         {/* Clean background */}
@@ -483,7 +483,7 @@ export default function UploadPage() {
         )}
       </main>
 
-      <Footer />
+      <Footer className="relative z-[1]" />
 
       <input
         ref={fileInputRef}
