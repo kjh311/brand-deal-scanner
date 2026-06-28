@@ -74,7 +74,7 @@ export function HowItWorks() {
       <div className="max-w-[1280px] mx-auto">
         <div className="text-center mb-20">
           <p className="text-xs font-mono uppercase tracking-wider text-[#D84C9F] mb-4">METHODOLOGY</p>
-          <h2 className="font-headline text-4xl text-[#1E1A5F] font-bold tracking-[-0.02em]">
+          <h2 className="font-headline text-4xl text-white font-bold tracking-[-0.02em]">
             Audit Process in 60 Seconds
           </h2>
         </div>
@@ -91,8 +91,8 @@ export function HowItWorks() {
                   {step.num}
                 </div>
                 <div>
-                  <h4 className="font-headline text-xl text-[#1E1A5F] font-medium tracking-[-0.02em]">{step.title}</h4>
-                  <p className="text-sm text-[#64748B] mt-2">{step.desc}</p>
+                  <h4 className="font-headline text-xl text-white font-medium tracking-[-0.02em]">{step.title}</h4>
+                  <p className="text-sm text-white/70 mt-2">{step.desc}</p>
                 </div>
               </div>
             ))}

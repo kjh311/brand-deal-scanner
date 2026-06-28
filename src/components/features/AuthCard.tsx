@@ -104,18 +104,18 @@ export function AuthCard({ mode }: AuthCardProps) {
   if (signUpSuccess) {
     return (
       <div className="w-full max-w-md">
-        <div className="glass-card rounded-3xl p-8 md:p-10 shadow-2xl text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
-            <span className="material-symbols-outlined text-primary text-3xl">mail</span>
+        <div className="bg-white rounded-3xl p-8 md:p-10 shadow-2xl text-center text-[#1E1A5F]">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#D84C9F]/10">
+            <span className="material-symbols-outlined text-[#D84C9F] text-3xl">mail</span>
           </div>
-          <h2 className="font-headline text-2xl font-semibold tracking-tight text-on-surface mb-2">
+          <h2 className="font-headline text-2xl font-semibold tracking-tight mb-2">
             Check your email
           </h2>
-          <p className="text-on-surface-variant mb-6">
-            We’ve sent a confirmation link to <span className="font-medium text-on-surface">{email}</span>.
+          <p className="text-[#64748B] mb-6">
+            We've sent a confirmation link to <span className="font-medium text-[#1E1A5F]">{email}</span>.
             Please click the link to activate your account.
           </p>
-          <p className="text-sm text-on-surface-variant">
+          <p className="text-sm text-[#64748B]">
             Once confirmed, you can log in and access your history.
           </p>
         </div>
@@ -125,24 +125,24 @@ export function AuthCard({ mode }: AuthCardProps) {
 
   return (
     <div className="w-full max-w-md">
-      <div className="glass-card rounded-3xl p-8 md:p-10 shadow-2xl relative overflow-hidden">
+      <div className="bg-white rounded-3xl p-8 md:p-10 shadow-2xl relative overflow-hidden text-[#1E1A5F]">
         {/* Background Glow */}
-        <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/10 blur-3xl rounded-full"></div>
-        <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-secondary/10 blur-3xl rounded-full"></div>
+        <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#D84C9F]/10 blur-3xl rounded-full"></div>
+        <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-[#7B2CBF]/10 blur-3xl rounded-full"></div>
 
         <div className="relative z-10 flex flex-col gap-8">
           <div className="text-center">
-            <h1 className="font-headline text-3xl font-bold tracking-tight text-on-surface">
+            <h1 className="font-headline text-3xl font-bold tracking-tight text-[#1E1A5F]">
               {isLogin ? 'Welcome Back' : 'Secure Your Brand Deals'}
             </h1>
-            <p className="text-on-surface-variant mt-2 text-sm">
+            <p className="text-[#64748B] mt-2 text-sm">
               {isLogin ? 'Log in to manage your audits' : 'Start your professional risk analysis'}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
-              <label htmlFor="email" className="text-xs font-mono uppercase tracking-wider text-on-surface-variant ml-1">
+              <label htmlFor="email" className="text-xs font-mono uppercase tracking-wider text-[#64748B] ml-1">
                 Email Address
               </label>
               <input
@@ -152,12 +152,12 @@ export function AuthCard({ mode }: AuthCardProps) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full bg-surface-container-low border border-outline-variant rounded-xl px-4 py-3 text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                className="w-full bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-4 py-3 text-[#1E1A5F] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#D84C9F]/50 transition-all"
               />
             </div>
 
             <div className="flex flex-col gap-2">
-              <label htmlFor="password" className="text-xs font-mono uppercase tracking-wider text-on-surface-variant ml-1">
+              <label htmlFor="password" className="text-xs font-mono uppercase tracking-wider text-[#64748B] ml-1">
                 Password
               </label>
               <div className="relative">
@@ -168,12 +168,12 @@ export function AuthCard({ mode }: AuthCardProps) {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full bg-surface-container-low border border-outline-variant rounded-xl px-4 py-3 text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                  className="w-full bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-4 py-3 text-[#1E1A5F] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#D84C9F]/50 transition-all"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-outline-variant hover:text-on-surface transition-colors"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#1E1A5F] transition-colors"
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
@@ -181,7 +181,7 @@ export function AuthCard({ mode }: AuthCardProps) {
             </div>
 
             {error && (
-              <p className="text-sm text-error text-center bg-error/10 border border-error/20 rounded-lg py-2 px-3">
+              <p className="text-sm text-rose-500 text-center bg-rose-50 border border-rose-200 rounded-lg py-2 px-3">
                 {error}
               </p>
             )}
@@ -189,7 +189,7 @@ export function AuthCard({ mode }: AuthCardProps) {
             <button
               type="submit"
               disabled={isLoading}
-              className="mt-2 w-full shimmer-btn bg-primary text-on-primary font-bold py-3 rounded-xl transition-all active:scale-[0.98] disabled:opacity-50"
+              className="mt-2 w-full shimmer-btn bg-[#D84C9F] text-white font-bold py-3 rounded-xl transition-all active:scale-[0.98] disabled:opacity-50"
             >
               {isLoading ? 'Processing...' : isLogin ? 'Sign In with Email' : 'Sign Up with Email'}
             </button>
@@ -197,10 +197,10 @@ export function AuthCard({ mode }: AuthCardProps) {
 
           <div className="relative my-2">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-outline-variant"></span>
+              <span className="w-full border-t border-[#E2E8F0]"></span>
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-transparent px-2 text-on-surface-variant font-mono">Quick Sign In</span>
+              <span className="bg-white px-2 text-[#64748B] font-mono">Quick Sign In</span>
             </div>
           </div>
 
@@ -208,7 +208,7 @@ export function AuthCard({ mode }: AuthCardProps) {
              <button 
                onClick={handleGoogleSignIn}
                disabled={isLoading}
-               className="flex items-center justify-center gap-3 bg-white/5 border border-white/10 hover:bg-white/10 transition-all py-3 rounded-xl font-medium text-sm disabled:opacity-50"
+               className="flex items-center justify-center gap-3 bg-[#F8FAFC] border border-[#E2E8F0] hover:bg-white transition-all py-3 rounded-xl font-medium text-sm text-[#1E1A5F] disabled:opacity-50"
              >
                <svg className="w-5 h-5" viewBox="0 0 24 24">
                  <path
@@ -232,24 +232,24 @@ export function AuthCard({ mode }: AuthCardProps) {
              </button>
            </div>
 
-          <div className="text-center text-sm">
-            <span className="text-on-surface-variant">
-              {isLogin ? "Don't have an account? " : "Already have an account? "}
-            </span>
-            <Link 
-              href={isLogin ? '/signup' : '/login'} 
-              className="text-primary font-bold hover:underline underline-offset-4"
-            >
-              {isLogin ? 'Sign Up' : 'Log In'}
-            </Link>
-          </div>
+           <div className="text-center text-sm">
+             <span className="text-[#64748B]">
+               {isLogin ? "Don't have an account? " : "Already have an account? "}
+             </span>
+             <Link 
+               href={isLogin ? '/signup' : '/login'} 
+               className="text-[#D84C9F] font-bold hover:underline underline-offset-4"
+             >
+               {isLogin ? 'Sign Up' : 'Log In'}
+             </Link>
+           </div>
 
-          <div className="text-[10px] text-center text-on-surface-variant leading-relaxed uppercase tracking-widest font-mono">
-            By continuing, you agree to our <br/>
-            <Link href="/terms" className="hover:text-on-surface underline">Terms of Service</Link>
-            {' & '}
-            <Link href="/privacy" className="hover:text-on-surface underline">Privacy Policy</Link>
-          </div>
+           <div className="text-[10px] text-center text-[#64748B] leading-relaxed uppercase tracking-widest font-mono">
+             By continuing, you agree to our <br/>
+             <Link href="/terms" className="hover:text-[#1E1A5F] underline">Terms of Service</Link>
+             {' & '}
+             <Link href="/privacy" className="hover:text-[#1E1A5F] underline">Privacy Policy</Link>
+           </div>
         </div>
       </div>
     </div>

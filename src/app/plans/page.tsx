@@ -218,15 +218,15 @@ export default function PlansPage() {
           {/* Pricing Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {plans.map((plan) => (
-              <div
-                key={plan.id}
-                onClick={() => handleSelect(plan)}
-                className="plan-card glass-panel rounded-2xl p-6 flex flex-col h-full border-[3px] shadow-2xl relative cursor-pointer hover:shadow-[0_0_25px_var(--glow-color),_0_0_45px_var(--glow-color)] transition-shadow duration-300"
-                style={{
-                  borderColor: plan.color + '60',
-                  '--glow-color': plan.color + '55'
-                } as any}
-              >
+                <div
+                  key={plan.id}
+                  onClick={() => handleSelect(plan)}
+                  className="plan-card bg-white border-[3px] rounded-2xl p-6 flex flex-col h-full shadow-2xl relative cursor-pointer hover:shadow-[0_0_25px_var(--glow-color),_0_0_45px_var(--glow-color)] transition-shadow duration-300"
+                  style={{
+                    borderColor: plan.color + '60',
+                    '--glow-color': plan.color + '55'
+                  } as any}
+                >
                 {plan.popular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
                     <span
@@ -245,35 +245,35 @@ export default function PlansPage() {
                   >
                     {plan.icon}
                   </span>
-                  <h3 className="font-mono text-xs uppercase tracking-[2px] font-bold mb-2" style={{ color: plan.color }}>
+                  <h3 className="font-mono text-xs uppercase tracking-[2px] font-bold mb-2 text-[#1E1A5F]" style={{ color: plan.color }}>
                     {plan.name}
                   </h3>
-                  <div className="flex items-baseline justify-center gap-1">
-                    <span className="font-headline text-4xl font-semibold tracking-tight text-white">{plan.price}</span>
-                    <span className="text-on-surface-variant text-sm font-medium">{plan.period}</span>
-                  </div>
-                  {plan.period.includes('/mo') && (
-                    <p className="text-[10px] text-on-surface-variant/60 mt-0.5 font-medium">(Billed monthly)</p>
-                  )}
-                </div>
+                   <div className="flex items-baseline justify-center gap-1">
+                     <span className="font-headline text-4xl font-semibold tracking-tight text-[#1E1A5F]">{plan.price}</span>
+                     <span className="text-[#64748B] text-sm font-medium">{plan.period}</span>
+                   </div>
+                   {plan.period.includes('/mo') && (
+                     <p className="text-[10px] text-[#64748B]/60 mt-0.5 font-medium">(Billed monthly)</p>
+                   )}
+                 </div>
 
-                <div
-                  className="border-y py-2 text-center mb-6 text-xs font-mono uppercase tracking-wider font-bold"
-                  style={{ borderColor: plan.color + '30', color: plan.color }}
-                >
-                  {plan.scans}
-                </div>
+                 <div
+                   className="border-y py-2 text-center mb-6 text-xs font-mono uppercase tracking-wider font-bold"
+                   style={{ borderColor: plan.color + '30', color: plan.color }}
+                 >
+                   {plan.scans}
+                 </div>
 
-                <ul className="flex-grow space-y-3 mb-8 text-sm">
-                  {plan.features.map((feature, i) => (
-                    <li key={i} className="flex items-start gap-2.5">
-                      <span className="material-symbols-outlined text-sm mt-0.5" style={{ color: plan.color }}>
-                        check_circle
-                      </span>
-                      <span className="text-on-surface-variant font-medium">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
+                 <ul className="flex-grow space-y-3 mb-8 text-sm">
+                   {plan.features.map((feature, i) => (
+                     <li key={i} className="flex items-start gap-2.5">
+                       <span className="material-symbols-outlined text-sm mt-0.5" style={{ color: plan.color }}>
+                         check_circle
+                       </span>
+                       <span className="text-[#1E1A5F] font-medium">{feature}</span>
+                     </li>
+                   ))}
+                 </ul>
 
                 <button
                   onClick={(e) => {

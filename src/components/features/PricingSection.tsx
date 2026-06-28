@@ -56,10 +56,10 @@ export function PricingSection() {
     <section ref={containerRef} className="py-20 px-10 bg-transparent" id="pricing">
       <div className="max-w-[1280px] mx-auto">
         <div className="text-center mb-16">
-          <h2 className="font-headline text-4xl text-[#1E1A5F] font-bold tracking-[-0.02em]">
+          <h2 className="font-headline text-4xl text-white font-bold tracking-[-0.02em]">
             Precision Protection for Every Creator
           </h2>
-          <p className="text-lg text-[#64748B] mt-4">Simple pricing. No hidden fees. Legal-grade security.</p>
+          <p className="text-lg text-white/70 mt-4">Simple pricing. No hidden fees. Legal-grade security.</p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
@@ -107,7 +107,7 @@ export function PricingSection() {
             </div>
           ))}
         </div>
-        <p className="text-center mt-12 text-xs font-mono uppercase tracking-wider text-[#64748B]">
+        <p className="text-center mt-12 text-xs font-mono uppercase tracking-wider text-white/60">
           Note: Subscribers get discount top-ups for high-volume months.
         </p>
       </div>

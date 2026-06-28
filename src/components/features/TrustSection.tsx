@@ -52,10 +52,10 @@ export function TrustSection() {
             <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center border border-[#E2E8F0] shadow-sm">
               <span className="material-symbols-outlined text-[32px] text-[#D84C9F]">{feature.icon}</span>
             </div>
-            <h3 className="font-headline text-xl text-[#1E1A5F] font-bold tracking-[-0.02em]">
+            <h3 className="font-headline text-xl text-white font-bold tracking-[-0.02em]">
               {feature.title}
             </h3>
-            <p className="text-sm text-[#64748B]">
+            <p className="text-sm text-white/70">
               {feature.description}
             </p>
           </div>

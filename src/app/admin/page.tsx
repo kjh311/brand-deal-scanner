@@ -47,13 +47,13 @@ export default async function AdminPage() {
           </div>
 
           <div className="space-y-4">
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+            <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 text-[#1E1A5F]">
               <h2 className="text-xl font-bold mb-2">User Management</h2>
-              <p className="text-white/60 text-sm">Manage users and permissions here.</p>
+              <p className="text-[#64748B] text-sm">Manage users and permissions here.</p>
             </div>
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+            <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 text-[#1E1A5F]">
               <h2 className="text-xl font-bold mb-2">System Settings</h2>
-              <p className="text-white/60 text-sm">Configure application settings and features.</p>
+              <p className="text-[#64748B] text-sm">Configure application settings and features.</p>
             </div>
           </div>
 

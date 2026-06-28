@@ -54,29 +54,29 @@ function SuccessContent() {
 
   return (
     <div className="max-w-xl mx-auto py-20 px-6">
-      <div className="success-card glass-panel rounded-3xl p-10 text-center border border-white/10 shadow-2xl relative overflow-hidden">
+      <div className="bg-white border border-[#E2E8F0] rounded-3xl p-10 text-center text-[#1E1A5F] shadow-2xl relative overflow-hidden">
         {/* Decorative background glow */}
-        <div className="absolute -top-24 -left-24 w-48 h-48 bg-primary/20 blur-[80px] rounded-full" />
-        <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-secondary/20 blur-[80px] rounded-full" />
+        <div className="absolute -top-24 -left-24 w-48 h-48 bg-[#D84C9F]/10 blur-[80px] rounded-full" />
+        <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-[#7B2CBF]/10 blur-[80px] rounded-full" />
 
-        <div className="success-icon w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-8 relative z-10">
-          <span className="material-symbols-outlined text-primary text-5xl font-bold">
+        <div className="w-20 h-20 bg-[#D84C9F]/10 rounded-full flex items-center justify-center mx-auto mb-8 relative z-10">
+          <span className="material-symbols-outlined text-[#D84C9F] text-5xl font-bold">
             check
           </span>
         </div>
 
-        <h1 className="font-headline text-4xl font-bold mb-4 text-white tracking-tight">
+        <h1 className="font-headline text-4xl font-bold mb-4 text-[#1E1A5F] tracking-tight">
           Payment Successful!
         </h1>
         
-        <p className="text-on-surface-variant text-lg mb-10 leading-relaxed max-w-md mx-auto">
+        <p className="text-[#64748B] text-lg mb-10 leading-relaxed max-w-md mx-auto">
           We've updated your account and your credits are now ready. You can start scanning contracts immediately.
         </p>
 
         <div className="flex flex-col gap-4 relative z-10">
           <Link 
             href="/upload"
-            className="w-full py-4 bg-primary text-[#131313] rounded-2xl font-bold text-lg hover:scale-[1.02] active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)] flex items-center justify-center gap-2"
+            className="w-full py-4 bg-[#D84C9F] text-white rounded-2xl font-bold text-lg hover:brightness-110 active:scale-[0.98] transition-all shadow-md flex items-center justify-center gap-2"
           >
             <span className="material-symbols-outlined">rocket_launch</span>
             Start Scanning
@@ -84,14 +84,14 @@ function SuccessContent() {
           
           <Link 
             href="/dashboard"
-            className="w-full py-4 bg-white/5 border border-white/10 text-white rounded-2xl font-semibold hover:bg-white/10 transition-all"
+            className="w-full py-4 bg-[#F8FAFC] border border-[#E2E8F0] text-[#1E1A5F] rounded-2xl font-semibold hover:bg-white transition-all"
           >
             View Dashboard
           </Link>
         </div>
       </div>
       
-      <p className="text-center mt-8 text-on-surface-variant/60 text-sm">
+      <p className="text-center mt-8 text-[#64748B]/60 text-sm">
         A receipt has been sent to your email.
       </p>
     </div>
