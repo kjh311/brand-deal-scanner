@@ -208,7 +208,7 @@ export default function PlansPage() {
           {/* Hero Title */}
           <div className="text-center mb-12">
             <h1 className="font-headline text-4xl md:text-5xl font-bold tracking-[-0.02em] uppercase mb-4 text-white">
-              Brand Deal Scanner: Premier Plans
+              Brand Deal Fixer: Premier Plans
             </h1>
             <p className="text-on-surface-variant max-w-2xl mx-auto text-lg leading-relaxed">
               Precise legal analysis and AI-driven risk assessment for high-volume content creators and agencies.

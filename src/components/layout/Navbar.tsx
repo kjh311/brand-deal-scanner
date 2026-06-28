@@ -67,7 +67,7 @@ export function Navbar() {
     if (!user?.id) return
 
     const supabase = createClient()
-    
+
     const channel = supabase
       .channel(`profile-updates-${user.id}`)
       .on(
@@ -112,21 +112,21 @@ export function Navbar() {
   return (
     <header className="fixed top-0 w-full z-[100] backdrop-blur-xl border-b border-white/5 bg-black/40">
       <nav className="flex justify-between items-center max-w-[1280px] mx-auto px-6 md:px-10 py-4 relative">
-        
+
         {/* Brand */}
         <Link href="/" className="flex items-center gap-3 active:scale-95 transition-transform group">
           <div className="w-14 h-14 flex items-center justify-center group-hover:scale-110 transition-all duration-300 pointer-events-none drop-shadow-[0_0_15px_rgba(255,188,43,0.3)]">
             <img src="/logo.png" alt="Logo" className="w-12 h-12 object-contain" />
           </div>
           <div className="font-headline text-2xl font-black tracking-tighter text-white">
-            Brand Deal <span className="text-primary tracking-normal font-bold">Scanner</span>
+            Brand Deal <span className="text-primary tracking-normal font-bold">Fixer</span>
           </div>
         </Link>
 
         {/* Action Center */}
         <div className="flex items-center gap-4 relative" ref={menuRef}>
           {!loading && user && (
-            <Link 
+            <Link
               href="/upload"
               className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/5 border border-white/10 hover:border-primary/50 text-xs font-black uppercase tracking-[2px] text-slate-400 cursor-pointer transition-all"
             >
@@ -139,14 +139,14 @@ export function Navbar() {
           <div className="flex items-center gap-3">
             {!loading && user ? (
               <>
-                <Link 
+                <Link
                   href="/settings"
                   className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center overflow-hidden hover:border-primary/50 transition-all bg-white/5 shadow-inner p-[2px]"
                 >
                   {user.user_metadata?.avatar_url || user.user_metadata?.picture ? (
-                    <img 
-                      src={user.user_metadata.avatar_url || user.user_metadata.picture} 
-                      alt="Profile" 
+                    <img
+                      src={user.user_metadata.avatar_url || user.user_metadata.picture}
+                      alt="Profile"
                       className="w-full h-full object-cover rounded-full"
                     />
                   ) : (
@@ -154,7 +154,7 @@ export function Navbar() {
                   )}
                 </Link>
 
-                <button 
+                <button
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
                   className={`w-10 h-10 flex flex-col items-center justify-center gap-1.5 transition-all duration-300 rounded-xl hover:bg-white/5 cursor-pointer 
                     ${isMenuOpen ? 'bg-white/10' : ''}`}
@@ -168,23 +168,23 @@ export function Navbar() {
               !loading && (
                 <div className="flex items-center gap-4">
                   <Link href="/login" className="text-xs font-black uppercase tracking-[2px] text-slate-400 hover:text-white transition-colors">Login</Link>
-                  <Link 
-                    href="/login" 
+                  <Link
+                    href="/login"
                     className="px-6 py-2.5 rounded-xl bg-white text-slate-950 font-black text-xs uppercase tracking-[2px] hover:scale-105 active:scale-95 transition-all shadow-xl"
                   >
                     Start Scanning
                   </Link>
-                  
+
                   {/* Logged Out Hamburger */}
-                   <button 
-                      onClick={() => setIsMenuOpen(!isMenuOpen)}
-                      className={`w-10 h-10 flex flex-col items-center justify-center gap-1.5 transition-all duration-300 rounded-xl hover:bg-white/5 cursor-pointer 
+                  <button
+                    onClick={() => setIsMenuOpen(!isMenuOpen)}
+                    className={`w-10 h-10 flex flex-col items-center justify-center gap-1.5 transition-all duration-300 rounded-xl hover:bg-white/5 cursor-pointer 
                         ${isMenuOpen ? 'bg-white/10' : ''}`}
-                    >
-                      <div className={`h-[2px] bg-white transition-all duration-300 transform rounded-full ${isMenuOpen ? 'w-5 rotate-45 translate-y-[8px]' : 'w-5'}`} />
-                      <div className={`h-[2px] bg-white transition-all duration-300 rounded-full ${isMenuOpen ? 'w-0 opacity-0' : 'w-3 opacity-100'}`} />
-                      <div className={`h-[2px] bg-white transition-all duration-300 transform rounded-full ${isMenuOpen ? 'w-5 -rotate-45 -translate-y-[8px]' : 'w-5'}`} />
-                    </button>
+                  >
+                    <div className={`h-[2px] bg-white transition-all duration-300 transform rounded-full ${isMenuOpen ? 'w-5 rotate-45 translate-y-[8px]' : 'w-5'}`} />
+                    <div className={`h-[2px] bg-white transition-all duration-300 rounded-full ${isMenuOpen ? 'w-0 opacity-0' : 'w-3 opacity-100'}`} />
+                    <div className={`h-[2px] bg-white transition-all duration-300 transform rounded-full ${isMenuOpen ? 'w-5 -rotate-45 -translate-y-[8px]' : 'w-5'}`} />
+                  </button>
                 </div>
               )
             )}
@@ -205,33 +205,33 @@ export function Navbar() {
                     <span className="text-sm font-bold text-slate-300 group-hover:text-white">{item.label}</span>
                   </Link>
                 ))}
-                
+
                 {user ? (
-                   <div className="pt-2 mt-2 border-t border-white/5">
-                      <button
-                        onClick={handleLogout}
-                        className="flex items-center gap-4 w-full px-5 py-4 rounded-2xl hover:bg-rose-500/10 transition-all group cursor-pointer"
-                      >
-                        <span className="material-symbols-outlined text-slate-500 group-hover:text-rose-500 transition-colors text-xl">logout</span>
-                        <span className="text-sm font-bold text-slate-300 group-hover:text-rose-500">Sign Out</span>
-                      </button>
-                   </div>
+                  <div className="pt-2 mt-2 border-t border-white/5">
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center gap-4 w-full px-5 py-4 rounded-2xl hover:bg-rose-500/10 transition-all group cursor-pointer"
+                    >
+                      <span className="material-symbols-outlined text-slate-500 group-hover:text-rose-500 transition-colors text-xl">logout</span>
+                      <span className="text-sm font-bold text-slate-300 group-hover:text-rose-500">Sign Out</span>
+                    </button>
+                  </div>
                 ) : (
                   <div className="pt-2 mt-2 border-t border-white/5">
-                      <Link
-                        href="/login"
-                        onClick={() => setIsMenuOpen(false)}
-                        className="flex items-center gap-4 px-5 py-4 rounded-2xl hover:bg-primary/10 transition-all group"
-                      >
-                        <span className="material-symbols-outlined text-slate-500 group-hover:text-primary transition-colors text-xl">login</span>
-                        <span className="text-sm font-bold text-slate-300 group-hover:text-primary">Sign In</span>
-                      </Link>
-                   </div>
+                    <Link
+                      href="/login"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="flex items-center gap-4 px-5 py-4 rounded-2xl hover:bg-primary/10 transition-all group"
+                    >
+                      <span className="material-symbols-outlined text-slate-500 group-hover:text-primary transition-colors text-xl">login</span>
+                      <span className="text-sm font-bold text-slate-300 group-hover:text-primary">Sign In</span>
+                    </Link>
+                  </div>
                 )}
               </div>
-              
+
               <div className="bg-white/[0.02] p-4 text-center">
-                 <p className="text-[9px] font-black uppercase tracking-[3px] text-slate-600">v2.1 Auditor Edition</p>
+                <p className="text-[9px] font-black uppercase tracking-[3px] text-slate-600">v2.1 Auditor Edition</p>
               </div>
             </div>
           )}

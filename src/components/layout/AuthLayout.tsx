@@ -25,7 +25,7 @@ export function AuthLayout({ children, variant = 'login' }: AuthLayoutProps) {
 
       <header className="absolute top-8 left-8">
         <Link href="/" className="font-headline text-xl font-bold text-on-surface">
-          Brand Deal Scanner
+          Brand Deal Fixer
         </Link>
       </header>
 
@@ -34,7 +34,7 @@ export function AuthLayout({ children, variant = 'login' }: AuthLayoutProps) {
         
         {/* Mandatory Legal Disclaimer */}
         <footer className="mt-12 text-[10px] md:text-xs text-on-surface-variant max-w-sm text-center font-mono uppercase tracking-widest leading-relaxed">
-          LEGAL DISCLAIMER: Brand Deal Scanner is an AI analysis tool and does not provide legal advice.
+          LEGAL DISCLAIMER: Brand Deal Fixer is an AI analysis tool and does not provide legal advice.
         </footer>
       </main>
     </div>
