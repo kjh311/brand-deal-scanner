@@ -45,17 +45,17 @@ export function TrustSection() {
   ]
 
   return (
-    <section ref={containerRef} className="bg-surface-container-lowest py-20 px-10 border-y border-outline-variant/30">
+    <section ref={containerRef} className="bg-white/5 py-20 px-10 border-y border-white/10">
       <div className="max-w-[1280px] mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
         {features.map((feature, idx) => (
           <div key={idx} className="reveal-trust flex flex-col items-center text-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-surface-container flex items-center justify-center border border-outline-variant/50">
-              <span className="material-symbols-outlined text-[32px] text-primary">{feature.icon}</span>
+            <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center border border-[#E2E8F0] shadow-sm">
+              <span className="material-symbols-outlined text-[32px] text-[#D84C9F]">{feature.icon}</span>
             </div>
-            <h3 className="font-headline text-xl text-on-surface font-medium tracking-[-0.02em]">
+            <h3 className="font-headline text-xl text-[#1E1A5F] font-bold tracking-[-0.02em]">
               {feature.title}
             </h3>
-            <p className="text-sm text-on-surface-variant">
+            <p className="text-sm text-[#64748B]">
               {feature.description}
             </p>
           </div>

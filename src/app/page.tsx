@@ -8,7 +8,7 @@ import { Footer } from '@/components/layout/Footer'
 
 export default function LandingPage() {
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-[#F8FAFC] text-[#1E1A5F]">
       <Navbar />
       <main className="flex-grow">
         <Hero />

@@ -49,29 +49,29 @@ export function TestimonialsSection() {
   ]
 
   return (
-    <section ref={containerRef} className="py-20 px-10 bg-surface" id="testimonials">
+    <section ref={containerRef} className="py-20 px-10 bg-transparent" id="testimonials">
       <div className="max-w-[1280px] mx-auto">
         <div className="text-center mb-16">
-          <p className="text-xs font-mono uppercase tracking-wider text-secondary mb-4">SUCCESS STORIES</p>
-          <h2 className="font-headline text-4xl text-on-surface font-semibold tracking-[-0.02em]">
+          <p className="text-xs font-mono uppercase tracking-wider text-[#D84C9F] mb-4">SUCCESS STORIES</p>
+          <h2 className="font-headline text-4xl text-[#1E1A5F] font-bold tracking-[-0.02em]">
             Trusted by the Creator Economy
           </h2>
         </div>
         
         <div className="grid md:grid-cols-3 gap-8">
           {testimonials.map((t, idx) => (
-            <div key={idx} className="reveal-testimonial glass-card rounded-2xl p-8 flex flex-col">
-              <div className="flex gap-1 text-secondary mb-4">
+            <div key={idx} className="reveal-testimonial bg-white border border-[#E2E8F0] shadow-xl rounded-2xl p-8 flex flex-col text-[#1E1A5F]">
+              <div className="flex gap-1 text-amber-400 mb-4">
                 {[1, 2, 3, 4, 5].map((s) => (
                   <span key={s} className="material-symbols-outlined text-[18px]">star</span>
                 ))}
               </div>
-              <p className="text-lg text-on-surface italic mb-8 font-serif leading-relaxed">{t.text}</p>
+              <p className="text-lg text-[#1E1A5F] italic mb-8 font-serif leading-relaxed">{t.text}</p>
               <div className="flex items-center gap-4 mt-auto">
-                <div className={`w-12 h-12 rounded-full ${t.color}`}></div>
+                <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-[#221A7F] to-[#D84C9F] shrink-0"></div>
                 <div>
-                  <p className="text-base text-on-surface font-bold">{t.author}</p>
-                  <p className="text-[10px] text-on-surface-variant uppercase tracking-wider">{t.role}</p>
+                  <p className="text-base text-[#1E1A5F] font-bold">{t.author}</p>
+                  <p className="text-[10px] text-[#64748B] uppercase tracking-wider">{t.role}</p>
                 </div>
               </div>
             </div>

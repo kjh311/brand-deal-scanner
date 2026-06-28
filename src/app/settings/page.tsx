@@ -144,6 +144,15 @@ export default function SettingsPage() {
                  </div>
 
                  <div className="space-y-4">
+                    {credits === 0 && (
+                      <button 
+                        onClick={() => router.push('/upload')}
+                        className="w-full py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-sm hover:scale-[1.01] transition-transform shadow-xl flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <span className="material-symbols-outlined text-sm">bolt</span>
+                        Purchase Top Ups
+                      </button>
+                    )}
                     <button 
                       onClick={handleUpdatePlan}
                       disabled={updating}

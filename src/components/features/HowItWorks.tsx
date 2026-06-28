@@ -73,8 +73,8 @@ export function HowItWorks() {
     <section ref={sectionRef} className="py-20 px-10" id="how-it-works">
       <div className="max-w-[1280px] mx-auto">
         <div className="text-center mb-20">
-          <p className="text-xs font-mono uppercase tracking-wider text-primary mb-4">METHODOLOGY</p>
-          <h2 className="font-headline text-4xl text-on-surface font-semibold tracking-[-0.02em]">
+          <p className="text-xs font-mono uppercase tracking-wider text-[#D84C9F] mb-4">METHODOLOGY</p>
+          <h2 className="font-headline text-4xl text-[#1E1A5F] font-bold tracking-[-0.02em]">
             Audit Process in 60 Seconds
           </h2>
         </div>
@@ -87,21 +87,21 @@ export function HowItWorks() {
               { num: '3', title: 'Counter-Offer', desc: 'Download a redlined PDF with optimized clauses for your protection.' }
             ].map((step) => (
               <div key={step.num} className="reveal-step flex gap-6 group">
-                <div className="flex-shrink-0 w-12 h-12 rounded-full border border-primary flex items-center justify-center text-primary font-bold group-hover:bg-primary group-hover:text-on-primary transition-colors">
+                <div className="flex-shrink-0 w-12 h-12 rounded-full border border-[#D84C9F] flex items-center justify-center text-[#D84C9F] font-bold group-hover:bg-[#D84C9F] group-hover:text-white transition-colors">
                   {step.num}
                 </div>
                 <div>
-                  <h4 className="font-headline text-xl text-on-surface font-medium tracking-[-0.02em]">{step.title}</h4>
-                  <p className="text-sm text-on-surface-variant mt-2">{step.desc}</p>
+                  <h4 className="font-headline text-xl text-[#1E1A5F] font-medium tracking-[-0.02em]">{step.title}</h4>
+                  <p className="text-sm text-[#64748B] mt-2">{step.desc}</p>
                 </div>
               </div>
             ))}
           </div>
 
-          <div className="lg:col-span-2 glass-card rounded-2xl p-8 flex flex-col md:flex-row items-center gap-8 animate-float">
+          <div className="lg:col-span-2 bg-white border border-[#E2E8F0] shadow-xl rounded-2xl p-8 flex flex-col md:flex-row items-center gap-8 animate-float text-[#1E1A5F]">
             <div className="relative w-64 h-64 flex items-center justify-center">
               <svg className="w-full h-full -rotate-90 gauge-svg" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="40" fill="transparent" stroke="#1C1C1E" strokeWidth="10" />
+                <circle cx="50" cy="50" r="40" fill="transparent" stroke="#E2E8F0" strokeWidth="10" />
                 <circle
                   ref={gaugeRef}
                   cx="50" cy="50" r="40"
@@ -115,32 +115,32 @@ export function HowItWorks() {
                 />
               </svg>
               <div className="absolute flex flex-col items-center">
-                <span className="text-5xl font-bold text-on-surface">{score}</span>
-                <span className="text-xs font-mono uppercase tracking-wider text-secondary">HEALTHY</span>
+                <span className="text-5xl font-bold text-[#1E1A5F]">{score}</span>
+                <span className="text-xs font-mono uppercase tracking-wider text-emerald-500">HEALTHY</span>
               </div>
             </div>
 
             <div className="flex-1 flex flex-col gap-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-secondary/10 border border-secondary/20">
-                  <span className="material-symbols-outlined text-secondary">check_circle</span>
+                <div className="p-2 rounded-lg bg-emerald-50 border border-emerald-200">
+                  <span className="material-symbols-outlined text-emerald-500">check_circle</span>
                 </div>
                 <div>
-                  <h5 className="font-headline font-bold text-on-surface">Standard Usage Rights</h5>
-                  <p className="text-sm text-on-surface-variant">Usage limited to 12 months on social media channels.</p>
+                  <h5 className="font-headline font-bold text-[#1E1A5F]">Standard Usage Rights</h5>
+                  <p className="text-sm text-[#64748B]">Usage limited to 12 months on social media channels.</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-error/10 border border-error/20">
-                  <span className="material-symbols-outlined text-error">warning</span>
+                <div className="p-2 rounded-lg bg-red-50 border border-red-200">
+                  <span className="material-symbols-outlined text-red-500">warning</span>
                 </div>
                 <div>
-                  <h5 className="font-headline font-bold text-on-surface">Broad Exclusivity Trap</h5>
-                  <p className="text-sm text-on-surface-variant">Prohibits work with all "beverage" brands for 2 years.</p>
+                  <h5 className="font-headline font-bold text-[#1E1A5F]">Broad Exclusivity Trap</h5>
+                  <p className="text-sm text-[#64748B]">Prohibits work with all "beverage" brands for 2 years.</p>
                 </div>
               </div>
-              <div className="mt-4 p-4 rounded-xl bg-surface-container-high border border-outline-variant/30">
-                <p className="text-xs font-mono text-primary-container">
+              <div className="mt-4 p-4 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]">
+                <p className="text-xs font-mono text-[#D84C9F] font-bold">
                   AI Recommendation: Strike clause 4.2. Limit exclusivity to direct competitors only (e.g., Brand X, Brand Y).
                 </p>
               </div>
