@@ -73,7 +73,7 @@ export function HowItWorks() {
     <section ref={sectionRef} className="py-20 px-10" id="how-it-works">
       <div className="max-w-[1280px] mx-auto">
         <div className="text-center mb-20">
-          <p className="text-xs font-mono uppercase tracking-wider text-[#D84C9F] mb-4">METHODOLOGY</p>
+          <p className="text-xs font-mono uppercase tracking-wider text-white/80 mb-4">METHODOLOGY</p>
           <h2 className="font-headline text-4xl text-white font-bold tracking-[-0.02em]">
             Audit Process in 60 Seconds
           </h2>

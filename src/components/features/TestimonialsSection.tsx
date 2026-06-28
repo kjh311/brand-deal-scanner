@@ -52,7 +52,7 @@ export function TestimonialsSection() {
     <section ref={containerRef} className="py-20 px-10 bg-transparent" id="testimonials">
       <div className="max-w-[1280px] mx-auto">
         <div className="text-center mb-16">
-          <p className="text-xs font-mono uppercase tracking-wider text-[#D84C9F] mb-4">SUCCESS STORIES</p>
+          <p className="text-xs font-mono uppercase tracking-wider text-white/80 mb-4">SUCCESS STORIES</p>
           <h2 className="font-headline text-4xl text-white font-bold tracking-[-0.02em]">
             Trusted by the Creator Economy
           </h2>
