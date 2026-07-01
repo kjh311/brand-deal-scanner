@@ -179,7 +179,7 @@ Deno.serve(async (req) => {
     const customPrompt = `Act as an elite professional talent manager negotiating a brand deal on behalf of a top-tier creator. Your goal is to protect the creator's interests while maintaining a collaborative, deal-closing relationship with the brand. NEVER sound defensive, litigious, or adversarial. Frame all requests as "standard industry adjustments to ensure a mutually beneficial partnership."
 
     ZERO-MISSING-CLAUSES AUDIT PROTOCOL (MANDATORY):
-    Before generating the response, scan the contract text for these 16 high-risk targets. If ANY are found, they MUST each receive its own distinct numbered bullet point in the email. Never combine separate risks into a single paragraph.
+    Before generating the response, scan the contract text for these 17 high-risk targets. If ANY are found, they MUST each receive its own distinct numbered bullet point in the email. Never combine separate risks into a single paragraph.
     
     1. HIDDEN LIQUIDATED DAMAGES & FINES: Scan for fixed monetary penalties (e.g., "$5,000 per incident"), flat fees for arbitrary breaches, or automatic billing penalties.
     2. EXCLUSIVITY OVERREACH: Scan for post-campaign windows exceeding 30 days, or categories that cross over into non-competing spaces.
@@ -196,6 +196,7 @@ Deno.serve(async (req) => {
     13. RETROACTIVE/HISTORICAL CONTENT GRABS: Scan the IP section for any clauses claiming rights to content created prior to the contract's effective date. Explicitly demand that historical content be excluded from the scope of the license.
     14. DASHBOARD & PRIVATE PLATFORM ACCESS: Scan for clauses demanding direct access, passwords, or read-only access to a creator's backend analytics dashboards or email lists. Require that metrics be delivered via screenshot/PDF report instead of direct platform access.
     15. STRICT IP TIME LIMITS: Enforce a zero-tolerance policy on the word "perpetual" in the generated 'Proposed Language' for IP clauses. It must ALWAYS explicitly insert a capped timeline (e.g., "12 months") unless the user overrides it.
+    16. POST-CAMPAIGN COMPETITIVE RIGHT OF FIRST REFUSAL: Scan for provisions that force a creator to disclose competitor offers or give the brand matching rights after the contract has ended. Explicitly demand that these handcuffs be stripped to protect the creator's future commercial mobility.
     16. ZERO-TOLERANCE "WE" FILTER: Perform a final text sweep on the intro and outro paragraphs to ensure collective pronouns ("we", "our", "us") are completely replaced with first-person singular phrasing ("I", "my", "me") or passive business terms.
 
     EMAIL GENERATION RULES (MANDATORY):
@@ -241,7 +242,7 @@ Deno.serve(async (req) => {
       10. Dispute Resolution (Local/affordable mediation process).
       * Also flag any other standard talent agreement protections that are absent.
     - FINANCIAL RISK QUANTIFIER (MANDATORY):
-      For EVERY predatory clause or missing protection identified, calculate an "Estimated Liability Value Saved" and add it to the `financial_risk_quantifier` array. Use the contract's total flat fee as the base value for calculations. If the flat fee is not explicitly stated, estimate based on standard market rates for the creator tier described.
+      For EVERY predatory clause or missing protection identified, calculate an "Estimated Liability Value Saved" and add it to the \`financial_risk_quantifier\` array. Use the contract's total flat fee as the base value for calculations. If the flat fee is not explicitly stated, estimate based on standard market rates for the creator tier described.
       Calculation framework:
       - Perpetual IP / Right-of-Publicity traps: 2x the contract's flat fee.
       - Fixed Fines / Liquidated Damages: The exact dollar amount printed in the contract.
@@ -257,8 +258,9 @@ Deno.serve(async (req) => {
       - Automatic Renewal/Opt-Out Traps: 1x the contract's flat fee.
       - Retroactive/Historical Content Grabs: 1x the contract's flat fee.
       - Dashboard & Private Platform Access: 0.5x the contract's flat fee.
-      - Hidden Liquidated Damages & Fines: The exact dollar amount if specified, otherwise 1x the contract's flat fee.
-      Output format: array of objects with `category`, `description`, and `estimated_value` (number in USD).
+       - Hidden Liquidated Damages & Fines: The exact dollar amount if specified, otherwise 1x the contract's flat fee.
+       - Post-Campaign Competitive Right of First Refusal: 2x the contract's flat fee in lost opportunity costs.
+        Output format: array of objects with category, description, and estimated_value (number in USD).
 
     SCHEMA: { 
       "summary": "string", 

@@ -173,6 +173,28 @@ function AnalysisContent() {
         </button>
       </header>
 
+      {/* Financial Risk Quantifier */}
+      {contract.financial_risk_quantifier && contract.financial_risk_quantifier.length > 0 && (
+        <section className="space-y-4">
+          <h3 className="text-sm font-black text-white/60 uppercase tracking-[4px]">Estimated Liability Value Saved</h3>
+          <div className="bg-white rounded-[2.5rem] p-8 md:p-10 text-[#1E1A5F] border border-[#E2E8F0] shadow-xl">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {contract.financial_risk_quantifier.map((item: any, i: number) => (
+                <div key={i} className="bg-[#F8FAFC] rounded-2xl p-6 border border-[#E2E8F0] flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black uppercase tracking-wider text-[#64748B]">{item.category}</span>
+                    <span className="text-lg font-black text-emerald-600">
+                      ${item.estimated_value?.toLocaleString() || '0'}
+                    </span>
+                  </div>
+                  <p className="text-sm text-[#1E1A5F] leading-relaxed">{item.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Hidden Report Template for PDF Generation */}
       <ReportTemplate ref={reportRef} contract={contract} />
 

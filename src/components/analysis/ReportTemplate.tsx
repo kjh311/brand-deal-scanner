@@ -88,25 +88,43 @@ export const ReportTemplate = React.forwardRef<HTMLDivElement, ReportTemplatePro
                 </div>
               </div>
 
-              {/* Scorecard */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px', breakInside: 'avoid' }}>
-                <div style={{ padding: '16px', backgroundColor: colors.slate50, border: `1px solid ${colors.slate100}`, borderRadius: '12px', textAlign: 'center' }}>
-                  <span style={{ fontSize: '9px', fontWeight: 'bold', color: colors.slate400, textTransform: 'uppercase', display: 'block' }}>Health Score</span>
-                  <span style={{ fontSize: '30px', fontWeight: 900, color: colors.emerald600 }}>{contract.health_score}<span style={{ fontSize: '14px', color: colors.slate400, fontWeight: 'bold' }}>/100</span></span>
-                </div>
-                <div style={{ padding: '16px', border: `1px solid ${colors.slate100}`, borderRadius: '12px', textAlign: 'center' }}>
-                  <span style={{ fontSize: '9px', fontWeight: 'bold', color: colors.slate400, textTransform: 'uppercase', display: 'block' }}>Red Flags</span>
-                  <span style={{ fontSize: '24px', fontWeight: 'bold', color: colors.rose500 }}>{redFlags}</span>
-                </div>
-                <div style={{ padding: '16px', border: `1px solid ${colors.slate100}`, borderRadius: '12px', textAlign: 'center' }}>
-                  <span style={{ fontSize: '9px', fontWeight: 'bold', color: colors.slate400, textTransform: 'uppercase', display: 'block' }}>Caution Items</span>
-                  <span style={{ fontSize: '24px', fontWeight: 'bold', color: colors.amber600 }}>{mediumRisks}</span>
-                </div>
-                <div style={{ padding: '16px', border: `1px solid ${colors.slate100}`, borderRadius: '12px', textAlign: 'center' }}>
-                  <span style={{ fontSize: '9px', fontWeight: 'bold', color: colors.slate400, textTransform: 'uppercase', display: 'block' }}>Safe Clauses</span>
-                  <span style={{ fontSize: '24px', fontWeight: 'bold', color: colors.emerald600 }}>{lowRisks}</span>
-                </div>
-              </div>
+               {/* Scorecard */}
+               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px', breakInside: 'avoid' }}>
+                 <div style={{ padding: '16px', backgroundColor: colors.slate50, border: `1px solid ${colors.slate100}`, borderRadius: '12px', textAlign: 'center' }}>
+                   <span style={{ fontSize: '9px', fontWeight: 'bold', color: colors.slate400, textTransform: 'uppercase', display: 'block' }}>Health Score</span>
+                   <span style={{ fontSize: '30px', fontWeight: 900, color: colors.emerald600 }}>{contract.health_score}<span style={{ fontSize: '14px', color: colors.slate400, fontWeight: 'bold' }}>/100</span></span>
+                 </div>
+                 <div style={{ padding: '16px', border: `1px solid ${colors.slate100}`, borderRadius: '12px', textAlign: 'center' }}>
+                   <span style={{ fontSize: '9px', fontWeight: 'bold', color: colors.slate400, textTransform: 'uppercase', display: 'block' }}>Red Flags</span>
+                   <span style={{ fontSize: '24px', fontWeight: 'bold', color: colors.rose500 }}>{redFlags}</span>
+                 </div>
+                 <div style={{ padding: '16px', border: `1px solid ${colors.slate100}`, borderRadius: '12px', textAlign: 'center' }}>
+                   <span style={{ fontSize: '9px', fontWeight: 'bold', color: colors.slate400, textTransform: 'uppercase', display: 'block' }}>Caution Items</span>
+                   <span style={{ fontSize: '24px', fontWeight: 'bold', color: colors.amber600 }}>{mediumRisks}</span>
+                 </div>
+                 <div style={{ padding: '16px', border: `1px solid ${colors.slate100}`, borderRadius: '12px', textAlign: 'center' }}>
+                   <span style={{ fontSize: '9px', fontWeight: 'bold', color: colors.slate400, textTransform: 'uppercase', display: 'block' }}>Safe Clauses</span>
+                   <span style={{ fontSize: '24px', fontWeight: 'bold', color: colors.emerald600 }}>{lowRisks}</span>
+                 </div>
+               </div>
+
+               {/* Financial Risk Quantifier */}
+               {contract.financial_risk_quantifier && contract.financial_risk_quantifier.length > 0 && (
+                 <div style={{ marginBottom: '24px', breakInside: 'avoid' }}>
+                   <h4 style={{ fontSize: '12px', fontWeight: 'bold', color: colors.primary, textTransform: 'uppercase', marginBottom: '12px', textAlign: 'center' }}>Estimated Liability Value Saved</h4>
+                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+                     {contract.financial_risk_quantifier.map((item: any, i: number) => (
+                       <div key={i} style={{ padding: '12px', backgroundColor: colors.slate50, border: `1px solid ${colors.slate100}`, borderRadius: '8px' }}>
+                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                           <span style={{ fontSize: '8px', fontWeight: 'bold', color: colors.slate500, textTransform: 'uppercase' }}>{item.category}</span>
+                           <span style={{ fontSize: '14px', fontWeight: 'bold', color: colors.emerald600 }}>${item.estimated_value?.toLocaleString() || '0'}</span>
+                         </div>
+                         <p style={{ fontSize: '10px', color: colors.slate600, lineHeight: 1.4 }}>{item.description}</p>
+                       </div>
+                     ))}
+                   </div>
+                 </div>
+               )}
 
               {/* Summary Text */}
               <div style={{ backgroundColor: colors.slate50, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.slate100}`, textAlign: 'center' }}>

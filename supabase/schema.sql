@@ -104,6 +104,7 @@ create table public.contracts (
   cautionary_clauses jsonb,
   missing_protections jsonb,
   suggested_response text,
+  financial_risk_quantifier jsonb,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
