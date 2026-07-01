@@ -76,22 +76,22 @@ export default function SettingsPage() {
           
           <header className="space-y-2">
             <h1 className="font-headline text-4xl font-black tracking-tight text-white mb-2">Account Settings</h1>
-            <p className="text-slate-500">Manage your subscription, profile preferences, and credit balance.</p>
+            <p className="text-white/70">Manage your subscription, profile preferences, and credit balance.</p>
           </header>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Sidebar Controls */}
-            <nav className="space-y-2">
-               <button className="w-full text-left px-6 py-4 rounded-2xl bg-white text-[#1E1A5F] font-bold border border-[#E2E8F0] shadow-lg transition-all cursor-pointer">
-                 Plan & Billing
-               </button>
-               <button className="w-full text-left px-6 py-4 rounded-2xl hover:bg-white text-[#64748B] font-medium transition-all cursor-pointer border border-transparent">
-                 Security
-               </button>
-               <button className="w-full text-left px-6 py-4 rounded-2xl hover:bg-white text-[#64748B] font-medium transition-all cursor-pointer border border-transparent">
-                 Preference
-               </button>
-            </nav>
+             <nav className="space-y-2">
+                <button className="w-full text-left px-6 py-4 rounded-2xl bg-white text-[#1E1A5F] font-bold border border-[#E2E8F0] shadow-lg transition-all cursor-pointer">
+                  Plan & Billing
+                </button>
+                <button className="w-full text-left px-6 py-4 rounded-2xl hover:bg-white text-white font-medium transition-all cursor-pointer border border-transparent">
+                  Security
+                </button>
+                <button className="w-full text-left px-6 py-4 rounded-2xl hover:bg-white text-white font-medium transition-all cursor-pointer border border-transparent">
+                  Preference
+                </button>
+             </nav>
 
             <div className="md:col-span-2 space-y-8">
               
@@ -189,10 +189,10 @@ export default function SettingsPage() {
                   </div>
                   <div className="space-y-2">
                     <h4 className="font-bold text-white text-sm">Privacy Dashboard</h4>
-                    <p className="text-xs text-slate-500 leading-relaxed">
-                      We prioritize your sensitive contract data. All original documents are permanently deleted 
-                      after the AI Audit process is complete. Your Scan History only stores the resulting risk analysis.
-                    </p>
+                     <p className="text-sm text-white/70 leading-relaxed">
+                       We prioritize your sensitive contract data. All original documents are permanently deleted 
+                       after the AI Audit process is complete. Your Scan History only stores the resulting risk analysis.
+                     </p>
                   </div>
               </section>
 
