@@ -26,11 +26,11 @@ export function Hero() {
       <div className="max-w-[1280px] mx-auto relative z-10">
         <div className="max-w-3xl mx-auto text-center">
           <h1 className="font-headline text-5xl text-white leading-tight stagger-in font-bold tracking-[-0.02em]">
-            Protect Your Brand. <br />
+            Don't Sign Away Your Rights. <br />
             <span className="text-[#FFD166]">Scan Your Deals</span> in Seconds.
           </h1>
           <p className="text-lg text-white/90 max-w-2xl mx-auto mt-4 stagger-in">
-            Upload your brand contract, get an AI-powered risk audit, generate a professional counter-offer instantly and close deals with confidence.
+            Spot the trap clauses, and flip the script with a professional counter-offer. Protect your brand—and pocket what you're actually worth.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 mt-8 justify-center items-center stagger-in">
             <Link href="/plans" className="w-full sm:w-auto px-8 py-4 rounded-full bg-white text-[#221A7F] font-bold text-lg hover:bg-slate-100 transition-all active:scale-95 shadow-md cursor-pointer">

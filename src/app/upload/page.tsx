@@ -331,13 +331,12 @@ export default function UploadPage() {
                         Add Document
                       </div>
                       <p className="text-[#1E1A5F] font-black uppercase tracking-[3px] text-[11px] opacity-90">DRAG & DROP OR CLICK TO UPLOAD</p>
-                      <p className="text-[#64748B] text-[10px] uppercase tracking-widest bg-[#EDF2F7] inline-block px-4 py-1.5 rounded-full border border-[#E2E8F0]">PDF, DOCX, JPG, PNG, or Text</p>
+                      <p className="text-[#64748B] text-[10px] uppercase tracking-widest bg-[#EDF2F7] inline-block px-4 py-1.5 rounded-full border border-[#E2E8F0]">PDF, DOCX, or TXT files</p>
                     </div>
 
                     <div className="flex gap-8 justify-center pt-2 grayscale opacity-40 group-hover/drop:grayscale-0 group-hover/drop:opacity-80 transition-all duration-700">
                       <span className="material-symbols-outlined text-red-500 scale-110">picture_as_pdf</span>
                       <span className="material-symbols-outlined text-blue-500 scale-110">description</span>
-                      <span className="material-symbols-outlined text-emerald-500 scale-110">image</span>
                       <span className="material-symbols-outlined text-slate-100 scale-110">subject</span>
                     </div>
                   </div>
@@ -355,13 +354,13 @@ export default function UploadPage() {
 
                     <div className="flex gap-4">
                       <button
-                        onClick={removeFile}
+                        onClick={(e) => { e.stopPropagation(); removeFile(); }}
                         className="flex-1 px-6 py-4 rounded-xl border border-[#E2E8F0] text-[#64748B] font-bold text-xs uppercase tracking-[2px] hover:bg-[#F8FAFC] transition-all cursor-pointer"
                       >
                         Cancel
                       </button>
                       <button
-                        onClick={handleRealAnalysis}
+                        onClick={(e) => { e.stopPropagation(); handleRealAnalysis(); }}
                         className="flex-1 px-6 py-4 rounded-xl bg-gradient-to-r from-[#D84C9F] to-[#DE5298] text-white font-bold text-xs uppercase tracking-[3px] hover:brightness-105 active:scale-95 transition-all cursor-pointer shadow-md"
                       >
                         Scan Contract
@@ -489,7 +488,7 @@ export default function UploadPage() {
         ref={fileInputRef}
         type="file"
         className="hidden"
-        accept=".pdf,.docx,.txt,.jpg,.jpeg,.png,.webp"
+        accept=".pdf,.docx,.txt"
         onChange={onFileChange}
       />
     </div>

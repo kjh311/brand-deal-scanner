@@ -122,7 +122,7 @@ function AnalysisContent() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <Loader2 className="w-10 h-10 text-[#D84C9F] animate-spin" />
-        <p className="text-slate-200 font-bold tracking-widest text-[10px] uppercase">Finalizing Report Surface...</p>
+        <p className="text-slate-200 font-bold tracking-widest text-xs uppercase">Finalizing Report Surface...</p>
       </div>
     )
   }
@@ -148,7 +148,7 @@ function AnalysisContent() {
       {/* Header */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-white/10 pb-8">
         <div className="space-y-2">
-          <div className="flex items-center gap-2 text-cyan-300 font-bold text-[10px] uppercase tracking-widest opacity-80">
+          <div className="flex items-center gap-2 text-cyan-300 font-bold text-xs uppercase tracking-widest opacity-80">
             <div className="w-1.5 h-1.5 rounded-full bg-cyan-300" />
             Security Audit Active
           </div>
@@ -161,7 +161,7 @@ function AnalysisContent() {
               return displayName.split('.')[0].replace(/_/g, ' ') || 'Untitled Report';
             })()}
           </h2>
-          <p className="text-slate-300 text-xs font-semibold">Processed on {new Date(contract.created_at).toLocaleDateString()}</p>
+          <p className="text-slate-300 text-sm font-semibold">Processed on {new Date(contract.created_at).toLocaleDateString()}</p>
         </div>
 
         <button 
@@ -179,12 +179,12 @@ function AnalysisContent() {
       <div className="space-y-12">
         {/* Summary with Integrated Health Score */}
         <section className="space-y-4">
-          <h3 className="text-xs font-black text-white/60 uppercase tracking-[4px]">Executive Summary</h3>
+          <h3 className="text-sm font-black text-white/60 uppercase tracking-[4px]">Executive Summary</h3>
           <div className="bg-white rounded-[3rem] p-10 text-[#1E1A5F] leading-relaxed text-base border border-[#E2E8F0] shadow-xl">
             
             <div className="flex flex-col items-center mb-10 pb-10 border-b border-[#E2E8F0] relative overflow-hidden">
                <div className="absolute top-0 right-0">
-                  <div className={`text-[9px] font-black px-4 py-2 rounded-xl border-2 ${scoreBadge} tracking-[2px] uppercase shadow-md`}>
+                   <div className={`text-[10px] font-black px-4 py-2 rounded-xl border-2 ${scoreBadge} tracking-[2px] uppercase shadow-md`}>
                     {scoreText}
                   </div>
                 </div>
@@ -205,7 +205,7 @@ function AnalysisContent() {
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
                     <span className="text-6xl font-black tracking-tighter text-[#1E1A5F] leading-none">{displayScore}</span>
-                    <span className="text-[8px] font-mono text-[#64748B] mt-3 tracking-[3px] uppercase font-black">Score</span>
+                    <span className="text-[10px] font-mono text-[#64748B] mt-3 tracking-[3px] uppercase font-black">Score</span>
                   </div>
                 </div>
             </div>
@@ -220,19 +220,19 @@ function AnalysisContent() {
 
         {/* Red Flags */}
         <section className="space-y-6">
-          <h3 className="text-xs font-black text-white/60 uppercase tracking-[4px]">Critical Risks</h3>
+          <h3 className="text-sm font-black text-white/60 uppercase tracking-[4px]">Critical Risks</h3>
           <div className="space-y-6">
             {contract.predatory_clauses?.map((clause: any, i: number) => (
               <div key={i} className="bg-white border border-[#E2E8F0] border-l-8 border-l-rose-500 rounded-[2.5rem] overflow-hidden shadow-lg transition hover:shadow-xl">
                 <div className="p-8 space-y-8">
                   <div className="space-y-3">
-                    <p className="text-[10px] font-bold text-rose-600 uppercase tracking-widest font-mono">Source Passage</p>
+                     <p className="text-xs font-bold text-rose-600 uppercase tracking-widest font-mono">Source Passage</p>
                     <div className="text-sm text-[#1E1A5F] font-mono leading-relaxed bg-[#FFF5F5] p-6 rounded-2xl border border-rose-100 italic">
                       "{clause.snippet}"
                     </div>
                   </div>
                   <div className="bg-rose-50 rounded-2xl p-6 border border-rose-100">
-                    <p className="text-rose-500 font-black text-[10px] uppercase tracking-widest mb-3">AI Verdict</p>
+                     <p className="text-rose-500 font-black text-xs uppercase tracking-widest mb-3">AI Verdict</p>
                     <p className="text-rose-700 text-lg leading-relaxed font-bold tracking-tight">{clause.explanation}</p>
                   </div>
                 </div>
@@ -243,12 +243,12 @@ function AnalysisContent() {
 
         {/* Areas of Concern */}
         <section className="space-y-6">
-          <h3 className="text-xs font-black text-white/60 uppercase tracking-[4px]">Areas of Concern</h3>
+          <h3 className="text-sm font-black text-white/60 uppercase tracking-[4px]">Areas of Concern</h3>
           <div className="grid grid-cols-1 gap-4">
             {contract.cautionary_clauses?.map((clause: any, i: number) => (
               <div key={i} className="bg-white rounded-2xl p-6 border border-[#E2E8F0] border-l-8 border-l-amber-500 shadow-md">
                 <div className="space-y-4">
-                   <p className="text-[#64748B] italic text-xs font-mono leading-snug">"{clause.snippet}"</p>
+                    <p className="text-sm text-[#64748B] italic font-mono leading-snug">"{clause.snippet}"</p>
                    <p className="text-[#1E1A5F] text-base leading-relaxed font-bold">{clause.explanation}</p>
                 </div>
               </div>
@@ -258,7 +258,7 @@ function AnalysisContent() {
 
         {/* Missing Protections */}
         <section className="space-y-6">
-          <h3 className="text-xs font-black text-white/60 uppercase tracking-[4px]">Missing Safeguards</h3>
+          <h3 className="text-sm font-black text-white/60 uppercase tracking-[4px]">Missing Safeguards</h3>
           <div className="bg-white border border-[#E2E8F0] rounded-[2.5rem] p-10 shadow-xl">
             <div className="grid md:grid-cols-2 gap-8">
               {contract.missing_protections?.map((item: any, i: number) => (
@@ -278,17 +278,17 @@ function AnalysisContent() {
 
         {/* Legal Translation */}
         <section className="space-y-6">
-          <h3 className="text-xs font-black text-white/60 uppercase tracking-[4px]">Legal Decoder</h3>
+          <h3 className="text-sm font-black text-white/60 uppercase tracking-[4px]">Legal Decoder</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
              {contract.legalese_translation?.map((term: any, i: number) => (
                <div key={i} className="bg-white rounded-2xl p-6 border border-[#E2E8F0] hover:border-[#D84C9F]/30 transition-all shadow-md">
                   <div className="space-y-4">
                     <div>
-                      <p className="text-[9px] font-black text-[#64748B] uppercase mb-1">Instance</p>
-                      <p className="text-xs font-mono text-[#64748B] leading-relaxed italic truncate">"{term.original}"</p>
-                    </div>
-                    <div className="pt-4 border-t border-[#E2E8F0]">
-                      <p className="text-[9px] font-black text-[#D84C9F] uppercase mb-2">Meaning</p>
+                       <p className="text-[10px] font-black text-[#64748B] uppercase mb-1">Instance</p>
+                       <p className="text-sm font-mono text-[#64748B] leading-relaxed italic truncate">"{term.original}"</p>
+                     </div>
+                     <div className="pt-4 border-t border-[#E2E8F0]">
+                       <p className="text-[10px] font-black text-[#D84C9F] uppercase mb-2">Meaning</p>
                       <p className="text-base font-bold text-[#1E1A5F] tracking-tight leading-tight uppercase font-mono">{term.translation}</p>
                     </div>
                   </div>
