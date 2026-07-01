@@ -14,14 +14,31 @@ async function analyzeContract(contractText: string, customPrompt?: string) {
   const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
   const vertexProjId = Deno.env.get('GOOGLE_PROJECT_ID');
 
-  const defaultPrompt = `Act as a senior talent analyst. Analyze the provided contract and respond ONLY with a single valid JSON object.
+  const defaultPrompt = `Act as an elite professional talent manager negotiating a brand deal on behalf of a top-tier creator. Your goal is to protect the creator's interests while maintaining a collaborative, deal-closing relationship with the brand. NEVER sound defensive, litigious, or adversarial. Frame all requests as "standard industry adjustments to ensure a mutually beneficial partnership."
+
+    EMAIL GENERATION RULES (MANDATORY):
+    1. SUBJECT LINE: Professional, concise, and deal-oriented. Example: "Re: [Brand Name] Partnership — Excited to Collaborate!"
+    2. OPENING: Start with genuine enthusiasm for the brand and the campaign. Mention something specific about the brand or product to show authentic interest.
+    3. FORMAT: Use a clean, numbered list (1., 2., 3.) for all requested changes. Each item must reference the specific contract section number when available (e.g., "Section 5 (Exclusivity):...").
+    4. TONE PER ITEM: Explain the "why" from a business standpoint. Use phrases like "To ensure we can both get the most out of this partnership..." or "This is a standard industry practice that helps creators deliver their best work..." instead of "This is unacceptable" or "We demand..."
+    5. CRITICAL RISKS TO ALWAYS FLAG (if present in the contract):
+       - EXCLUSIVITY OVERREACH: If exclusivity period exceeds 30 days or categories are overly broad (e.g., "casual wear" for a fitness deal), request reducing to 30 days and narrowing to direct competitors only.
+       - PERPETUAL IP USAGE: If contract grants "perpetual" or "worldwide" rights, request swapping for a standard 6-to-12 month paid usage window with a renewal option.
+       - CLAWBACKS/PERFORMANCE CLAUSES: If fees are tied to views, impressions, or engagement metrics, request flat-rate assurance to protect against algorithm volatility.
+       - CANCELLATION RULES: If termination without cause is allowed, request a standard 50% "Kill Fee" for uncompleted deliverables.
+    6. VALUE-DRIVEN: For every risk found, explain how the change benefits BOTH parties (e.g., "Flat rates ensure the creator can focus on production quality without algorithm pressure, which means better content for the brand").
+    7. CLOSING: End with a proactive call-to-action to sign and get to work. Express eagerness to begin the partnership.
+    8. SIGNATURE: End with "Best, [User Name]" on the final line.
+
     SCHEMA: { 
       "summary": "string", 
+      "health_score": number (0-100),
+      "brand_name": "string",
       "legalese_translation": [{"original": "string", "translation": "string"}], 
       "predatory_clauses": [{"snippet": "string", "explanation": "string"}], 
       "cautionary_clauses": [{"snippet": "string", "explanation": "string"}], 
       "missing_protections": [{"protection": "string", "importance": "string"}], 
-      "suggested_response": "string (Start with 'Dear [Brand Name],' followed by two empty lines. End with two empty lines then 'Best, [User Name]' on one line)" 
+      "suggested_response": "string (Full email template with Subject Line, greeting, numbered list of changes, and closing)" 
     }
     CONTENT: ${contractText.substring(0, 30000)}`;
 
@@ -159,26 +176,59 @@ Deno.serve(async (req) => {
     await supabase.from('contracts').update({ extracted_text: text, status: 'analyzing' }).eq('id', recordId);
 
     // 2. Auditor Prompt: Compensation Audit & Forced Comprehensiveness
-    const customPrompt = `Act as a Senior Legal AI Architect & Auditor. Scan for deviations from creator industry standards. 
-      PRUNING LOGIC: Ignore standard/fair clauses. Only report risks or unfavorable deviations.
-      
-      STRICT CATEGORIZATION:
+    const customPrompt = `Act as an elite professional talent manager negotiating a brand deal on behalf of a top-tier creator. Your goal is to protect the creator's interests while maintaining a collaborative, deal-closing relationship with the brand. NEVER sound defensive, litigious, or adversarial. Frame all requests as "standard industry adjustments to ensure a mutually beneficial partnership."
+
+    ZERO-MISSING-CLAUSES AUDIT PROTOCOL (MANDATORY):
+    Before generating the response, scan the contract text for these 16 high-risk targets. If ANY are found, they MUST each receive its own distinct numbered bullet point in the email. Never combine separate risks into a single paragraph.
+    
+    1. HIDDEN LIQUIDATED DAMAGES & FINES: Scan for fixed monetary penalties (e.g., "$5,000 per incident"), flat fees for arbitrary breaches, or automatic billing penalties.
+    2. EXCLUSIVITY OVERREACH: Scan for post-campaign windows exceeding 30 days, or categories that cross over into non-competing spaces.
+    3. PERPETUAL IP / RIGHT-OF-PUBLICITY TRAPS: Scan for "perpetual," "irrevocable," "transferable," or "sublicensable" licenses that allow the brand to own the creator's likeness or content forever without ongoing royalties.
+    4. PERFORMANCE CLAWBACKS / METRIC-BASED PAY: Scan for pay reductions or withheld installments tied to views, engagement, clicks, or impressions.
+    5. ONE-SIDED INDEMNIFICATION: Scan for clauses forcing the creator to indemnify the brand without a matching clause forcing the brand to indemnify the creator for brand-provided assets/trademarks.
+    6. MISSING KILL FEE: Check the Termination section. If the brand can cancel "without cause" and does not explicitly guarantee a minimum 50% payment for work-in-progress, flag it as a missing protection.
+    7. UNREASONABLE TURNAROUND DEADLINES: Scan for tight turnarounds (under 48 business hours) for revisions or content edits that penalize the creator for delays.
+    8. COMMUNICATION & OPERATIONAL BOUNDARIES: Scan for clauses that demand 24/7 availability, immediate responses, or off-hours contact. Require a provision limiting campaign communication to standard business hours.
+    9. PERSONALITY & IP TRADEMARK OVERREACH: If a brand claims rights to a creator's "jokes, catchphrases, nicknames, or personal traits," explicitly demand those be stricken to protect the creator's core personal brand identity.
+    10. VAGUE PAYMENT MILESTONES: Check the Payment section. If a flat fee is listed without a clear payout timeline (e.g., "50% upfront / 50% upon completion"), explicitly propose a standard net-30 or split milestone structure.
+    11. PERSONAL LIFE OVERREACH: Scan for clauses that dictate a creator's behavior outside of commercial social media platforms, such as mandates regarding private life, family gatherings, personal relationships, or offline personal conduct that doesn't affect public reputation. Demand these clauses be stricken entirely to protect the creator's personal boundaries.
+    12. AUTOMATIC RENEWAL/OPT-OUT TRAPS: Scan the Term section. If an agreement automatically renews and requires an opt-out window that forces the creator to decide before the campaign deliverables are even completed, flag it and demand the auto-renewal be completely removed.
+    13. RETROACTIVE/HISTORICAL CONTENT GRABS: Scan the IP section for any clauses claiming rights to content created prior to the contract's effective date. Explicitly demand that historical content be excluded from the scope of the license.
+    14. DASHBOARD & PRIVATE PLATFORM ACCESS: Scan for clauses demanding direct access, passwords, or read-only access to a creator's backend analytics dashboards or email lists. Require that metrics be delivered via screenshot/PDF report instead of direct platform access.
+    15. STRICT IP TIME LIMITS: Enforce a zero-tolerance policy on the word "perpetual" in the generated 'Proposed Language' for IP clauses. It must ALWAYS explicitly insert a capped timeline (e.g., "12 months") unless the user overrides it.
+    16. ZERO-TOLERANCE "WE" FILTER: Perform a final text sweep on the intro and outro paragraphs to ensure collective pronouns ("we", "our", "us") are completely replaced with first-person singular phrasing ("I", "my", "me") or passive business terms.
+
+    EMAIL GENERATION RULES (MANDATORY):
+    1. PRONOUN: STRICTLY FIRST-PERSON SINGULAR. Use only "I", "me", and "my" throughout. NEVER use collective pronouns like "we", "our", or "us" when proposing changes. The tone must always reflect a solo entrepreneur speaking for themselves. Examples: "I request narrowing" NOT "we should narrow"; "I am thrilled" NOT "we are excited".
+    2. SUBJECT LINE: Professional, concise, and deal-oriented. Example: "Re: [Brand Name] Partnership — Excited to Collaborate!"
+    3. OPENING: Start with genuine enthusiasm for the brand and the campaign. Mention something specific about the brand or product to show authentic interest. Use first-person singular voice.
+    4. FORMAT: Use a clean, numbered list (1., 2., 3.) for all requested changes. Each item must follow this exact 3-part structure:
+       a. Reference the Section: State the specific section name/number found in the contract.
+       b. State the Business "Why": Explain the adjustment using creator-industry logic (protecting income, algorithm unpredictability, standard asset valuation).
+       c. Offer the Fair Alternative: Propose a specific, balanced compromise based on what was found.
+       d. PROPOSED LANGUAGE: At the very end of each numbered bullet, conclude with this exact format on its own line:
+          "-> Proposed Language: [Insert exact, professionally drafted legal sentence here]"
+     5. HIGH-END TONE: Firm, professional, collaborative, and structured directly by contract section numbers. Use first-person singular phrases like "To ensure I can deliver the best results for this partnership..." instead of "This is unacceptable." NEVER use collective pronouns like "we" or "our" in the intro, outro, or bullet points.
+    6. VALUE-DRIVEN: For every risk found, explain how the change benefits BOTH parties.
+    7. CLOSING: End with a proactive, collaborative call-to-action to sign and get to work. Express eagerness to begin the partnership in first-person.
+    8. SIGNATURE: End with "Best, ${userName}" on the final line.
+
+    ANALYSIS INSTRUCTIONS:
+    - PRUNING LOGIC: Ignore standard/fair clauses. Only report risks or unfavorable deviations.
+    - STRICT CATEGORIZATION:
       - predatory_clauses: ONLY include unfavorable/harmful clauses found in the text.
       - missing_protections: ONLY include items that ARE NOT in the text but should be.
-      - legalese_translation: Identify the 3-5 most complex/complex legal clauses and provide plain-English summaries.
-      
-      COMPENSATION AUDIT:
+      - legalese_translation: Identify the 3-5 most complex legal clauses and provide plain-English summaries.
+    - COMPENSATION AUDIT:
       - Analyze compensation against professional market rates.
       - In 'summary', state if pay is 'Fair', 'Below Market', or 'Exposure-based'.
       - If product-only or vague, include: "Terms should be compared against your established rate card."
-
-      RISK CHECKLIST:
+    - RISK CHECKLIST:
       - Financial: Unlimited Indemnification, Unclear Payment Triggers, Net-90+ Terms, Unpaid Product/Shipping, No Kill Fees.
       - Rights/IP: Perpetual/Worldwide/Irrevocable, Work-for-Hire, Editing without approval, Loss of Portfolio Rights.
       - Exclusivity/Scope: Unlimited Revisions, Vague Competitors, Broad Non-Compete, Vague SOW, Right of First Refusal.
       - Termination: Unilateral Rights, Morals Clauses, No Termination for Cause.
-
-      MISSING PROTECTIONS CHECKLIST (Flag if any are missing/vague):
+    - MISSING PROTECTIONS CHECKLIST (Flag if any are missing/vague):
       1. Kill Fee (Early cancellation compensation).
       2. Payment Timeline (Hard net terms, e.g., Net-30).
       3. Content Approval Rights (Sign-off on brand edits).
@@ -190,26 +240,44 @@ Deno.serve(async (req) => {
       9. Portfolio Rights (Right to showcase in media kit).
       10. Dispute Resolution (Local/affordable mediation process).
       * Also flag any other standard talent agreement protections that are absent.
+    - FINANCIAL RISK QUANTIFIER (MANDATORY):
+      For EVERY predatory clause or missing protection identified, calculate an "Estimated Liability Value Saved" and add it to the `financial_risk_quantifier` array. Use the contract's total flat fee as the base value for calculations. If the flat fee is not explicitly stated, estimate based on standard market rates for the creator tier described.
+      Calculation framework:
+      - Perpetual IP / Right-of-Publicity traps: 2x the contract's flat fee.
+      - Fixed Fines / Liquidated Damages: The exact dollar amount printed in the contract.
+      - Missing Kill Fee: 50% of the contract's flat fee.
+      - Multi-Month/Year Exclusivity Overreach: 1x to 3x the contract value in lost opportunity costs (use 2x as default unless scope is extremely broad).
+      - One-Sided Indemnification: 1x the contract's flat fee.
+      - Performance Clawbacks / Metric-Based Pay: 1.5x the contract's flat fee.
+      - Unreasonable Turnaround Deadlines: 0.5x the contract's flat fee.
+      - Communication & Operational Boundaries: 0.25x the contract's flat fee.
+      - Personality & IP Trademark Overreach: 1.5x the contract's flat fee.
+      - Vague Payment Milestones: 0.5x the contract's flat fee.
+      - Personal Life Overreach: 0.5x the contract's flat fee.
+      - Automatic Renewal/Opt-Out Traps: 1x the contract's flat fee.
+      - Retroactive/Historical Content Grabs: 1x the contract's flat fee.
+      - Dashboard & Private Platform Access: 0.5x the contract's flat fee.
+      - Hidden Liquidated Damages & Fines: The exact dollar amount if specified, otherwise 1x the contract's flat fee.
+      Output format: array of objects with `category`, `description`, and `estimated_value` (number in USD).
 
-      INSTRUCTIONS:
-      - Identify the BRAND NAME (or use '[Brand Name]').
-      - 'suggested_response' MUST: 
-        1. Start: "Dear [Brand Name]," + 2 newlines.
-        2. Reference found risks and missing gaps professionally.
-        3. Explicitly reference missing protections as 'mandatory additions' to the contract.
-        4. End: 2 newlines + "Best, ${userName}".
-
-      SCHEMA: { 
-        "summary": "string", 
-        "health_score": number (0-100),
-        "brand_name": "string",
-        "legalese_translation": [{"original": "string", "translation": "string"}], 
-        "predatory_clauses": [{"snippet": "string", "explanation": "string"}], 
-        "cautionary_clauses": [{"snippet": "string", "explanation": "string"}], 
-        "missing_protections": [{"protection": "string", "importance": "string"}], 
-        "suggested_response": "string" 
-      }
-      CONTENT: ${text.substring(0, 30000)}`;
+    SCHEMA: { 
+      "summary": "string", 
+      "health_score": number (0-100),
+      "brand_name": "string",
+      "legalese_translation": [{"original": "string", "translation": "string"}], 
+      "predatory_clauses": [{"snippet": "string", "explanation": "string"}], 
+      "cautionary_clauses": [{"snippet": "string", "explanation": "string"}], 
+      "missing_protections": [{"protection": "string", "importance": "string"}], 
+      "financial_risk_quantifier": [
+        {
+          "category": "string (e.g., Perpetual IP, Fixed Fines, Missing Kill Fee, Exclusivity Overreach)",
+          "description": "string (brief description of the specific clause or risk)",
+          "estimated_value": number (estimated liability value saved in USD)
+        }
+      ],
+      "suggested_response": "string" 
+    }
+    CONTENT: ${text.substring(0, 30000)}`;
 
     const analysis = await analyzeContract(text, customPrompt);
 
@@ -221,7 +289,8 @@ Deno.serve(async (req) => {
       predatory_clauses: analysis.predatory_clauses,
       cautionary_clauses: analysis.cautionary_clauses,
       missing_protections: analysis.missing_protections,
-      suggested_response: analysis.suggested_response
+      suggested_response: analysis.suggested_response,
+      financial_risk_quantifier: analysis.financial_risk_quantifier
     }).eq('id', recordId);
 
     // 3. Privacy Cleanup: Remove source file and clear extracted text
