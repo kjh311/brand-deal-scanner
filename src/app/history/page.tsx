@@ -126,8 +126,8 @@ export default function HistoryPage() {
           {/* Sidebar Stats */}
           <aside className="w-full lg:w-80 flex flex-col gap-8 shrink-0">
              <div>
-               <h1 className="font-headline text-4xl font-bold tracking-tight text-[#1E1A5F] mb-2">History</h1>
-               <p className="text-[#64748B]">Welcome back, {userName}.</p>
+               <h1 className="font-headline text-4xl font-bold tracking-tight text-white mb-2">History</h1>
+               <p className="text-white/70">Welcome back, {userName}.</p>
              </div>
 
             <div className="grid grid-cols-1 gap-4">
@@ -183,98 +183,96 @@ export default function HistoryPage() {
                </div>
              </div>
 
-             <div className="bg-white border border-[#E2E8F0] rounded-[2.5rem] overflow-hidden shadow-2xl">
-               <div className="overflow-x-auto">
-                 <table className="w-full">
-                   <thead>
-                     <tr className="text-left text-[#64748B] text-[10px] uppercase font-black tracking-[3px] border-b border-[#E2E8F0]">
-                       <th className="px-8 py-6">Agreement</th>
-                       <th className="px-8 py-6">Analyzed</th>
-                       <th className="px-8 py-6">Fairness Score</th>
-                       <th className="px-8 py-6 text-right">Action</th>
-                     </tr>
-                   </thead>
-                   <tbody className="divide-y divide-[#E2E8F0]">
-                    {isLoading ? (
-                      <tr>
-                        <td colSpan={4} className="px-8 py-20 text-center">
-                            <div className="flex flex-col items-center gap-4">
-                              <div className="w-8 h-8 border-2 border-[#D84C9F] border-t-transparent rounded-full animate-spin" />
-                              <p className="text-xs font-mono uppercase tracking-widest text-[#64748B]">Retrieving Vault Data...</p>
-                            </div>
-                        </td>
+              <div className="bg-white border border-[#E2E8F0] rounded-[2.5rem] overflow-hidden shadow-2xl">
+                <table className="w-full">
+                    <thead>
+                      <tr className="text-left text-[#64748B] text-[10px] uppercase font-black tracking-[3px] border-b border-[#E2E8F0]">
+                        <th className="px-4 py-4">Agreement</th>
+                        <th className="px-4 py-4">Analyzed</th>
+                        <th className="px-4 py-4">Fairness Score</th>
+                        <th className="px-4 py-4 text-right">Action</th>
                       </tr>
-                    ) : filteredAudits.length > 0 ? (
-                      filteredAudits.map((audit) => (
-                        <tr 
-                          key={audit.id} 
-                          onClick={() => {
-                            if (audit.status === 'completed') {
-                              window.location.href = `/analysis?id=${audit.id}`;
-                            }
-                           }}
-                           className={`group hover:bg-[#F8FAFC] transition-colors cursor-pointer ${audit.status !== 'completed' ? 'pointer-events-none opacity-60' : ''}`}
+                    </thead>
+                    <tbody className="divide-y divide-[#E2E8F0]">
+                     {isLoading ? (
+                       <tr>
+                         <td colSpan={4} className="px-4 py-20 text-center">
+                             <div className="flex flex-col items-center gap-4">
+                               <div className="w-8 h-8 border-2 border-[#D84C9F] border-t-transparent rounded-full animate-spin" />
+                               <p className="text-xs font-mono uppercase tracking-widest text-[#64748B]">Retrieving Vault Data...</p>
+                             </div>
+                         </td>
+                       </tr>
+                     ) : filteredAudits.length > 0 ? (
+                       filteredAudits.map((audit) => (
+                         <tr 
+                           key={audit.id} 
+                           onClick={() => {
+                             if (audit.status === 'completed') {
+                               window.location.href = `/analysis?id=${audit.id}`;
+                             }
+                            }}
+                            className={`group hover:bg-[#F8FAFC] transition-colors cursor-pointer ${audit.status !== 'completed' ? 'pointer-events-none opacity-60' : ''}`}
                          >
-                           <td className="px-8 py-6">
-                             <div className="flex items-center gap-4">
-                               <div className={`w-12 h-12 rounded-2xl flex items-center justify-center bg-[#F8FAFC] border border-[#E2E8F0] group-hover:border-[#D84C9F]/30 transition-colors`}>
-                                 <span className="material-symbols-outlined text-xl text-[#64748B]">
-                                   {audit.fileType === 'pdf' ? 'picture_as_pdf' : 
-                                    audit.fileType === 'image' ? 'image' : 'description'}
-                                 </span>
-                               </div>
-                               <div>
-                                 <p className="font-bold text-[#1E1A5F] text-sm line-clamp-1">{audit.name}</p>
-                                 <p className="text-[10px] font-mono text-[#64748B] uppercase tracking-widest leading-none mt-1">Source: {audit.fileType}</p>
-                               </div>
-                             </div>
-                           </td>
-                           <td className="px-8 py-6">
-                              <p className="text-sm font-medium text-[#64748B]">{audit.date}</p>
-                           </td>
-                           <td className="px-8 py-6">
-                             <span className={`inline-flex items-center px-4 py-1.5 rounded-xl text-[10px] font-black tracking-widest uppercase ${getRiskColor(audit.risk)}`}>
-                               {audit.risk === 'Analyzing' ? 'Scanning...' : `${audit.risk} RISK`}
-                             </span>
-                           </td>
-                           <td className="px-8 py-6 text-right">
-                             <div className="flex items-center justify-end gap-1">
-                               {audit.status === 'completed' && (
-                                 <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-[#F8FAFC] group-hover:bg-white text-[#64748B] group-hover:text-[#1E1A5F] transition-all shadow-lg border border-[#E2E8F0]">
-                                   <span className="material-symbols-outlined text-lg">visibility</span>
-                                 </div>
-                               )}
-                               <button 
-                                 onClick={(e) => {
-                                   e.stopPropagation();
-                                   handleDelete(audit.id);
-                                 }} 
-                                 className="w-10 h-10 flex items-center justify-center rounded-xl bg-[#F8FAFC] hover:bg-rose-500/10 text-[#64748B] hover:text-rose-500 transition-all cursor-pointer relative z-10 border border-[#E2E8F0]"
-                                 title="Delete"
-                               >
-                                 <span className="material-symbols-outlined text-lg">delete</span>
-                               </button>
-                             </div>
-                           </td>
-                         </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={4} className="px-8 py-20 text-center">
-                           <div className="max-w-xs mx-auto space-y-4">
-                               <p className="text-[#64748B] text-sm">No contract history found.</p>
-                               <Link href="/upload" className="text-[#D84C9F] text-xs font-black uppercase tracking-widest hover:underline">Start your first audit →</Link>
-                           </div>
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </section>
-        </div>
-      </main>
+                            <td className="px-4 py-4">
+                              <div className="flex items-center gap-3">
+                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center bg-[#F8FAFC] border border-[#E2E8F0] group-hover:border-[#D84C9F]/30 transition-colors`}>
+                                  <span className="material-symbols-outlined text-lg text-[#64748B]">
+                                    {audit.fileType === 'pdf' ? 'picture_as_pdf' : 
+                                     audit.fileType === 'image' ? 'image' : 'description'}
+                                  </span>
+                                </div>
+                                <div>
+                                  <p className="font-bold text-[#1E1A5F] text-sm line-clamp-1">{audit.name}</p>
+                                  <p className="text-[10px] font-mono text-[#64748B] uppercase tracking-widest leading-none mt-1">Source: {audit.fileType}</p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-4 py-4">
+                               <p className="text-sm font-medium text-[#64748B]">{audit.date}</p>
+                            </td>
+                            <td className="px-4 py-4">
+                              <span className={`inline-flex items-center px-3 py-1 rounded-lg text-[10px] font-black tracking-widest uppercase ${getRiskColor(audit.risk)}`}>
+                                {audit.risk === 'Analyzing' ? 'Scanning...' : `${audit.risk} RISK`}
+                              </span>
+                            </td>
+                            <td className="px-4 py-4 text-right">
+                              <div className="flex items-center justify-end gap-1">
+                                {audit.status === 'completed' && (
+                                  <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-[#F8FAFC] group-hover:bg-white text-[#64748B] group-hover:text-[#1E1A5F] transition-all shadow-lg border border-[#E2E8F0]">
+                                    <span className="material-symbols-outlined text-base">visibility</span>
+                                  </div>
+                                )}
+                                <button 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDelete(audit.id);
+                                  }} 
+                                  className="w-9 h-9 flex items-center justify-center rounded-lg bg-[#F8FAFC] hover:bg-rose-500/10 text-[#64748B] hover:text-rose-500 transition-all cursor-pointer relative z-10 border border-[#E2E8F0]"
+                                  title="Delete"
+                                >
+                                  <span className="material-symbols-outlined text-base">delete</span>
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                       ))
+                     ) : (
+                       <tr>
+                         <td colSpan={4} className="px-4 py-20 text-center">
+                            <div className="max-w-xs mx-auto space-y-4">
+                                <p className="text-[#64748B] text-sm">No contract history found.</p>
+                                <Link href="/upload" className="text-[#D84C9F] text-xs font-black uppercase tracking-widest hover:underline">Start your first audit →</Link>
+                            </div>
+                         </td>
+                       </tr>
+                     )}
+                    </tbody>
+                  </table>
+                </div>
+            </section>
+         </div>
+       </main>
 
       <Footer  />
     </div>

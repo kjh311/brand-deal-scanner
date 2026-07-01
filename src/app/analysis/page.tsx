@@ -245,7 +245,7 @@ function AnalysisContent() {
           <h3 className="text-sm font-black text-white/60 uppercase tracking-[4px]">Critical Risks</h3>
           <div className="space-y-6">
             {contract.predatory_clauses?.map((clause: any, i: number) => (
-              <div key={i} className="bg-white border border-[#E2E8F0] border-l-8 border-l-rose-500 rounded-[2.5rem] overflow-hidden shadow-lg transition hover:shadow-xl">
+              <div key={i} className="bg-white border-4 border-rose-500 rounded-[2.5rem] overflow-hidden shadow-lg transition hover:shadow-xl">
                 <div className="p-8 space-y-8">
                   <div className="space-y-3">
                      <p className="text-xs font-bold text-rose-600 uppercase tracking-widest font-mono">Source Passage</p>
@@ -268,7 +268,7 @@ function AnalysisContent() {
           <h3 className="text-sm font-black text-white/60 uppercase tracking-[4px]">Areas of Concern</h3>
           <div className="grid grid-cols-1 gap-4">
             {contract.cautionary_clauses?.map((clause: any, i: number) => (
-              <div key={i} className="bg-white rounded-2xl p-6 border border-[#E2E8F0] border-l-8 border-l-amber-500 shadow-md">
+              <div key={i} className="bg-white rounded-2xl p-6 border-4 border-amber-500 shadow-md">
                 <div className="space-y-4">
                     <p className="text-sm text-[#64748B] italic font-mono leading-snug">"{clause.snippet}"</p>
                    <p className="text-[#1E1A5F] text-base leading-relaxed font-bold">{clause.explanation}</p>

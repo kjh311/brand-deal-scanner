@@ -162,7 +162,7 @@ export function Navbar() {
           {!loading && user && (
             <Link
               href="/upload"
-              className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/5 border border-white/10 hover:border-primary/50 text-xs font-black uppercase tracking-[2px] text-slate-400 cursor-pointer transition-all"
+               className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/5 border border-white/10 hover:border-primary/50 text-xs font-black uppercase tracking-[2px] text-white cursor-pointer transition-all"
             >
               <span className="material-symbols-outlined text-primary text-sm">token</span>
               <span>{credits ?? 0} Credits</span>
