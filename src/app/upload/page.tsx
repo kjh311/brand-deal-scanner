@@ -1,12 +1,13 @@
 'use client'
 
 import React, { useState, useRef, useCallback, useEffect } from 'react'
-import Link from 'next/link'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { uploadContract, registerManualContract } from '@/lib/actions/contracts'
-import ContractMonitor from '@/components/features/ContractMonitor'
 import { handleCheckout } from '@/lib/stripe-client'
+import { LegalComplianceModal } from '@/components/legal/LegalComplianceModal'
+import { createClient } from '@/lib/supabase/client'
+import ContractMonitor from '@/components/features/ContractMonitor'
 
 interface WorkflowStep {
   number: number
@@ -33,6 +34,11 @@ export default function UploadPage() {
   const [isLoadingSub, setIsLoadingSub] = useState(true)
   const [loadingTopUp, setLoadingTopUp] = useState(false)
   const [selectedQuantity, setSelectedQuantity] = useState(5)
+
+  const [legalModalOpen, setLegalModalOpen] = useState(false)
+  const [legalVariant, setLegalVariant] = useState<'initial' | 'updated'>('initial')
+  const [latestTermsText, setLatestTermsText] = useState('')
+  const [latestPrivacyText, setLatestPrivacyText] = useState('')
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -64,6 +70,43 @@ export default function UploadPage() {
       }
     }
     fetchStatus()
+  }, [])
+
+  useEffect(() => {
+    const checkLegalAcceptance = async () => {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (!user) return
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('terms_accepted_at')
+        .eq('id', user.id)
+        .single()
+
+      const { data: version } = await supabase
+        .from('terms_versions')
+        .select('terms_text, privacy_text, published_at')
+        .order('published_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      const acceptedAt = profile?.terms_accepted_at ?? null
+      const publishedAt = version?.published_at ?? null
+
+      setLatestTermsText(version?.terms_text ?? '')
+      setLatestPrivacyText(version?.privacy_text ?? '')
+
+      if (!publishedAt) return
+
+      if (!acceptedAt || new Date(acceptedAt).toISOString() < new Date(publishedAt).toISOString()) {
+        setLegalVariant(!acceptedAt ? 'initial' : 'updated')
+        setLegalModalOpen(true)
+      }
+    }
+
+    checkLegalAcceptance()
   }, [])
 
   const getTopUpDetails = (tier: string) => {
@@ -196,6 +239,10 @@ export default function UploadPage() {
     updateWorkflow(3);
     setIsAnalyzing(false);
     setAnalysisComplete(true);
+  }
+
+  const handleLegalAccepted = () => {
+    setLegalModalOpen(false)
   }
 
   return (
@@ -483,6 +530,14 @@ export default function UploadPage() {
       </main>
 
       <Footer className="relative z-[1]" />
+
+      <LegalComplianceModal
+        isOpen={legalModalOpen}
+        variant={legalVariant}
+        termsText={latestTermsText}
+        privacyText={latestPrivacyText}
+        onAccepted={handleLegalAccepted}
+      />
 
       <input
         ref={fileInputRef}

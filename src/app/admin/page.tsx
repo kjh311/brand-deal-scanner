@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { AdminFeedbackView } from '@/components/admin/AdminFeedbackView'
+import { AdminLegalManager } from '@/components/admin/AdminLegalManager'
 
 export default async function AdminPage() {
   const supabase = await createClient()
@@ -32,10 +33,17 @@ export default async function AdminPage() {
     console.error('Failed to load feedback:', feedbackError)
   }
 
+  const { data: latestVersion } = await supabase
+    .from('terms_versions')
+    .select('id, terms_text, privacy_text, published_at')
+    .order('published_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-r from-[#221A7F] via-[#7B2CBF] to-[#D84C9F] text-white">
       <Navbar />
-      <div className="flex-1 flex items-center justify-center pt-32 p-6">
+      <div className="flex-1 flex items-start justify-center pt-32 p-6">
         <div className="max-w-2xl w-full space-y-8">
           <div className="text-center mb-8">
             <h1 className="font-headline text-4xl font-bold tracking-tight mb-2">
@@ -56,6 +64,8 @@ export default async function AdminPage() {
               <p className="text-[#64748B] text-sm">Configure application settings and features.</p>
             </div>
           </div>
+
+          <AdminLegalManager initialVersion={latestVersion} />
 
           <AdminFeedbackView initialFeedback={feedback || []} />
           {feedbackError && (
