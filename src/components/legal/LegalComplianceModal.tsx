@@ -81,8 +81,14 @@ export function LegalComplianceModal({ isOpen, variant, termsText, privacyText, 
           <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl p-6">
             <h3 className="text-lg font-bold mb-2">Terms of Service</h3>
             <div className="h-64 overflow-y-auto bg-white border border-[#E2E8F0] rounded-xl p-4">
-              <div className="prose prose-sm max-w-none text-[#1E1A5F]">
-                <ReactMarkdown>{termsText}</ReactMarkdown>
+              <div className="prose prose-sm max-w-none text-[#1E1A5F] leading-relaxed">
+                <ReactMarkdown
+                  components={{
+                    p: ({ children }) => <p className="text-[#1E1A5F]">{children}</p>
+                  }}
+                >
+                  {termsText}
+                </ReactMarkdown>
               </div>
             </div>
           </div>
@@ -90,8 +96,14 @@ export function LegalComplianceModal({ isOpen, variant, termsText, privacyText, 
           <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl p-6">
             <h3 className="text-lg font-bold mb-2">Privacy Policy</h3>
             <div className="h-64 overflow-y-auto bg-white border border-[#E2E8F0] rounded-xl p-4">
-              <div className="prose prose-sm max-w-none text-[#1E1A5F]">
-                <ReactMarkdown>{privacyText}</ReactMarkdown>
+              <div className="prose prose-sm max-w-none text-[#1E1A5F] leading-relaxed">
+                <ReactMarkdown
+                  components={{
+                    p: ({ children }) => <p className="text-[#1E1A5F]">{children}</p>
+                  }}
+                >
+                  {privacyText}
+                </ReactMarkdown>
               </div>
             </div>
           </div>

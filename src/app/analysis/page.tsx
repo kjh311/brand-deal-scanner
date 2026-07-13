@@ -8,6 +8,7 @@ import { Footer } from '@/components/layout/Footer'
 import { Loader2, AlertCircle, CheckCircle2, Copy, Check, Download } from 'lucide-react'
 import { ReportTemplate } from '@/components/analysis/ReportTemplate'
 import { FeedbackSection } from '@/components/features/FeedbackSection'
+import ReactMarkdown from 'react-markdown'
 
 function AnalysisContent() {
   const searchParams = useSearchParams()
@@ -327,14 +328,21 @@ function AnalysisContent() {
           </div>
 
           <div className="bg-white rounded-[3rem] p-10 space-y-10 border border-[#E2E8F0] shadow-xl relative overflow-hidden group">              
-            <div className="prose text-[#1E1A5F] leading-relaxed whitespace-pre-wrap font-sans text-base font-medium relative z-10">
-              {contract.suggested_response}
+            <div className="prose prose-sm max-w-none text-[#1E1A5F] leading-relaxed relative z-10">
+              <ReactMarkdown
+                components={{
+                  p: ({ children }) => <p className="text-[#1E1A5F]">{children}</p>
+                }}
+              >
+                {contract.suggested_response || "Generating email draft..."}
+              </ReactMarkdown>
             </div>
 
             <div className="flex justify-end pt-8">
               <button
                 onClick={handleCopy}
-                className="flex items-center gap-2 px-10 py-4 rounded-2xl bg-gradient-to-r from-[#D84C9F] to-[#DE5298] text-white font-bold shadow-md transition-all hover:scale-[1.03] active:scale-95 text-base cursor-pointer"
+                disabled={!contract?.suggested_response}
+                className="flex items-center gap-2 px-10 py-4 rounded-2xl bg-gradient-to-r from-[#D84C9F] to-[#DE5298] text-white font-bold shadow-md transition-all hover:scale-[1.03] active:scale-95 text-base cursor-pointer disabled:opacity-50"
               >
                 {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
                 {copied ? 'Copied' : 'Copy Email Script'}

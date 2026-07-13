@@ -46,7 +46,13 @@ export default function TermsPage() {
             </div>
           ) : (
             <div className="prose prose-sm max-w-none text-[#1E1A5F]">
-              <ReactMarkdown>{termsText}</ReactMarkdown>
+              <ReactMarkdown
+                components={{
+                  p: ({ children }) => <p className="text-[#1E1A5F]">{children}</p>
+                }}
+              >
+                {termsText}
+              </ReactMarkdown>
             </div>
           )}
         </div>
