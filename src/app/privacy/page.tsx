@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { createClient } from '@/lib/supabase/client'
-import ReactMarkdown from 'react-markdown'
 
 export default function PrivacyPage() {
   const [privacyText, setPrivacyText] = useState('')
@@ -45,14 +44,8 @@ export default function PrivacyPage() {
               <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
             </div>
           ) : (
-            <div className="prose prose-sm max-w-none text-[#1E1A5F]">
-              <ReactMarkdown
-                components={{
-                  p: ({ children }) => <p className="text-[#1E1A5F]">{children}</p>
-                }}
-              >
-                {privacyText}
-              </ReactMarkdown>
+            <div className="text-[#1E1A5F] whitespace-pre-line">
+              {privacyText.replace(/\r\n/g, '\n')}
             </div>
           )}
         </div>

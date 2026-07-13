@@ -1,7 +1,6 @@
 'use client'
 
 import React from 'react'
-import ReactMarkdown from 'react-markdown'
 
 interface ReportTemplateProps {
   contract: any
@@ -261,12 +260,12 @@ export const ReportTemplate = React.forwardRef<HTMLDivElement, ReportTemplatePro
               <h3 style={{ fontSize: '14px', fontWeight: 900, color: colors.slate400, textTransform: 'uppercase', letterSpacing: '0.1em', display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '16px' }}>
                 <span style={{ marginRight: '8px' }}>05.</span> Suggested Response Draft
               </h3>
-              <div style={{ border: `1px solid ${colors.slate200}`, borderRadius: '16px', padding: '32px', backgroundColor: colors.slate50, textAlign: 'center' }}>
-                <div style={{ fontSize: '12px', color: colors.slate800, lineHeight: 1.8, fontStyle: 'normal', margin: 0, fontWeight: 500 }}>
-                  <ReactMarkdown>{contract.suggested_response}</ReactMarkdown>
-                </div>
-              </div>
-            </section>
+               <div style={{ border: `1px solid ${colors.slate200}`, borderRadius: '16px', padding: '32px', backgroundColor: colors.slate50, textAlign: 'center' }}>
+                 <div style={{ fontSize: '12px', color: colors.slate800, lineHeight: 1.8, fontStyle: 'normal', margin: 0, fontWeight: 500, whiteSpace: 'pre-line' }}>
+                   {contract.suggested_response}
+                 </div>
+               </div>
+             </section>
           )}
         </main>
 

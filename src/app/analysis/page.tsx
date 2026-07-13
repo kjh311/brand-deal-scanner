@@ -8,7 +8,6 @@ import { Footer } from '@/components/layout/Footer'
 import { Loader2, AlertCircle, CheckCircle2, Copy, Check, Download } from 'lucide-react'
 import { ReportTemplate } from '@/components/analysis/ReportTemplate'
 import { FeedbackSection } from '@/components/features/FeedbackSection'
-import ReactMarkdown from 'react-markdown'
 
 function AnalysisContent() {
   const searchParams = useSearchParams()
@@ -328,14 +327,8 @@ function AnalysisContent() {
           </div>
 
           <div className="bg-white rounded-[3rem] p-10 space-y-10 border border-[#E2E8F0] shadow-xl relative overflow-hidden group">              
-            <div className="prose prose-sm max-w-none text-[#1E1A5F] leading-relaxed relative z-10">
-              <ReactMarkdown
-                components={{
-                  p: ({ children }) => <p className="text-[#1E1A5F]">{children}</p>
-                }}
-              >
-                {contract.suggested_response || "Generating email draft..."}
-              </ReactMarkdown>
+            <div className="text-[#1E1A5F] leading-relaxed relative z-10 whitespace-pre-line">
+              {contract.suggested_response || "Generating email draft..."}
             </div>
 
             <div className="flex justify-end pt-8">
