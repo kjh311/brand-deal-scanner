@@ -34,4 +34,4 @@ Brand Deal Auditor helps influencers and creators protect their business. By lev
    git clone [your-repo-url]
    cd brand-deal-auditor
 
-   d
+   
