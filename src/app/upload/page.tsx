@@ -397,7 +397,7 @@ export default function UploadPage() {
                     </div>
                   </div>
                 ) : !isAnalyzing && !analysisComplete && file ? (
-                  <div className="w-full max-w-sm space-y-10 p-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                  <div className="w-full max-w-sm space-y-10 p-4 sm:p-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
                     <div className="text-center mb-10">
                       <div className="relative w-20 h-20 mx-auto mb-6">
                         <div className="w-20 h-20 rounded-[2rem] bg-gradient-to-br from-[#2E1E96] to-[#D84C9F] flex items-center justify-center shadow-lg">
@@ -407,24 +407,24 @@ export default function UploadPage() {
                       <p className="text-sm font-bold text-[#1E1A5F] uppercase tracking-[4px]">Document Ready</p>
                       <p className="text-xs text-[#64748B] font-mono mt-2 break-all">{file.name}</p>
                     </div>
-
-                    <div className="flex gap-4">
+ 
+                    <div className="flex flex-col sm:flex-row gap-3 w-full">
                       <button
                         onClick={(e) => { e.stopPropagation(); removeFile(); }}
-                        className="flex-1 px-6 py-4 rounded-xl border border-[#E2E8F0] text-[#64748B] font-bold text-xs uppercase tracking-[2px] hover:bg-[#F8FAFC] transition-all cursor-pointer"
+                        className="w-full sm:flex-1 px-6 py-4 rounded-xl border border-[#E2E8F0] text-[#64748B] font-bold text-xs uppercase tracking-[2px] hover:bg-[#F8FAFC] transition-all cursor-pointer text-center"
                       >
                         Cancel
                       </button>
                       <button
                         onClick={(e) => { e.stopPropagation(); handleRealAnalysis(); }}
-                        className="flex-1 px-6 py-4 rounded-xl bg-gradient-to-r from-[#D84C9F] to-[#DE5298] text-white font-bold text-xs uppercase tracking-[3px] hover:brightness-105 active:scale-95 transition-all cursor-pointer shadow-md"
+                        className="w-full sm:flex-1 px-6 py-4 rounded-xl bg-gradient-to-r from-[#D84C9F] to-[#DE5298] text-white font-bold text-xs uppercase tracking-[3px] hover:brightness-105 active:scale-95 transition-all cursor-pointer shadow-md text-center"
                       >
                         Scan Contract
                       </button>
                     </div>
                   </div>
                 ) : isAnalyzing && !analysisComplete ? (
-                  <div className="w-full max-w-sm space-y-10 p-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                  <div className="w-full max-w-sm space-y-10 p-4 sm:p-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
                     <div className="text-center mb-10">
                       <div className="relative w-20 h-20 mx-auto mb-6">
                         <div className="absolute inset-0 border-4 border-[#2E1E96]/20 rounded-full" />
@@ -435,7 +435,7 @@ export default function UploadPage() {
                       </div>
                       <p className="text-sm font-bold text-[#1E1A5F] uppercase tracking-[4px]">Audit in Transit</p>
                     </div>
-
+ 
                     <div className="space-y-8 relative">
                       <div className="absolute left-[15px] top-6 bottom-6 w-[2px] bg-[#E2E8F0]" />
                       {workflow.map((step, idx) => (
@@ -469,7 +469,7 @@ export default function UploadPage() {
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center space-y-10 animate-in zoom-in fade-in duration-700 py-10">
+                  <div className="text-center space-y-10 animate-in zoom-in fade-in duration-700 py-10 px-4">
                     <div className="relative w-32 h-32 mx-auto">
                       <div className="relative w-32 h-32 rounded-[2.5rem] bg-gradient-to-br from-[#16A34A] to-[#4ADE80] flex items-center justify-center border border-[#E2E8F0] shadow-lg">
                         <span className="material-symbols-outlined text-white text-6xl">verified</span>
@@ -481,7 +481,7 @@ export default function UploadPage() {
                     </div>
                     <button
                       onClick={() => currentContractId && (window.location.href = `/analysis?id=${currentContractId}`)}
-                      className="group relative inline-flex items-center justify-center px-12 py-5 space-x-4 font-bold text-white transition-all rounded-2xl bg-gradient-to-r from-[#D84C9F] to-[#DE5298] hover:scale-105 active:scale-95 text-lg shadow-md overflow-hidden cursor-pointer"
+                      className="group relative inline-flex items-center justify-center w-full sm:w-auto px-6 sm:px-12 py-4 sm:py-5 space-x-4 font-bold text-white transition-all rounded-2xl bg-gradient-to-r from-[#D84C9F] to-[#DE5298] hover:scale-105 active:scale-95 text-base sm:text-lg shadow-md overflow-hidden cursor-pointer"
                     >
                       <span>VIEW DETAILED REPORT</span>
                       <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
