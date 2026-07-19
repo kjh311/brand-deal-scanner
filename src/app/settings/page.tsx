@@ -74,26 +74,12 @@ export default function SettingsPage() {
       <main className="flex-1 pt-32 pb-20 px-6 md:px-10 max-w-[1000px] mx-auto w-full">
         <div className="space-y-12">
           
-          <header className="space-y-2">
+          <header className="space-y-2 text-center">
             <h1 className="font-headline text-4xl font-black tracking-tight text-white mb-2">Account Settings</h1>
-            <p className="text-white/70">Manage your subscription, profile preferences, and credit balance.</p>
+            <p className="text-white/70">Modify your subscription and credit balance.</p>
           </header>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Sidebar Controls */}
-             <nav className="space-y-2">
-                <button className="w-full text-left px-6 py-4 rounded-2xl bg-white text-[#1E1A5F] font-bold border border-[#E2E8F0] shadow-lg transition-all cursor-pointer">
-                  Plan & Billing
-                </button>
-                <button className="w-full text-left px-6 py-4 rounded-2xl hover:bg-white text-white font-medium transition-all cursor-pointer border border-transparent">
-                  Security
-                </button>
-                <button className="w-full text-left px-6 py-4 rounded-2xl hover:bg-white text-white font-medium transition-all cursor-pointer border border-transparent">
-                  Preference
-                </button>
-             </nav>
-
-            <div className="md:col-span-2 space-y-8">
+ 
+          <div className="max-w-2xl mx-auto space-y-8">
                             {/* Profile Card */}
                <section className="bg-white border border-[#E2E8F0] rounded-[2.5rem] p-5 sm:p-10 space-y-8 text-[#1E1A5F]">
                  <div className="flex items-center gap-6 pb-8 border-b border-[#E2E8F0]">
@@ -194,8 +180,7 @@ export default function SettingsPage() {
                      </p>
                   </div>
               </section>
-
-            </div>
+ 
           </div>
         </div>
       </main>
