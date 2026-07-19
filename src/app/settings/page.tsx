@@ -94,11 +94,10 @@ export default function SettingsPage() {
              </nav>
 
             <div className="md:col-span-2 space-y-8">
-              
-              {/* Profile Card */}
-               <section className="bg-white border border-[#E2E8F0] rounded-[2.5rem] p-10 space-y-8 text-[#1E1A5F]">
+                            {/* Profile Card */}
+               <section className="bg-white border border-[#E2E8F0] rounded-[2.5rem] p-5 sm:p-10 space-y-8 text-[#1E1A5F]">
                  <div className="flex items-center gap-6 pb-8 border-b border-[#E2E8F0]">
-                    <div className="w-20 h-20 rounded-3xl border-2 border-[#D84C9F]/30 flex items-center justify-center overflow-hidden bg-[#F8FAFC] shadow-2xl">
+                    <div className="w-20 h-20 rounded-3xl border-2 border-[#D84C9F]/30 flex items-center justify-center overflow-hidden bg-[#F8FAFC] shadow-2xl shrink-0">
                        {user?.user_metadata?.avatar_url ? (
                          <img src={user.user_metadata.avatar_url} alt="Profile" className="w-full h-full object-cover" />
                        ) : (
@@ -110,8 +109,8 @@ export default function SettingsPage() {
                        <p className="text-[#64748B] text-sm">{user?.email}</p>
                     </div>
                  </div>
-
-                 <div className="grid grid-cols-2 gap-4">
+ 
+                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="p-6 rounded-3xl bg-[#F8FAFC] border border-[#E2E8F0]">
                        <p className="text-[10px] font-black uppercase tracking-[3px] text-[#64748B] mb-2">Current Plan</p>
                        <p className="text-xl font-bold text-emerald-600 capitalize">{plan}</p>
@@ -124,7 +123,7 @@ export default function SettingsPage() {
                </section>
 
                {/* Billing Management */}
-               <section className="bg-white border border-[#E2E8F0] rounded-[2.5rem] p-10 text-[#1E1A5F]">
+               <section className="bg-white border border-[#E2E8F0] rounded-[2.5rem] p-5 sm:p-10 text-[#1E1A5F]">
                   <div className="flex items-center justify-between mb-8">
                      <div>
                        <h3 className="text-xl font-bold text-[#1E1A5F]">Subscription Management</h3>
