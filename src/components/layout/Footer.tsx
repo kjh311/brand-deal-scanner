@@ -29,7 +29,7 @@ export function Footer({ className = '' }: FooterProps) {
   }, [])
 
   return (
-    <footer ref={footerRef} className={`w-full py-16 z-[100] backdrop-blur-xl border-t border-white/5 bg-black/40 ${className}`} id="main-footer">
+    <footer ref={footerRef} className={`w-full py-16 z-10 backdrop-blur-xl border-t border-white/5 bg-black/40 ${className}`} id="main-footer">
       <div className="max-w-[1280px] mx-auto px-10">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="font-headline text-2xl font-bold text-white tracking-tighter">
@@ -38,7 +38,7 @@ export function Footer({ className = '' }: FooterProps) {
           <p className="text-sm text-white/80 text-center md:text-left">
             © 2026 Brand Deal Fixer. AI Auditor for Creators.
           </p>
-          <div className="flex gap-8">
+          <div className="flex flex-wrap justify-center gap-4 sm:gap-8">
             {isAdmin && (
               <Link href="/admin" className="text-[10px] font-black uppercase tracking-[3px] text-white/80 hover:text-white transition-colors duration-200">
                 Admin

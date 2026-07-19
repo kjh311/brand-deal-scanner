@@ -45,7 +45,7 @@ export function TrustSection() {
   ]
 
   return (
-    <section ref={containerRef} className="bg-white/5 py-20 px-10 border-y border-white/10">
+    <section ref={containerRef} className="bg-white/5 py-16 sm:py-20 px-5 sm:px-10 border-y border-white/10">
       <div className="max-w-[1280px] mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
         {features.map((feature, idx) => (
           <div key={idx} className="reveal-trust flex flex-col items-center text-center gap-4">

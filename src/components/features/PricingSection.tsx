@@ -53,10 +53,10 @@ export function PricingSection() {
   ]
 
   return (
-    <section ref={containerRef} className="py-20 px-10 bg-transparent" id="pricing">
+    <section ref={containerRef} className="py-16 sm:py-20 px-5 sm:px-10 bg-transparent" id="pricing">
       <div className="max-w-[1280px] mx-auto">
         <div className="text-center mb-16">
-          <h2 className="font-headline text-4xl text-white font-bold tracking-[-0.02em]">
+            <h2 className="font-headline text-3xl sm:text-4xl text-white font-bold tracking-[-0.02em]">
             Precision Protection for Every Creator
           </h2>
           <p className="text-lg text-white/70 mt-4">Simple pricing. No hidden fees. Legal-grade security.</p>

@@ -70,11 +70,11 @@ export function HowItWorks() {
   }, [])
 
   return (
-    <section ref={sectionRef} className="py-20 px-10" id="how-it-works">
+    <section ref={sectionRef} className="py-16 sm:py-20 px-5 sm:px-10" id="how-it-works">
       <div className="max-w-[1280px] mx-auto">
         <div className="text-center mb-20">
           <p className="text-xs font-mono uppercase tracking-wider text-white/80 mb-4">METHODOLOGY</p>
-          <h2 className="font-headline text-4xl text-white font-bold tracking-[-0.02em]">
+            <h2 className="font-headline text-3xl sm:text-4xl text-white font-bold tracking-[-0.02em]">
             Audit Process in 60 Seconds
           </h2>
         </div>
@@ -98,13 +98,13 @@ export function HowItWorks() {
             ))}
           </div>
 
-          <div className="lg:col-span-2 bg-white border border-[#E2E8F0] shadow-xl rounded-2xl p-8 flex flex-col md:flex-row items-center gap-8 animate-float text-[#1E1A5F]">
-            <div className="relative w-64 h-64 flex items-center justify-center">
+          <div className="lg:col-span-2 bg-white border border-[#E2E8F0] shadow-xl rounded-2xl p-5 sm:p-8 flex flex-col md:flex-row items-center gap-8 animate-float text-[#1E1A5F]">
+            <div className="relative w-48 h-48 sm:w-64 sm:h-64 flex items-center justify-center">
               <svg className="w-full h-full -rotate-90 gauge-svg" viewBox="0 0 100 100">
                 <circle cx="50" cy="50" r="40" fill="transparent" stroke="#E2E8F0" strokeWidth="10" />
                 <circle
-                  ref={gaugeRef}
-                  cx="50" cy="50" r="40"
+                   ref={gaugeRef}
+                   cx="50" cy="50" r="40"
                   fill="transparent"
                   stroke="#53e16f"
                   strokeWidth="10"
@@ -115,8 +115,8 @@ export function HowItWorks() {
                 />
               </svg>
               <div className="absolute flex flex-col items-center">
-                <span className="text-5xl font-bold text-[#1E1A5F]">{score}</span>
-                <span className="text-xs font-mono uppercase tracking-wider text-emerald-500">HEALTHY</span>
+                <span className="text-4xl sm:text-5xl font-bold text-[#1E1A5F]">{score}</span>
+                <span className="text-[10px] sm:text-xs font-mono uppercase tracking-wider text-emerald-500">HEALTHY</span>
               </div>
             </div>
 

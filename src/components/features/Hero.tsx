@@ -22,14 +22,14 @@ export function Hero() {
   }, [])
 
   return (
-    <section ref={containerRef} className="relative pt-32 pb-44 px-10 overflow-hidden bg-gradient-to-r from-[#221A7F] via-[#7B2CBF] to-[#D84C9F]" id="hero">
+    <section ref={containerRef} className="relative pt-28 sm:pt-32 pb-36 sm:pb-44 px-5 sm:px-10 overflow-hidden bg-gradient-to-r from-[#221A7F] via-[#7B2CBF] to-[#D84C9F]" id="hero">
       <div className="max-w-[1280px] mx-auto relative z-10">
         <div className="max-w-3xl mx-auto text-center">
-          <h1 className="font-headline text-5xl text-white leading-tight stagger-in font-bold tracking-[-0.02em]">
+          <h1 className="font-headline text-3xl sm:text-4xl lg:text-5xl text-white leading-tight stagger-in font-bold tracking-[-0.02em]">
             Don't Sign Away Your Rights. <br />
             <span className="text-[#FFD166]">Scan Your Deals</span> in Seconds.
           </h1>
-          <p className="text-lg text-white/90 max-w-2xl mx-auto mt-4 stagger-in">
+          <p className="text-base sm:text-lg text-white/90 max-w-2xl mx-auto mt-4 stagger-in">
             Spot the trap clauses, and flip the script with a professional counter-offer. Protect your brand—and pocket what you're actually worth.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 mt-8 justify-center items-center stagger-in">

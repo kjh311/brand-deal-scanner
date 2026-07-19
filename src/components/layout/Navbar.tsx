@@ -144,7 +144,7 @@ export function Navbar() {
   ]
 
   return (
-    <header className="fixed top-0 w-full z-[100] backdrop-blur-xl border-b border-white/5 bg-black/40">
+    <header className="fixed top-0 w-full z-[150] backdrop-blur-xl border-b border-white/5 bg-black/40">
       <nav className="flex justify-between items-center max-w-[1280px] mx-auto px-6 md:px-10 py-4 relative">
 
         {/* Brand */}
@@ -213,10 +213,10 @@ export function Navbar() {
             ) : (
               !loading && (
                 <div className="flex items-center gap-4">
-                  <Link href="/login" className="text-xs font-black uppercase tracking-[2px] text-slate-400 hover:text-white transition-colors">Login</Link>
+                  <Link href="/login" className="hidden md:inline-block text-xs font-black uppercase tracking-[2px] text-slate-400 hover:text-white transition-colors">Login</Link>
                   <Link
                     href="/login"
-                    className="px-6 py-2.5 rounded-xl bg-white text-slate-950 font-black text-xs uppercase tracking-[2px] hover:scale-105 active:scale-95 transition-all shadow-xl"
+                    className="hidden md:inline-block px-6 py-2.5 rounded-xl bg-white text-slate-950 font-black text-xs uppercase tracking-[2px] hover:scale-105 active:scale-95 transition-all shadow-xl"
                   >
                     Start Scanning
                   </Link>
@@ -238,7 +238,7 @@ export function Navbar() {
 
           {/* DROPDOWN MENU */}
           {isMenuOpen && (
-            <div className="absolute top-full right-0 mt-3 w-64 glass-panel border border-white/10 rounded-[2rem] bg-black/80 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="absolute top-full right-0 mt-3 w-64 bg-[#0e0e0e] border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
               <div className="p-4 space-y-1">
                 {menuItems.map((item, idx) => (
                   <Link
