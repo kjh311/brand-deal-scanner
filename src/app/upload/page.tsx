@@ -263,14 +263,14 @@ export default function UploadPage() {
 
       <Navbar />
 
-      <main className="relative z-10 flex-1 pt-32 pb-20 px-6 md:px-10 max-w-[850px] mx-auto">
+      <main className="relative z-10 flex-1 pt-32 pb-20 px-4 sm:px-6 md:px-10 max-w-[850px] mx-auto">
         {isLoadingSub ? (
           <div className="flex flex-col items-center justify-center min-h-[400px] text-center space-y-4">
             <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
             <p className="text-sm font-bold uppercase tracking-widest text-slate-400">Loading profile...</p>
           </div>
         ) : subStatus && subStatus.credits === 0 ? (
-          <div className="bg-white border border-[#E2E8F0] rounded-[3rem] p-10 md:p-12 shadow-lg space-y-8 relative overflow-hidden group text-center py-16 animate-in fade-in zoom-in duration-500">
+          <div className="bg-white border border-[#E2E8F0] rounded-[3rem] p-5 sm:p-10 md:p-12 shadow-lg space-y-8 relative overflow-hidden group text-center py-16 animate-in fade-in zoom-in duration-500">
             <div className="relative z-10 max-w-md mx-auto space-y-6">
               <div className="w-20 h-20 rounded-2xl bg-[#FFFBEB] border border-[#FDE68A] flex items-center justify-center mx-auto shadow-sm">
                 <span className="material-symbols-outlined text-[#D97706] text-5xl">warning</span>
@@ -348,13 +348,13 @@ export default function UploadPage() {
           <div className="space-y-10">
 
             {/* MAIN UPLOAD CARD - Clean solid white card with simple border and shadow */}
-            <section className="bg-white border border-[#E2E8F0] rounded-[3rem] p-10 md:p-12 shadow-xl space-y-10 relative overflow-hidden group">
+            <section className="bg-white border border-[#E2E8F0] rounded-[3rem] p-5 sm:p-10 md:p-12 shadow-xl space-y-10 relative overflow-hidden group">
               <div className="space-y-4 text-center relative z-10">
-                <h1 className="font-headline text-5xl font-bold tracking-tight text-[#1E1A5F] leading-tight">
+                <h1 className="font-headline text-3xl sm:text-5xl font-bold tracking-tight text-[#1E1A5F] leading-tight">
                   Contract Analysis <br />
                   <span className="bg-gradient-to-r from-[#D84C9F] to-[#2E1E96] bg-clip-text text-transparent">& Risk Detection</span>
                 </h1>
-                <p className="text-[#64748B] text-lg leading-relaxed max-w-xl mx-auto">
+                <p className="text-[#64748B] text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
                   Scan for hidden traps and unfavorable clauses with our AI-powered engine.
                 </p>
               </div>
@@ -364,21 +364,21 @@ export default function UploadPage() {
                 onDrop={analysisComplete || isAnalyzing ? undefined : handleDrop}
                 onDragOver={analysisComplete || isAnalyzing ? undefined : handleDragOver}
                 onDragLeave={analysisComplete || isAnalyzing ? undefined : handleDragLeave}
-                className={`flex flex-col items-center justify-center gap-8 border-2 border-dashed rounded-[2.5rem] min-h-[400px] transition-all relative overflow-hidden group/drop
-                  ${isDragging ? 'border-[#D84C9F] bg-[#FDF2F8]' : 'border-[#CBD5E1] hover:border-[#D84C9F] bg-[#F8FAFC]'}
-                  ${analysisComplete || isAnalyzing ? 'cursor-default border-solid border-[#E2E8F0]' : 'cursor-pointer animate-in fade-in zoom-in duration-500'}`}
+                className={`flex flex-col items-center justify-center gap-8 border-2 border-dashed rounded-[2.5rem] p-4 sm:p-8 min-h-[350px] sm:min-h-[400px] transition-all relative overflow-hidden group/drop
+                  \${isDragging ? 'border-[#D84C9F] bg-[#FDF2F8]' : 'border-[#CBD5E1] hover:border-[#D84C9F] bg-[#F8FAFC]'}
+                  \${analysisComplete || isAnalyzing ? 'cursor-default border-solid border-[#E2E8F0]' : 'cursor-pointer animate-in fade-in zoom-in duration-500'}`}
               >
                 {!isAnalyzing && !analysisComplete && !file ? (
-                  <div className="text-center space-y-8">
-                    <div className="w-24 h-24 rounded-[2rem] bg-gradient-to-br from-[#2E1E96] to-[#D84C9F] flex items-center justify-center mx-auto shadow-lg group-hover/drop:scale-110 transition-transform duration-500">
-                      <span className="material-symbols-outlined text-white text-5xl">cloud_upload</span>
+                  <div className="text-center space-y-8 max-w-full">
+                    <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-[2rem] bg-gradient-to-br from-[#2E1E96] to-[#D84C9F] flex items-center justify-center mx-auto shadow-lg group-hover/drop:scale-110 transition-transform duration-500">
+                      <span className="material-symbols-outlined text-white text-4xl sm:text-5xl">cloud_upload</span>
                     </div>
-                    <div className="space-y-4">
-                      <div className="inline-block px-10 py-5 rounded-2xl bg-gradient-to-r from-[#D84C9F] to-[#DE5298] text-white font-bold text-lg hover:-translate-y-1 active:scale-95 transition-all cursor-pointer shadow-md">
+                    <div className="space-y-4 px-2">
+                      <div className="inline-block px-6 sm:px-10 py-4 sm:py-5 rounded-2xl bg-gradient-to-r from-[#D84C9F] to-[#DE5298] text-white font-bold text-base sm:text-lg hover:-translate-y-1 active:scale-95 transition-all cursor-pointer shadow-md">
                         Add Document
                       </div>
-                      <p className="text-[#1E1A5F] font-black uppercase tracking-[3px] text-[11px] opacity-90">DRAG & DROP OR CLICK TO UPLOAD</p>
-                      <p className="text-[#64748B] text-[10px] uppercase tracking-widest bg-[#EDF2F7] inline-block px-4 py-1.5 rounded-full border border-[#E2E8F0]">PDF, DOCX, or TXT files</p>
+                      <p className="text-[#1E1A5F] font-black uppercase tracking-[2px] sm:tracking-[3px] text-[10px] sm:text-[11px] opacity-90 break-words">DRAG & DROP OR CLICK TO UPLOAD</p>
+                      <p className="text-[#64748B] text-[10px] uppercase tracking-widest bg-[#EDF2F7] inline-block px-4 py-1.5 rounded-full border border-[#E2E8F0] max-w-full">PDF, DOCX, or TXT files</p>
                     </div>
 
                     <div className="flex gap-8 justify-center pt-2 grayscale opacity-40 group-hover/drop:grayscale-0 group-hover/drop:opacity-80 transition-all duration-700">
@@ -483,25 +483,25 @@ export default function UploadPage() {
             </section>
 
             {!file && !isAnalyzing && !analysisComplete && (
-              <section className="bg-white border border-[#E2E8F0] rounded-[3rem] p-10 md:p-12 space-y-10 shadow-lg relative overflow-hidden">
-                <div className="flex items-center justify-between relative z-10">
+              <section className="bg-white border border-[#E2E8F0] rounded-[3rem] p-5 sm:p-10 md:p-12 space-y-10 shadow-lg relative overflow-hidden">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
                   <h3 className="text-2xl font-bold text-[#1E1A5F] tracking-tight">Alternative: <span className="text-[#64748B]">Copy-Paste</span></h3>
-                  <span className="text-[10px] font-black uppercase tracking-[4px] bg-[#FDF2F8] text-[#D84C9F] border border-[#FCE7F3] px-4 py-1.5 rounded-full">MANUAL ENTRY</span>
+                  <span className="self-start sm:self-auto text-[10px] font-black uppercase tracking-[4px] bg-[#FDF2F8] text-[#D84C9F] border border-[#FCE7F3] px-4 py-1.5 rounded-full">MANUAL ENTRY</span>
                 </div>
-
+ 
                 <div className="relative group">
                   <textarea
                     value={pastedText}
                     onChange={(e) => setPastedText(e.target.value)}
                     placeholder="Insert your contract text here for immediate AI processing..."
-                    className="relative w-full h-56 bg-[#F8FAFC] border border-[#E2E8F0] rounded-[2rem] p-8 font-mono text-sm text-[#1E1A5F] focus:outline-none focus:border-[#D84C9F]/50 focus:bg-white transition-all placeholder:text-[#94A3B8] resize-none shadow-inner"
+                    className="relative w-full h-56 bg-[#F8FAFC] border border-[#E2E8F0] rounded-[2rem] p-4 sm:p-8 font-mono text-sm text-[#1E1A5F] focus:outline-none focus:border-[#D84C9F]/50 focus:bg-white transition-all placeholder:text-[#94A3B8] resize-none shadow-inner"
                   />
                 </div>
-
+ 
                 <div className="flex justify-end relative z-10">
                   <button
                     onClick={handleRealAnalysis}
-                    className="flex items-center gap-4 px-10 py-5 rounded-2xl border border-[#E2E8F0] hover:bg-[#F8FAFC] active:scale-95 transition-all font-black text-[#1E1A5F] text-xs uppercase tracking-[3px] cursor-pointer group"
+                    className="flex w-full sm:w-auto items-center justify-center gap-4 px-6 sm:px-10 py-4 sm:py-5 rounded-2xl border border-[#E2E8F0] hover:bg-[#F8FAFC] active:scale-95 transition-all font-black text-[#1E1A5F] text-xs uppercase tracking-[3px] cursor-pointer group"
                   >
                     <span className="material-symbols-outlined text-[#D84C9F] text-xl group-hover:scale-125 transition-transform">content_paste</span>
                     Paste Text & Analyze

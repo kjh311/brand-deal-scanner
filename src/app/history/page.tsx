@@ -167,12 +167,12 @@ export default function HistoryPage() {
           {/* Table Content */}
           <section className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-8">
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                  {(['All', 'Low', 'Medium', 'High'] as const).map(r => (
                    <button
                      key={r}
                      onClick={() => setFilter(r)}
-                     className={`px-6 py-2 rounded-xl text-xs font-bold transition-all
+                     className={`px-3 sm:px-6 py-2 rounded-xl text-xs font-bold transition-all
                        ${filter === r 
                          ? 'bg-[#1E1A5F] text-white shadow-xl' 
                          : 'bg-[#F8FAFC] text-[#64748B] hover:bg-white border border-[#E2E8F0]'}`}
@@ -183,7 +183,7 @@ export default function HistoryPage() {
                </div>
              </div>
 
-              <div className="bg-white border border-[#E2E8F0] rounded-[2.5rem] overflow-hidden shadow-2xl">
+              <div className="bg-white border border-[#E2E8F0] rounded-[2.5rem] overflow-x-auto shadow-2xl">
                 <table className="w-full">
                     <thead>
                       <tr className="text-left text-[#64748B] text-[10px] uppercase font-black tracking-[3px] border-b border-[#E2E8F0]">
@@ -222,8 +222,8 @@ export default function HistoryPage() {
                                      audit.fileType === 'image' ? 'image' : 'description'}
                                   </span>
                                 </div>
-                                <div>
-                                  <p className="font-bold text-[#1E1A5F] text-sm line-clamp-1">{audit.name}</p>
+                                <div className="min-w-0 max-w-[200px] sm:max-w-none">
+                                  <p className="font-bold text-[#1E1A5F] text-sm break-words whitespace-normal">{audit.name}</p>
                                   <p className="text-[10px] font-mono text-[#64748B] uppercase tracking-widest leading-none mt-1">Source: {audit.fileType}</p>
                                 </div>
                               </div>
