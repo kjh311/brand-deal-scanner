@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { MarkdownContent } from '@/components/legal/MarkdownContent'
 
 type LegalVariant = 'initial' | 'updated'
 
@@ -79,20 +80,16 @@ export function LegalComplianceModal({ isOpen, variant, termsText, privacyText, 
         <div className="flex-1 overflow-y-auto p-8 space-y-6">
           <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl p-6">
             <h3 className="text-lg font-bold mb-2">Terms of Service</h3>
-            <div className="h-64 overflow-y-auto bg-white border border-[#E2E8F0] rounded-xl p-4">
-              <div className="text-[#1E1A5F] leading-relaxed whitespace-pre-line">
-                {termsText.replace(/\r\n/g, '\n')}
+              <div className="h-64 overflow-y-auto bg-white border border-[#E2E8F0] rounded-xl p-4">
+                <MarkdownContent text={termsText} />
               </div>
-            </div>
           </div>
 
           <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl p-6">
             <h3 className="text-lg font-bold mb-2">Privacy Policy</h3>
-            <div className="h-64 overflow-y-auto bg-white border border-[#E2E8F0] rounded-xl p-4">
-              <div className="text-[#1E1A5F] leading-relaxed whitespace-pre-line">
-                {privacyText.replace(/\r\n/g, '\n')}
+              <div className="h-64 overflow-y-auto bg-white border border-[#E2E8F0] rounded-xl p-4">
+                <MarkdownContent text={privacyText} />
               </div>
-            </div>
           </div>
         </div>
 

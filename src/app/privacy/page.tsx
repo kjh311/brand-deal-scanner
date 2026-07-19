@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
+import { MarkdownContent } from '@/components/legal/MarkdownContent'
 import { createClient } from '@/lib/supabase/client'
 
 export default function PrivacyPage() {
@@ -44,9 +45,7 @@ export default function PrivacyPage() {
               <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
             </div>
           ) : (
-            <div className="text-[#1E1A5F] whitespace-pre-line">
-              {privacyText.replace(/\r\n/g, '\n')}
-            </div>
+            <MarkdownContent text={privacyText} />
           )}
         </div>
       </div>
