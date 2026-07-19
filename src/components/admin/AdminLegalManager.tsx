@@ -91,9 +91,6 @@ export function AdminLegalManager({ initialVersion }: AdminLegalManagerProps) {
             className="w-full flex items-center justify-between p-6 hover:bg-[#F8FAFC] transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-3">
-              <span className="text-sm font-black uppercase tracking-[2px] text-[#64748B]">
-                Section A
-              </span>
               <span className="text-lg font-bold text-[#1E1A5F]">Update Terms of Service</span>
             </div>
             {termsOpen ? (
@@ -102,7 +99,7 @@ export function AdminLegalManager({ initialVersion }: AdminLegalManagerProps) {
               <ChevronDown className="w-5 h-5 text-[#64748B]" />
             )}
           </button>
-
+ 
           {termsOpen && (
             <div className="px-6 pb-6 animate-in fade-in zoom-in-95 duration-200">
               <textarea
@@ -114,16 +111,13 @@ export function AdminLegalManager({ initialVersion }: AdminLegalManagerProps) {
             </div>
           )}
         </div>
-
+ 
         <div className="border border-[#E2E8F0] rounded-2xl overflow-hidden">
           <button
             onClick={() => setPrivacyOpen(!privacyOpen)}
             className="w-full flex items-center justify-between p-6 hover:bg-[#F8FAFC] transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-3">
-              <span className="text-sm font-black uppercase tracking-[2px] text-[#64748B]">
-                Section B
-              </span>
               <span className="text-lg font-bold text-[#1E1A5F]">Update Privacy Policy</span>
             </div>
             {privacyOpen ? (

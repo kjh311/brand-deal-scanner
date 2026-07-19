@@ -7,7 +7,18 @@ import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { Loader2, AlertCircle, CheckCircle2, Copy, Check, Download } from 'lucide-react'
 import { ReportTemplate } from '@/components/analysis/ReportTemplate'
+import { MarkdownContent } from '@/components/legal/MarkdownContent'
 import { FeedbackSection } from '@/components/features/FeedbackSection'
+
+// Normalize an email string stored in the DB so it renders consistently:
+// convert escaped newlines (\n) into real ones, and strip stray markdown fences.
+function normalizeEmail(text: string): string {
+  if (!text) return ''
+  let t = text.trim()
+  t = t.replace(/^```(?:json|markdown|md|text)?\s*\n?/i, '').replace(/\n?```$/i, '')
+  t = t.replace(/\\n/g, '\n')
+  return t.trim()
+}
 
 function AnalysisContent() {
   const searchParams = useSearchParams()
@@ -67,9 +78,9 @@ function AnalysisContent() {
   }
 
   const handleCopy = async () => {
-    if (!contract?.suggested_response) return
+    if (!emailText) return
     try {
-      await navigator.clipboard.writeText(contract.suggested_response)
+      await navigator.clipboard.writeText(emailText)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch (err) {
@@ -142,6 +153,8 @@ function AnalysisContent() {
   const scoreText = contract.health_score > 70 ? 'Fair Agreement' : contract.health_score > 40 ? 'Moderate Risk' : 'High Risk';
   const scoreBadge = contract.health_score > 70 ? 'bg-[#3fb950]/10 text-[#3fb950] border-2 border-[#3fb950]/20' : contract.health_score > 40 ? 'bg-[#d29922]/10 text-[#d29922] border-2 border-[#d29922]/20' : 'bg-[#f85149]/10 text-[#f85149] border-2 border-[#f85149]/20';
 
+  const emailText = normalizeEmail(contract.suggested_response || '');
+
   return (
     <main className="max-w-[1000px] mx-auto px-4 sm:px-6 md:px-10 pt-32 pb-12 space-y-12 animate-in fade-in duration-500">
       
@@ -172,28 +185,6 @@ function AnalysisContent() {
           Download Scan Results
         </button>
       </header>
-
-      {/* Financial Risk Quantifier */}
-      {contract.financial_risk_quantifier && contract.financial_risk_quantifier.length > 0 && (
-        <section className="space-y-4">
-          <h3 className="text-sm font-black text-white/60 uppercase tracking-[4px]">Estimated Liability Value Saved</h3>
-          <div className="bg-white rounded-[2.5rem] p-5 sm:p-8 md:p-10 text-[#1E1A5F] border border-[#E2E8F0] shadow-xl">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {contract.financial_risk_quantifier.map((item: any, i: number) => (
-                <div key={i} className="bg-[#F8FAFC] rounded-2xl p-6 border border-[#E2E8F0] flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-black uppercase tracking-wider text-[#64748B]">{item.category}</span>
-                    <span className="text-lg font-black text-emerald-600">
-                      ${item.estimated_value?.toLocaleString() || '0'}
-                    </span>
-                  </div>
-                  <p className="text-sm text-[#1E1A5F] leading-relaxed">{item.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* Hidden Report Template for PDF Generation */}
       <ReportTemplate ref={reportRef} contract={contract} />
@@ -328,14 +319,14 @@ function AnalysisContent() {
           </div>
 
           <div className="bg-white rounded-[3rem] p-5 sm:p-10 space-y-6 sm:space-y-10 border border-[#E2E8F0] shadow-xl relative overflow-hidden group">              
-            <div className="text-[#1E1A5F] leading-relaxed relative z-10 whitespace-pre-line break-words text-sm sm:text-base">
-              {contract.suggested_response || "Generating email draft..."}
+            <div className="text-[#1E1A5F] leading-relaxed relative z-10 break-words text-sm sm:text-base">
+              {emailText ? <MarkdownContent text={emailText} /> : "Generating email draft..."}
             </div>
 
             <div className="flex justify-end pt-8">
               <button
                 onClick={handleCopy}
-                disabled={!contract?.suggested_response}
+                disabled={!emailText}
                 className="flex w-full sm:w-auto items-center justify-center gap-2 px-6 sm:px-10 py-4 rounded-2xl bg-gradient-to-r from-[#D84C9F] to-[#DE5298] text-white font-bold shadow-md transition-all hover:scale-[1.03] active:scale-95 text-base cursor-pointer disabled:opacity-50"
               >
                 {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}

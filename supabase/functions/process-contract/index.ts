@@ -40,6 +40,9 @@ async function analyzeContract(contractText: string, customPrompt?: string) {
       "missing_protections": [{"protection": "string", "importance": "string"}], 
       "suggested_response": "string (Full email template with Subject Line, greeting, numbered list of changes, and closing)" 
     }
+    OUTPUT FORMATTING (MANDATORY):
+    - The entire response MUST be a single valid JSON object only. Do NOT wrap it in markdown code fences (no \`\`\`).
+    - The "suggested_response" value MUST be plain text with real newline characters separating lines. Do NOT use markdown (no **, #, >, or code fences) inside the email. Use actual line breaks, not the literal characters backslash-n.
     CONTENT: ${contractText.substring(0, 30000)}`;
 
   const prompt = customPrompt || defaultPrompt;
@@ -47,17 +50,55 @@ async function analyzeContract(contractText: string, customPrompt?: string) {
   // Helper to safely extract JSON from potentially messy AI responses
   const cleanAndParse = (text: string) => {
     try {
-      // 1. First, try to find the start and end of the JSON object
-      const start = text.indexOf('{');
-      const end = text.lastIndexOf('}');
+      // 1. Strip markdown code fences if the model wrapped the JSON in them
+      let working = text.trim();
+      const fenceMatch = working.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
+      if (fenceMatch) working = fenceMatch[1].trim();
+
+      // 2. Try a strict parse first (most reliable when responseMimeType is JSON)
+      try {
+        const strict = JSON.parse(working);
+        return normalizeAnalysis(strict);
+      } catch { /* fall through to slice-based recovery */ }
+
+      // 3. Recover by slicing from the first '{' to the last '}'
+      const start = working.indexOf('{');
+      const end = working.lastIndexOf('}');
       if (start === -1 || end === -1) throw new Error("No JSON object found");
-      
-      const jsonStr = text.substring(start, end + 1);
-      return JSON.parse(jsonStr);
+
+      const jsonStr = working.substring(start, end + 1);
+      return normalizeAnalysis(JSON.parse(jsonStr));
     } catch (err) {
       console.error("[AI] JSON Parse Failed. Raw Text Segment:", text.substring(0, 100));
       throw new Error(`JSON Cleanup Error: ${err.message}`);
     }
+  };
+
+  // Normalize the parsed analysis so downstream rendering is consistent:
+  // ensure the suggested_response is a clean plain-text email with real newlines.
+  const normalizeAnalysis = (analysis: any) => {
+    if (analysis && typeof analysis.suggested_response === 'string') {
+      analysis.suggested_response = cleanEmail(analysis.suggested_response);
+    }
+    return analysis;
+  };
+
+  // Strip stray markdown fences and collapse escaped newline sequences into
+  // real newlines so the email renders with proper line breaks everywhere.
+  const cleanEmail = (email: string) => {
+    let text = email.trim();
+    // Remove wrapping code fences (``` or ~~~)
+    text = text.replace(/^```(?:json|markdown|md|text)?\s*\n?/i, '').replace(/\n?```$/i, '');
+    // Convert escaped newline sequences (\n) into real newlines
+    text = text.replace(/\\n/g, '\n');
+    // Strip any leftover inline markdown markers for a clean plain-text email
+    text = text
+      .replace(/\*\*(.+?)\*\*/g, '$1')
+      .replace(/__(.+?)__/g, '$1')
+      .replace(/\*(.+?)\*/g, '$1')
+      .replace(/_(.+?)_/g, '$1')
+      .replace(/^#{1,6}\s+/gm, '');
+    return text.trim();
   };
 
   // --- ENGINE 1: GOOGLE AI STUDIO (PRIORITY) ---
@@ -240,27 +281,7 @@ Deno.serve(async (req) => {
       8. Exclusivity Scope (Narrow competitor lists, not categories).
       9. Portfolio Rights (Right to showcase in media kit).
       10. Dispute Resolution (Local/affordable mediation process).
-      * Also flag any other standard talent agreement protections that are absent.
-    - FINANCIAL RISK QUANTIFIER (MANDATORY):
-      For EVERY predatory clause or missing protection identified, calculate an "Estimated Liability Value Saved" and add it to the \`financial_risk_quantifier\` array. Use the contract's total flat fee as the base value for calculations. If the flat fee is not explicitly stated, estimate based on standard market rates for the creator tier described.
-      Calculation framework:
-      - Perpetual IP / Right-of-Publicity traps: 2x the contract's flat fee.
-      - Fixed Fines / Liquidated Damages: The exact dollar amount printed in the contract.
-      - Missing Kill Fee: 50% of the contract's flat fee.
-      - Multi-Month/Year Exclusivity Overreach: 1x to 3x the contract value in lost opportunity costs (use 2x as default unless scope is extremely broad).
-      - One-Sided Indemnification: 1x the contract's flat fee.
-      - Performance Clawbacks / Metric-Based Pay: 1.5x the contract's flat fee.
-      - Unreasonable Turnaround Deadlines: 0.5x the contract's flat fee.
-      - Communication & Operational Boundaries: 0.25x the contract's flat fee.
-      - Personality & IP Trademark Overreach: 1.5x the contract's flat fee.
-      - Vague Payment Milestones: 0.5x the contract's flat fee.
-      - Personal Life Overreach: 0.5x the contract's flat fee.
-      - Automatic Renewal/Opt-Out Traps: 1x the contract's flat fee.
-      - Retroactive/Historical Content Grabs: 1x the contract's flat fee.
-      - Dashboard & Private Platform Access: 0.5x the contract's flat fee.
-       - Hidden Liquidated Damages & Fines: The exact dollar amount if specified, otherwise 1x the contract's flat fee.
-       - Post-Campaign Competitive Right of First Refusal: 2x the contract's flat fee in lost opportunity costs.
-        Output format: array of objects with category, description, and estimated_value (number in USD).
+       * Also flag any other standard talent agreement protections that are absent.
 
     SCHEMA: { 
       "summary": "string", 
@@ -270,15 +291,11 @@ Deno.serve(async (req) => {
       "predatory_clauses": [{"snippet": "string", "explanation": "string"}], 
       "cautionary_clauses": [{"snippet": "string", "explanation": "string"}], 
       "missing_protections": [{"protection": "string", "importance": "string"}], 
-      "financial_risk_quantifier": [
-        {
-          "category": "string (e.g., Perpetual IP, Fixed Fines, Missing Kill Fee, Exclusivity Overreach)",
-          "description": "string (brief description of the specific clause or risk)",
-          "estimated_value": number (estimated liability value saved in USD)
-        }
-      ],
-      "suggested_response": "string" 
+      "suggested_response": "string (plain-text email with real newlines)" 
     }
+    OUTPUT FORMATTING (MANDATORY):
+    - The entire response MUST be a single valid JSON object only. Do NOT wrap it in markdown code fences (no \`\`\`).
+    - The "suggested_response" value MUST be plain text with real newline characters separating lines. Do NOT use markdown (no **, #, >, or code fences) inside the email. Use actual line breaks, not the literal characters backslash-n.
     CONTENT: ${text.substring(0, 30000)}`;
 
     const analysis = await analyzeContract(text, customPrompt);
@@ -291,8 +308,7 @@ Deno.serve(async (req) => {
       predatory_clauses: analysis.predatory_clauses,
       cautionary_clauses: analysis.cautionary_clauses,
       missing_protections: analysis.missing_protections,
-      suggested_response: analysis.suggested_response,
-      financial_risk_quantifier: analysis.financial_risk_quantifier
+      suggested_response: analysis.suggested_response
     }).eq('id', recordId);
 
     // 3. Privacy Cleanup: Remove source file and clear extracted text

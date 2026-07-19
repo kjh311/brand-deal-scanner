@@ -381,10 +381,19 @@ export default function UploadPage() {
                       <p className="text-[#64748B] text-[10px] uppercase tracking-widest bg-[#EDF2F7] inline-block px-4 py-1.5 rounded-full border border-[#E2E8F0] max-w-full">PDF, DOCX, or TXT files</p>
                     </div>
 
-                    <div className="flex gap-8 justify-center pt-2 grayscale opacity-40 group-hover/drop:grayscale-0 group-hover/drop:opacity-80 transition-all duration-700">
-                      <span className="material-symbols-outlined text-red-500 scale-110">picture_as_pdf</span>
-                      <span className="material-symbols-outlined text-blue-500 scale-110">description</span>
-                      <span className="material-symbols-outlined text-slate-100 scale-110">subject</span>
+                    <div className="flex gap-8 justify-center pt-2 text-[#94A3B8]">
+                      <div className="flex flex-col items-center gap-1">
+                        <span className="material-symbols-outlined text-3xl">picture_as_pdf</span>
+                        <span className="text-[9px] font-black tracking-widest uppercase">PDF</span>
+                      </div>
+                      <div className="flex flex-col items-center gap-1">
+                        <span className="material-symbols-outlined text-3xl">description</span>
+                        <span className="text-[9px] font-black tracking-widest uppercase">DOCX</span>
+                      </div>
+                      <div className="flex flex-col items-center gap-1">
+                        <span className="material-symbols-outlined text-3xl">text_snippet</span>
+                        <span className="text-[9px] font-black tracking-widest uppercase">TXT</span>
+                      </div>
                     </div>
                   </div>
                 ) : !isAnalyzing && !analysisComplete && file ? (

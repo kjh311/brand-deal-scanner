@@ -108,25 +108,7 @@ export const ReportTemplate = React.forwardRef<HTMLDivElement, ReportTemplatePro
                  </div>
                </div>
 
-               {/* Financial Risk Quantifier */}
-               {contract.financial_risk_quantifier && contract.financial_risk_quantifier.length > 0 && (
-                 <div style={{ marginBottom: '24px', breakInside: 'avoid' }}>
-                   <h4 style={{ fontSize: '12px', fontWeight: 'bold', color: colors.primary, textTransform: 'uppercase', marginBottom: '12px', textAlign: 'center' }}>Estimated Liability Value Saved</h4>
-                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
-                     {contract.financial_risk_quantifier.map((item: any, i: number) => (
-                       <div key={i} style={{ padding: '12px', backgroundColor: colors.slate50, border: `1px solid ${colors.slate100}`, borderRadius: '8px' }}>
-                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                           <span style={{ fontSize: '8px', fontWeight: 'bold', color: colors.slate500, textTransform: 'uppercase' }}>{item.category}</span>
-                           <span style={{ fontSize: '14px', fontWeight: 'bold', color: colors.emerald600 }}>${item.estimated_value?.toLocaleString() || '0'}</span>
-                         </div>
-                         <p style={{ fontSize: '10px', color: colors.slate600, lineHeight: 1.4 }}>{item.description}</p>
-                       </div>
-                     ))}
-                   </div>
-                 </div>
-               )}
-
-              {/* Summary Text */}
+               {/* Summary Text */}
               <div style={{ backgroundColor: colors.slate50, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.slate100}`, textAlign: 'center' }}>
                 <p style={{ fontSize: '12px', color: colors.slate600, lineHeight: 1.6, fontStyle: 'italic', margin: 0 }}>"{contract.summary}"</p>
               </div>
