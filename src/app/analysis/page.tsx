@@ -143,7 +143,7 @@ function AnalysisContent() {
   const scoreBadge = contract.health_score > 70 ? 'bg-[#3fb950]/10 text-[#3fb950] border-2 border-[#3fb950]/20' : contract.health_score > 40 ? 'bg-[#d29922]/10 text-[#d29922] border-2 border-[#d29922]/20' : 'bg-[#f85149]/10 text-[#f85149] border-2 border-[#f85149]/20';
 
   return (
-    <main className="max-w-[1000px] mx-auto px-6 md:px-10 pt-32 pb-12 space-y-12 animate-in fade-in duration-500">
+    <main className="max-w-[1000px] mx-auto px-4 sm:px-6 md:px-10 pt-32 pb-12 space-y-12 animate-in fade-in duration-500">
       
       {/* Header */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-white/10 pb-8">
@@ -166,7 +166,7 @@ function AnalysisContent() {
 
         <button 
           onClick={handleExport}
-          className="flex items-center gap-2 px-6 py-2 rounded-xl bg-white/15 border border-white/20 hover:bg-white/25 transition text-xs font-bold text-white shadow-md cursor-pointer"
+          className="flex w-full md:w-auto items-center justify-center gap-2 px-6 py-3 rounded-xl bg-white/15 border border-white/20 hover:bg-white/25 transition text-xs font-bold text-white shadow-md cursor-pointer"
         >
           <Download className="w-4 h-4" />
           Download Scan Results
@@ -177,7 +177,7 @@ function AnalysisContent() {
       {contract.financial_risk_quantifier && contract.financial_risk_quantifier.length > 0 && (
         <section className="space-y-4">
           <h3 className="text-sm font-black text-white/60 uppercase tracking-[4px]">Estimated Liability Value Saved</h3>
-          <div className="bg-white rounded-[2.5rem] p-8 md:p-10 text-[#1E1A5F] border border-[#E2E8F0] shadow-xl">
+          <div className="bg-white rounded-[2.5rem] p-5 sm:p-8 md:p-10 text-[#1E1A5F] border border-[#E2E8F0] shadow-xl">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {contract.financial_risk_quantifier.map((item: any, i: number) => (
                 <div key={i} className="bg-[#F8FAFC] rounded-2xl p-6 border border-[#E2E8F0] flex flex-col gap-2">
@@ -202,10 +202,10 @@ function AnalysisContent() {
         {/* Summary with Integrated Health Score */}
         <section className="space-y-4">
           <h3 className="text-sm font-black text-white/60 uppercase tracking-[4px]">Executive Summary</h3>
-          <div className="bg-white rounded-[3rem] p-10 text-[#1E1A5F] leading-relaxed text-base border border-[#E2E8F0] shadow-xl">
+          <div className="bg-white rounded-[3rem] p-5 sm:p-10 text-[#1E1A5F] leading-relaxed text-base border border-[#E2E8F0] shadow-xl">
             
-            <div className="flex flex-col items-center mb-10 pb-10 border-b border-[#E2E8F0] relative overflow-hidden">
-               <div className="absolute top-0 right-0">
+            <div className="flex flex-col items-center mb-10 pb-10 border-b border-[#E2E8F0] relative gap-4">
+               <div className="sm:absolute sm:top-0 sm:right-0">
                    <div className={`text-[10px] font-black px-4 py-2 rounded-xl border-2 ${scoreBadge} tracking-[2px] uppercase shadow-md`}>
                     {scoreText}
                   </div>
@@ -241,21 +241,22 @@ function AnalysisContent() {
         </section>
 
         {/* Red Flags */}
+        {/* Critical Risks */}
         <section className="space-y-6">
           <h3 className="text-sm font-black text-white/60 uppercase tracking-[4px]">Critical Risks</h3>
           <div className="space-y-6">
             {contract.predatory_clauses?.map((clause: any, i: number) => (
               <div key={i} className="bg-white border-4 border-rose-500 rounded-[2.5rem] overflow-hidden shadow-lg transition hover:shadow-xl">
-                <div className="p-8 space-y-8">
+                <div className="p-5 sm:p-8 space-y-6 sm:space-y-8">
                   <div className="space-y-3">
                      <p className="text-xs font-bold text-rose-600 uppercase tracking-widest font-mono">Source Passage</p>
-                    <div className="text-sm text-[#1E1A5F] font-mono leading-relaxed bg-[#FFF5F5] p-6 rounded-2xl border border-rose-100 italic">
+                    <div className="text-sm text-[#1E1A5F] font-mono leading-relaxed bg-[#FFF5F5] p-4 sm:p-6 rounded-2xl border border-rose-100 italic break-words">
                       "{clause.snippet}"
                     </div>
                   </div>
-                  <div className="bg-rose-50 rounded-2xl p-6 border border-rose-100">
+                  <div className="bg-rose-50 rounded-2xl p-4 sm:p-6 border border-rose-100">
                      <p className="text-rose-500 font-black text-xs uppercase tracking-widest mb-3">AI Verdict</p>
-                    <p className="text-rose-700 text-lg leading-relaxed font-bold tracking-tight">{clause.explanation}</p>
+                    <p className="text-rose-700 text-base sm:text-lg leading-relaxed font-bold tracking-tight">{clause.explanation}</p>
                   </div>
                 </div>
               </div>
@@ -268,9 +269,9 @@ function AnalysisContent() {
           <h3 className="text-sm font-black text-white/60 uppercase tracking-[4px]">Areas of Concern</h3>
           <div className="grid grid-cols-1 gap-4">
             {contract.cautionary_clauses?.map((clause: any, i: number) => (
-              <div key={i} className="bg-white rounded-2xl p-6 border-4 border-amber-500 shadow-md">
+              <div key={i} className="bg-white rounded-2xl p-5 sm:p-6 border-4 border-amber-500 shadow-md">
                 <div className="space-y-4">
-                    <p className="text-sm text-[#64748B] italic font-mono leading-snug">"{clause.snippet}"</p>
+                    <p className="text-sm text-[#64748B] italic font-mono leading-snug break-words">"{clause.snippet}"</p>
                    <p className="text-[#1E1A5F] text-base leading-relaxed font-bold">{clause.explanation}</p>
                 </div>
               </div>
@@ -281,7 +282,7 @@ function AnalysisContent() {
         {/* Missing Protections */}
         <section className="space-y-6">
           <h3 className="text-sm font-black text-white/60 uppercase tracking-[4px]">Missing Safeguards</h3>
-          <div className="bg-white border border-[#E2E8F0] rounded-[2.5rem] p-10 shadow-xl">
+          <div className="bg-white border border-[#E2E8F0] rounded-[2.5rem] p-5 sm:p-10 shadow-xl">
             <div className="grid md:grid-cols-2 gap-8">
               {contract.missing_protections?.map((item: any, i: number) => (
                 <div key={i} className="bg-[#F8FAFC] rounded-2xl p-6 border border-[#E2E8F0] flex flex-col gap-5">
@@ -303,7 +304,7 @@ function AnalysisContent() {
           <h3 className="text-sm font-black text-white/60 uppercase tracking-[4px]">Legal Decoder</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
              {contract.legalese_translation?.map((term: any, i: number) => (
-               <div key={i} className="bg-white rounded-2xl p-6 border border-[#E2E8F0] hover:border-[#D84C9F]/30 transition-all shadow-md">
+               <div key={i} className="bg-white rounded-2xl p-5 sm:p-6 border border-[#E2E8F0] hover:border-[#D84C9F]/30 transition-all shadow-md">
                   <div className="space-y-4">
                     <div>
                        <p className="text-[10px] font-black text-[#64748B] uppercase mb-1">Instance</p>
@@ -311,7 +312,7 @@ function AnalysisContent() {
                      </div>
                      <div className="pt-4 border-t border-[#E2E8F0]">
                        <p className="text-[10px] font-black text-[#D84C9F] uppercase mb-2">Meaning</p>
-                      <p className="text-base font-bold text-[#1E1A5F] tracking-tight leading-tight uppercase font-mono">{term.translation}</p>
+                      <p className="text-base font-bold text-[#1E1A5F] tracking-tight leading-tight uppercase font-mono break-words">{term.translation}</p>
                     </div>
                   </div>
                </div>
@@ -326,8 +327,8 @@ function AnalysisContent() {
             <h3 className="text-xl font-bold tracking-tight text-white">Email Response Draft</h3>
           </div>
 
-          <div className="bg-white rounded-[3rem] p-10 space-y-10 border border-[#E2E8F0] shadow-xl relative overflow-hidden group">              
-            <div className="text-[#1E1A5F] leading-relaxed relative z-10 whitespace-pre-line">
+          <div className="bg-white rounded-[3rem] p-5 sm:p-10 space-y-6 sm:space-y-10 border border-[#E2E8F0] shadow-xl relative overflow-hidden group">              
+            <div className="text-[#1E1A5F] leading-relaxed relative z-10 whitespace-pre-line break-words text-sm sm:text-base">
               {contract.suggested_response || "Generating email draft..."}
             </div>
 
@@ -335,7 +336,7 @@ function AnalysisContent() {
               <button
                 onClick={handleCopy}
                 disabled={!contract?.suggested_response}
-                className="flex items-center gap-2 px-10 py-4 rounded-2xl bg-gradient-to-r from-[#D84C9F] to-[#DE5298] text-white font-bold shadow-md transition-all hover:scale-[1.03] active:scale-95 text-base cursor-pointer disabled:opacity-50"
+                className="flex w-full sm:w-auto items-center justify-center gap-2 px-6 sm:px-10 py-4 rounded-2xl bg-gradient-to-r from-[#D84C9F] to-[#DE5298] text-white font-bold shadow-md transition-all hover:scale-[1.03] active:scale-95 text-base cursor-pointer disabled:opacity-50"
               >
                 {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
                 {copied ? 'Copied' : 'Copy Email Script'}
