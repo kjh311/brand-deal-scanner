@@ -163,8 +163,15 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription, prev
   console.log(`🧐 current_period_end raw:`, (subscription as any).current_period_end, `currentPeriodEnd raw:`, (subscription as any).currentPeriodEnd);
   const nextBillingDate = periodEnd ? new Date(periodEnd * 1000).toISOString() : new Date().toISOString();
   
+  let targetPlan = profile.plan;
+  if (status === 'active') {
+    targetPlan = newPlan;
+  } else if (status === 'canceled' || status === 'unpaid') {
+    targetPlan = 'none';
+  }
+
   const updateData: any = {
-    plan: status === 'active' ? newPlan : 'Free',
+    plan: targetPlan,
     next_billing_date: nextBillingDate,
     updated_at: new Date().toISOString(),
   };
@@ -229,7 +236,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   const { error } = await supabaseAdmin
     .from('profiles')
     .update({
-      plan: 'Free',
+      plan: 'none',
       cancellation_reason: cancellationReason,
       next_billing_date: null,
       updated_at: new Date().toISOString(),

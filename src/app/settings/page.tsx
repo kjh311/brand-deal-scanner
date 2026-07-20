@@ -32,8 +32,8 @@ export default function SettingsPage() {
           
         if (profile) {
           setCredits(profile.credits || 0)
-          setPlan(profile.plan || 'Free')
-          setHasActivePlan(!!profile.stripe_customer_id)
+          setPlan(profile.plan && profile.plan !== 'none' ? profile.plan : 'No Active Subscription')
+          setHasActivePlan(profile.plan !== null && profile.plan !== 'none')
         }
       }
       setLoading(false)
@@ -123,43 +123,55 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="space-y-4">
-                     {credits === 0 && (
-                       <button 
-                         onClick={() => router.push('/upload')}
-                         className="w-full py-4 rounded-2xl bg-[#D84C9F] hover:brightness-110 text-white font-black text-sm hover:scale-[1.01] transition-transform shadow-xl flex items-center justify-center gap-2 cursor-pointer"
-                       >
-                         <span className="material-symbols-outlined text-sm">bolt</span>
-                         Purchase Top Ups
-                       </button>
+                     {!hasActivePlan ? (
+                       <>
+                         <button 
+                           onClick={() => router.push('/plans')}
+                           className="w-full py-4 rounded-2xl bg-[#1E1A5F] text-white font-black text-sm hover:scale-[1.01] transition-transform shadow-xl flex items-center justify-center gap-2 cursor-pointer"
+                         >
+                           <span className="material-symbols-outlined text-sm">subscriptions</span>
+                           Subscribe to a Plan
+                         </button>
+                         <button 
+                           onClick={() => router.push('/upload')}
+                           className="w-full py-4 rounded-2xl bg-[#D84C9F] hover:brightness-110 text-white font-black text-sm hover:scale-[1.01] transition-transform shadow-xl flex items-center justify-center gap-2 cursor-pointer"
+                         >
+                           <span className="material-symbols-outlined text-sm">bolt</span>
+                           Buy Top-Up Credits
+                         </button>
+                       </>
+                     ) : (
+                       <>
+                         <button 
+                           onClick={handleUpdatePlan}
+                           disabled={updating}
+                           className="w-full py-4 rounded-2xl bg-[#1E1A5F] text-white font-black text-sm hover:scale-[1.01] transition-transform shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
+                         >
+                           {updating ? (
+                             <>
+                               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                               Connecting...
+                             </>
+                           ) : (
+                             'Modify Subscription'
+                           )}
+                         </button>
+                         <button 
+                           onClick={handleCancelSubscription}
+                           disabled={cancelling}
+                           className="w-full py-4 rounded-2xl border border-rose-200 text-rose-600 font-bold text-sm hover:bg-rose-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
+                         >
+                           {cancelling ? (
+                             <>
+                               <div className="w-4 h-4 border-2 border-rose-600 border-t-transparent rounded-full animate-spin" />
+                               Redirecting...
+                             </>
+                           ) : (
+                             'Cancel Subscription'
+                           )}
+                         </button>
+                       </>
                      )}
-                     <button 
-                       onClick={handleUpdatePlan}
-                       disabled={updating}
-                       className="w-full py-4 rounded-2xl bg-[#1E1A5F] text-white font-black text-sm hover:scale-[1.01] transition-transform shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
-                     >
-                       {updating ? (
-                         <>
-                           <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                           Connecting...
-                         </>
-                       ) : (
-                         hasActivePlan ? 'Modify Subscription' : 'Upgrade Plan'
-                       )}
-                     </button>
-                     <button 
-                       onClick={handleCancelSubscription}
-                       disabled={cancelling}
-                       className="w-full py-4 rounded-2xl border border-rose-200 text-rose-600 font-bold text-sm hover:bg-rose-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
-                     >
-                       {cancelling ? (
-                         <>
-                           <div className="w-4 h-4 border-2 border-rose-600 border-t-transparent rounded-full animate-spin" />
-                           Redirecting...
-                         </>
-                       ) : (
-                         'Cancel Subscription'
-                       )}
-                     </button>
                   </div>
                   
                   <p className="mt-6 text-center text-[10px] text-[#64748B] font-medium uppercase tracking-[2px]">
