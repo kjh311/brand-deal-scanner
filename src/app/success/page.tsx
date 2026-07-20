@@ -53,7 +53,7 @@ function SuccessContent() {
   }
 
   return (
-    <div className="max-w-xl mx-auto py-20 px-6">
+    <div className="max-w-xl mx-auto pt-28 pb-20 px-6">
       <div className="bg-white border border-[#E2E8F0] rounded-3xl p-10 text-center text-[#1E1A5F] shadow-2xl relative overflow-hidden">
         {/* Decorative background glow */}
         <div className="absolute -top-24 -left-24 w-48 h-48 bg-[#D84C9F]/10 blur-[80px] rounded-full" />
@@ -80,13 +80,6 @@ function SuccessContent() {
           >
             <span className="material-symbols-outlined">rocket_launch</span>
             Start Scanning
-          </Link>
-          
-          <Link 
-            href="/dashboard"
-            className="w-full py-4 bg-[#F8FAFC] border border-[#E2E8F0] text-[#1E1A5F] rounded-2xl font-semibold hover:bg-white transition-all"
-          >
-            View Dashboard
           </Link>
         </div>
       </div>
