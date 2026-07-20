@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useRef, useCallback, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { uploadContract, registerManualContract } from '@/lib/actions/contracts'
@@ -17,6 +18,7 @@ interface WorkflowStep {
 }
 
 export default function UploadPage() {
+  const router = useRouter()
   const [isUploading, setIsUploading] = useState(false)
   const [currentContractId, setCurrentContractId] = useState<string | null>(null)
   const [file, setFile] = useState<File | null>(null)
@@ -30,7 +32,7 @@ export default function UploadPage() {
     { number: 3, label: 'Get Report', status: 'locked', subtext: 'Locked' },
   ])
 
-  const [subStatus, setSubStatus] = useState<{ plan: string; credits: number; currentPeriodEnd: number | null; nextBillingDate: string | null } | null>(null)
+  const [subStatus, setSubStatus] = useState<{ plan: string; credits: number; stripe_customer_id?: string | null; currentPeriodEnd: number | null; nextBillingDate: string | null } | null>(null)
   const [isLoadingSub, setIsLoadingSub] = useState(true)
   const [loadingTopUp, setLoadingTopUp] = useState(false)
   const [selectedQuantity, setSelectedQuantity] = useState(5)
@@ -56,58 +58,67 @@ export default function UploadPage() {
   }
 
   useEffect(() => {
-    const fetchStatus = async () => {
+    const initPage = async () => {
       try {
         const res = await fetch('/api/subscription-status')
         if (res.ok) {
           const data = await res.json()
           setSubStatus(data)
+
+          const userCredits = data.credits || 0
+
+          if (userCredits === 0) {
+            // Scenario A (No Stripe Customer ID): If credits === 0 AND stripe_customer_id IS NULL, redirect to /plans
+            if (!data.stripe_customer_id) {
+              router.replace('/plans')
+              // Don't set isLoadingSub to false so loading spinner persists during transition
+              return
+            }
+            // Scenario B (Has Stripe Customer ID): If credits === 0 AND stripe_customer_id IS NOT NULL,
+            // they will remain on this page to view the top-up scans purchasing slider.
+          }
+
+          // Existing Customers / Active Users (Scenario C): Check terms / privacy policy acceptance
+          const supabase = createClient()
+          const { data: { user } } = await supabase.auth.getUser()
+
+          if (user) {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('terms_accepted_at')
+              .eq('id', user.id)
+              .single()
+
+            const { data: version } = await supabase
+              .from('terms_versions')
+              .select('terms_text, privacy_text, published_at')
+              .order('published_at', { ascending: false })
+              .limit(1)
+              .maybeSingle()
+
+            const acceptedAt = profile?.terms_accepted_at ?? null
+            const publishedAt = version?.published_at ?? null
+
+            setLatestTermsText(version?.terms_text ?? '')
+            setLatestPrivacyText(version?.privacy_text ?? '')
+
+            if (publishedAt) {
+              if (!acceptedAt || new Date(acceptedAt).toISOString() < new Date(publishedAt).toISOString()) {
+                setLegalVariant(!acceptedAt ? 'initial' : 'updated')
+                setLegalModalOpen(true)
+              }
+            }
+          }
         }
       } catch (err) {
-        console.error('Error fetching subscription status:', err)
+        console.error('Error initializing upload page:', err)
       } finally {
         setIsLoadingSub(false)
       }
     }
-    fetchStatus()
-  }, [])
 
-  useEffect(() => {
-    const checkLegalAcceptance = async () => {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-
-      if (!user) return
-
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('terms_accepted_at')
-        .eq('id', user.id)
-        .single()
-
-      const { data: version } = await supabase
-        .from('terms_versions')
-        .select('terms_text, privacy_text, published_at')
-        .order('published_at', { ascending: false })
-        .limit(1)
-        .maybeSingle()
-
-      const acceptedAt = profile?.terms_accepted_at ?? null
-      const publishedAt = version?.published_at ?? null
-
-      setLatestTermsText(version?.terms_text ?? '')
-      setLatestPrivacyText(version?.privacy_text ?? '')
-
-      if (!publishedAt) return
-
-      if (!acceptedAt || new Date(acceptedAt).toISOString() < new Date(publishedAt).toISOString()) {
-        setLegalVariant(!acceptedAt ? 'initial' : 'updated')
-        setLegalModalOpen(true)
-      }
-    }
-
-    checkLegalAcceptance()
-  }, [])
+    initPage()
+  }, [router])
 
   const getTopUpDetails = (tier: string) => {
     switch (tier.toLowerCase()) {

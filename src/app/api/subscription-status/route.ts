@@ -45,6 +45,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       plan: profile.plan || 'Free',
       credits: profile.credits || 0,
+      stripe_customer_id: profile.stripe_customer_id,
       currentPeriodEnd,
       nextBillingDate: profile.next_billing_date,
     });
