@@ -49,7 +49,7 @@ export function FeedbackSection({ contractId }: FeedbackSectionProps) {
         return
       }
 
-      const { insertError } = await supabase
+      const { error } = await supabase
         .from('scan_feedback')
         .insert({
           profile_id: user.id,
@@ -60,8 +60,8 @@ export function FeedbackSection({ contractId }: FeedbackSectionProps) {
           used_on_homepage: usedOnHomepage,
         })
 
-      if (insertError) {
-        throw insertError
+      if (error) {
+        throw error
       }
 
       setSubmitted(true)

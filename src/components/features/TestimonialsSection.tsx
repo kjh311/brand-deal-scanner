@@ -15,8 +15,10 @@ interface Testimonial {
 
 export function TestimonialsSection() {
   const marqueeRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
   const [testimonials, setTestimonials] = useState<Testimonial[]>([])
   const [loading, setLoading] = useState(true)
+  const [shouldScroll, setShouldScroll] = useState(false)
 
   useEffect(() => {
     const fetchTestimonials = async () => {
@@ -38,10 +40,21 @@ export function TestimonialsSection() {
   }, [])
 
   useEffect(() => {
-    if (testimonials.length === 0) return
+    if (testimonials.length === 0) {
+      setShouldScroll(false)
+      return
+    }
 
+    const container = containerRef.current
     const marquee = marqueeRef.current
-    if (!marquee) return
+    if (!container || !marquee) return
+
+    const containerWidth = container.clientWidth
+    const totalContentWidth = 320 * testimonials.length + 24 * (testimonials.length - 1)
+
+    setShouldScroll(totalContentWidth > containerWidth)
+
+    if (!shouldScroll) return
 
     let animationId: number
     let offset = 0
@@ -49,9 +62,7 @@ export function TestimonialsSection() {
 
     const animate = () => {
       offset -= speed
-      const cardWidth = 320
-      const totalWidth = cardWidth * testimonials.length
-      if (Math.abs(offset) >= totalWidth) {
+      if (Math.abs(offset) >= totalContentWidth) {
         offset = 0
       }
       marquee.style.transform = `translateX(${offset}px)`
@@ -83,7 +94,7 @@ export function TestimonialsSection() {
     return null
   }
 
-  const duplicated = [...testimonials, ...testimonials]
+  const displayedTestimonials = shouldScroll ? [...testimonials, ...testimonials] : testimonials
 
   return (
     <section className="py-16 sm:py-20 px-5 sm:px-10 bg-transparent" id="testimonials">
@@ -95,16 +106,20 @@ export function TestimonialsSection() {
           </h2>
         </div>
 
-        <div className="relative overflow-hidden">
-          <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-[#221A7F] via-[#7B2CBF] to-transparent z-10 pointer-events-none" />
-          <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-[#221A7F] via-[#7B2CBF] to-transparent z-10 pointer-events-none" />
+        <div ref={containerRef} className="relative overflow-hidden">
+          {shouldScroll && (
+            <>
+              <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-[#221A7F] via-[#7B2CBF] to-transparent z-10 pointer-events-none" />
+              <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-[#221A7F] via-[#7B2CBF] to-transparent z-10 pointer-events-none" />
+            </>
+          )}
 
           <div
             ref={marqueeRef}
             className="flex gap-6 transition-transform duration-100 cursor-pointer"
             style={{ willChange: 'transform' }}
           >
-            {duplicated.map((t, i) => (
+            {displayedTestimonials.map((t, i) => (
               <div
                 key={`${t.id}-${i}`}
                 className="min-w-[320px] max-w-[350px] flex-shrink-0 bg-[#1a1a3e]/80 border border-white/10 backdrop-blur-sm rounded-2xl p-6 flex flex-col text-white shadow-xl hover:bg-[#1a1a3e] transition-colors duration-300"
