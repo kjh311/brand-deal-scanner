@@ -107,7 +107,7 @@ export function TestimonialsSection() {
             {duplicated.map((t, i) => (
               <div
                 key={`${t.id}-${i}`}
-                className="min-w-[320px] max-w-[350px] flex-shrink-0 bg-white/5 border border-white/10 backdrop-blur-sm rounded-2xl p-6 flex flex-col text-white shadow-xl hover:bg-white/10 transition-colors duration-300"
+                className="min-w-[320px] max-w-[350px] flex-shrink-0 bg-[#1a1a3e]/80 border border-white/10 backdrop-blur-sm rounded-2xl p-6 flex flex-col text-white shadow-xl hover:bg-[#1a1a3e] transition-colors duration-300"
               >
                 <div className="flex gap-1 text-amber-400 mb-4">
                   {[1, 2, 3, 4, 5].map((s) => (

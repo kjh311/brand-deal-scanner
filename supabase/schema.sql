@@ -7,7 +7,7 @@ create extension if not exists "uuid-ossp";
 create table public.profiles (
   id uuid references auth.users(id) on delete cascade not null primary key,
   email text,
-  full_name text,
+  user_name text,
   avatar_url text,
   credit_balance integer default 0 not null,
   subscription_tier text default 'free' not null,
@@ -32,11 +32,11 @@ create policy "Users can update their own profile"
 create or replace function public.handle_new_user()
 returns trigger as $$
 begin
-  insert into public.profiles (id, email, full_name, avatar_url)
+  insert into public.profiles (id, email, user_name, avatar_url)
   values (
     new.id, 
     new.email, 
-    new.raw_user_meta_data->>'full_name',
+    COALESCE(new.raw_user_meta_data->>'user_name', new.raw_user_meta_data->>'name'),
     new.raw_user_meta_data->>'avatar_url'
   );
   return new;

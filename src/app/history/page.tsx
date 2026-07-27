@@ -32,7 +32,7 @@ export default function HistoryPage() {
       if (!user) return
 
       // Personalized Welcome
-      const name = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Creator'
+      const name = user.user_metadata?.user_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Creator'
       setUserName(name)
 
       // Fetch Contracts

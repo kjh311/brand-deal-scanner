@@ -193,7 +193,7 @@ Deno.serve(async (req) => {
     const { data: profile } = await supabase.from('profiles').select('*').eq('id', record.user_id).single();
 
     // Try multiple common name fields in case of variations
-    const userName = profile?.full_name || profile?.name || profile?.display_name || '[YOUR NAME]';
+    const userName = profile?.user_name || profile?.name || profile?.display_name || '[YOUR NAME]';
     console.log(`[AUDIT] Resolved User Identity (Prioritizing Name over Email): ${userName}`);
 
     const { source_type, file_path, extracted_text: existingText } = record;

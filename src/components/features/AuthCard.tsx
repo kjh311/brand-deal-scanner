@@ -16,6 +16,7 @@ export function AuthCard({ mode }: AuthCardProps) {
   const [showPassword, setShowPassword] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [username, setUsername] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [signUpSuccess, setSignUpSuccess] = useState(false)
@@ -36,6 +37,9 @@ export function AuthCard({ mode }: AuthCardProps) {
           email: email.trim(),
           password,
           options: {
+            data: {
+              user_name: username.trim(),
+            },
             emailRedirectTo: `${window.location.origin}/auth/callback`,
           },
         })
@@ -141,6 +145,22 @@ export function AuthCard({ mode }: AuthCardProps) {
           </div>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            {!isLogin && (
+              <div className="flex flex-col gap-2">
+                <label htmlFor="username" className="text-xs font-mono uppercase tracking-wider text-[#64748B] ml-1">
+                  Username
+                </label>
+                <input
+                  id="username"
+                  type="text"
+                  placeholder="your_username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                  className="w-full bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-4 py-3 text-[#1E1A5F] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#D84C9F]/50 transition-all"
+                />
+              </div>
+            )}
             <div className="flex flex-col gap-2">
               <label htmlFor="email" className="text-xs font-mono uppercase tracking-wider text-[#64748B] ml-1">
                 Email Address

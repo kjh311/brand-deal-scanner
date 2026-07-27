@@ -91,7 +91,7 @@ export default function SettingsPage() {
                        )}
                     </div>
                     <div>
-                       <h2 className="text-2xl font-bold text-[#1E1A5F]">{user?.user_metadata?.full_name || 'Creator'}</h2>
+                       <h2 className="text-2xl font-bold text-[#1E1A5F]">{user?.user_metadata?.user_name || 'Creator'}</h2>
                        <p className="text-[#64748B] text-sm">{user?.email}</p>
                     </div>
                  </div>

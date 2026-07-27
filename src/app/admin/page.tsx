@@ -50,7 +50,7 @@ export default async function AdminPage() {
               Admin Dashboard
             </h1>
             <p className="text-white/80 text-lg">
-              Welcome, {user.user_metadata?.full_name || user.email}. You have administrator access.
+              Welcome, {user.user_metadata?.user_name || user.email}. You have administrator access.
             </p>
           </div>
 
