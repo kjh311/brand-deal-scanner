@@ -15,6 +15,7 @@ export function FeedbackSection({ contractId }: FeedbackSectionProps) {
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isOpen, setIsOpen] = useState(false)
 
   const handleSubmit = useCallback(async () => {
     if (rating === 0) {
@@ -72,68 +73,80 @@ export function FeedbackSection({ contractId }: FeedbackSectionProps) {
       </div>
     )
   }
- 
+
   return (
-    <div className="bg-white border border-[#E2E8F0] rounded-[2.5rem] p-5 sm:p-10 md:p-12 space-y-8 text-[#1E1A5F]">
-      <div className="text-center">
-        <h3 className="font-headline text-2xl font-bold tracking-tight mb-2">
-          Rate this scan
-        </h3>
-      </div>
- 
-      <div className="flex justify-center gap-1.5 sm:gap-3">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <button
-            key={star}
-            type="button"
-            onClick={() => setRating(star)}
-            onMouseEnter={() => setHover(star)}
-            onMouseLeave={() => setHover(0)}
-            className="p-0.5 sm:p-1 transition-transform hover:scale-110 cursor-pointer"
-          >
-            <Star
-              className={`w-8 h-8 sm:w-10 sm:h-10 ${
-                star <= (hover || rating)
-                  ? 'text-amber-400 fill-amber-400'
-                  : 'text-[#CBD5E1]'
-              }`}
+    <div className="bg-white border border-[#E2E8F0] rounded-[2.5rem] overflow-hidden text-[#1E1A5F]">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between p-5 sm:p-10 md:p-12 hover:bg-[#F8FAFC] transition-colors cursor-pointer"
+      >
+        <div className="text-center flex-1">
+          <h3 className="font-headline text-2xl font-bold tracking-tight mb-2">
+            Rate this scan
+          </h3>
+          <div className="flex justify-center gap-1.5 sm:gap-3 mt-3">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <button
+                key={star}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setRating(star)
+                  setIsOpen(true)
+                }}
+                onMouseEnter={() => setHover(star)}
+                onMouseLeave={() => setHover(0)}
+                className="p-0.5 sm:p-1 transition-transform hover:scale-110 cursor-pointer"
+              >
+                <Star
+                  className={`w-6 h-6 sm:w-8 sm:h-8 ${
+                    star <= (hover || rating)
+                      ? 'text-amber-400 fill-amber-400'
+                      : 'text-[#CBD5E1]'
+                  }`}
+                />
+              </button>
+            ))}
+          </div>
+         </div>
+       </button>
+
+      {isOpen && (
+        <div className="px-5 sm:px-10 md:px-12 pb-5 sm:pb-10 md:pb-12 space-y-8 animate-in fade-in zoom-in-95 duration-200">
+          <div className="space-y-3">
+            <textarea
+              value={feedback}
+              onChange={(e) => setFeedback(e.target.value)}
+              placeholder="Tell us how we can improve this scan or what caught your eye..."
+              rows={4}
+              className="w-full bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl p-4 sm:p-5 text-[#1E1A5F] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#D84C9F]/50 focus:bg-white transition-all resize-none text-sm sm:text-base"
             />
-          </button>
-        ))}
-      </div>
- 
-      <div className="space-y-3">
-        <textarea
-          value={feedback}
-          onChange={(e) => setFeedback(e.target.value)}
-          placeholder="Tell us how we can improve this scan or what caught your eye..."
-          rows={4}
-          className="w-full bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl p-4 sm:p-5 text-[#1E1A5F] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#D84C9F]/50 focus:bg-white transition-all resize-none text-sm sm:text-base"
-        />
-      </div>
- 
-      {error && (
-        <p className="text-rose-500 text-sm text-center font-medium">
-          {error}
-        </p>
-      )}
- 
-      <div className="flex justify-center w-full">
-        <button
-          onClick={handleSubmit}
-          disabled={submitting}
-          className="w-full sm:w-auto justify-center px-6 sm:px-10 py-4 rounded-2xl bg-gradient-to-r from-[#D84C9F] to-[#DE5298] text-white font-bold text-xs sm:text-sm uppercase tracking-[2px] sm:tracking-[3px] hover:brightness-110 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-md flex items-center gap-3"
-        >
-          {submitting ? (
-            <>
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              <span>Submitting...</span>
-            </>
-          ) : (
-            'Submit Feedback'
+          </div>
+
+          {error && (
+            <p className="text-rose-500 text-sm text-center font-medium">
+              {error}
+            </p>
           )}
-        </button>
-      </div>
+
+          <div className="flex justify-center w-full">
+            <button
+              onClick={handleSubmit}
+              disabled={submitting}
+              className="w-full sm:w-auto justify-center px-6 sm:px-10 py-4 rounded-2xl bg-gradient-to-r from-[#D84C9F] to-[#DE5298] text-white font-bold text-xs sm:text-sm uppercase tracking-[2px] sm:tracking-[3px] hover:brightness-110 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-md flex items-center gap-3"
+            >
+              {submitting ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Submitting...</span>
+                </>
+              ) : (
+                'Submit Feedback'
+              )}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

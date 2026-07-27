@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Star, Check } from 'lucide-react'
+import { Star, Check, ChevronDown, ChevronUp } from 'lucide-react'
 
 interface FeedbackItem {
   id: string
@@ -24,6 +24,8 @@ export function AdminFeedbackView({ initialFeedback }: AdminFeedbackViewProps) {
   const [feedback, setFeedback] = useState<FeedbackItem[]>(initialFeedback)
   const [dismissingId, setDismissingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [isOpen, setIsOpen] = useState(false)
+  const [expandedId, setExpandedId] = useState<string | null>(null)
 
   useEffect(() => {
     const supabase = createClient()
@@ -71,80 +73,117 @@ export function AdminFeedbackView({ initialFeedback }: AdminFeedbackViewProps) {
   }
 
   return (
-    <div className="bg-white border border-[#E2E8F0] rounded-[2.5rem] p-10 md:p-12 text-[#1E1A5F]">
-      <h2 className="font-headline text-2xl font-bold tracking-tight mb-6">
-        User Feedback
-      </h2>
+    <div className="bg-white border border-[#E2E8F0] rounded-[2.5rem] overflow-hidden text-[#1E1A5F]">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between p-6 md:p-8 hover:bg-[#F8FAFC] transition-colors cursor-pointer"
+      >
+        <div className="flex items-center gap-3">
+          <span className="font-headline text-2xl font-bold tracking-tight">
+            User Feedback
+          </span>
+          {feedback.length > 0 && (
+            <span className="text-xs font-bold bg-rose-100 text-rose-600 px-2 py-1 rounded-full">
+              {feedback.length}
+            </span>
+          )}
+        </div>
+        {isOpen ? (
+          <ChevronUp className="w-5 h-5 text-[#64748B]" />
+        ) : (
+          <ChevronDown className="w-5 h-5 text-[#64748B]" />
+        )}
+      </button>
 
-      {error ? (
-        <div className="text-center py-16">
-          <p className="text-rose-500 font-medium mb-2">Failed to load feedback</p>
-          <p className="text-sm text-[#64748B]">{error}</p>
-        </div>
-      ) : feedback.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="w-16 h-16 rounded-full bg-emerald-50 flex items-center justify-center mb-4">
-            <Star className="w-8 h-8 text-emerald-500 fill-emerald-500" />
-          </div>
-          <p className="font-headline text-xl font-bold text-[#1E1A5F] mb-1">No new unread feedback!</p>
-          <p className="text-sm text-[#64748B]">All feedback has been reviewed.</p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {feedback.map((item) => (
-            <div
-              key={item.id}
-              className={`bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl p-6 flex gap-6 items-start transition-all duration-300 ${
-                dismissingId === item.id ? 'opacity-0 translate-x-4' : ''
-              }`}
-            >
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-3 mb-3">
-                  <span className="text-[10px] font-mono text-[#64748B] uppercase tracking-wider bg-white px-2 py-1 rounded-lg border border-[#E2E8F0]">
-                    {item.profile_id.slice(0, 8)}...
-                  </span>
-                  <div className="flex gap-0.5">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star
-                        key={star}
-                        className={`w-4 h-4 ${
-                          star <= item.rating
-                            ? 'text-amber-400 fill-amber-400'
-                            : 'text-[#CBD5E1]'
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </div>
-                <div className="mb-3">
-                  <p className="text-sm font-bold text-[#1E1A5F]">
-                    {item.profiles?.email || 'Anonymous Creator'}
-                  </p>
-                  {item.profiles?.email && (
-                    <p className="text-xs text-[#64748B] font-mono select-all">
-                      {item.profiles.email}
-                    </p>
+      {isOpen && (
+        <div className="px-6 md:px-8 pb-8 md:pb-12 animate-in fade-in zoom-in-95 duration-200">
+          {error ? (
+            <div className="text-center py-16">
+              <p className="text-rose-500 font-medium mb-2">Failed to load feedback</p>
+              <p className="text-sm text-[#64748B]">{error}</p>
+            </div>
+          ) : feedback.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="w-16 h-16 rounded-full bg-emerald-50 flex items-center justify-center mb-4">
+                <Star className="w-8 h-8 text-emerald-500 fill-emerald-500" />
+              </div>
+              <p className="font-headline text-xl font-bold text-[#1E1A5F] mb-1">No new unread feedback!</p>
+              <p className="text-sm text-[#64748B]">All feedback has been reviewed.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {feedback.map((item) => (
+                <div key={item.id}>
+                  <button
+                    onClick={() => setExpandedId(expandedId === item.id ? null : item.id)}
+                    className="w-full text-left"
+                  >
+                    <div className={`bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl p-6 flex gap-6 items-start transition-all duration-300 ${
+                      dismissingId === item.id ? 'opacity-0 translate-x-4' : ''
+                    }`}>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-3 mb-3">
+                          <span className="text-[10px] font-mono text-[#64748B] uppercase tracking-wider bg-white px-2 py-1 rounded-lg border border-[#E2E8F0]">
+                            {item.profile_id.slice(0, 8)}...
+                          </span>
+                          <div className="flex gap-0.5">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <Star
+                                key={star}
+                                className={`w-4 h-4 ${
+                                  star <= item.rating
+                                    ? 'text-amber-400 fill-amber-400'
+                                    : 'text-[#CBD5E1]'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        <div className="mb-3">
+                          <p className="text-sm font-bold text-[#1E1A5F]">
+                            {item.profiles?.email || 'Anonymous Creator'}
+                          </p>
+                          {item.profiles?.email && (
+                            <p className="text-xs text-[#64748B] font-mono select-all">
+                              {item.profiles.email}
+                            </p>
+                          )}
+                        </div>
+                        {expandedId === item.id && item.feedback_text && (
+                          <p className="text-sm text-[#1E1A5F] leading-relaxed whitespace-pre-wrap">
+                            {item.feedback_text}
+                          </p>
+                        )}
+                        {expandedId === item.id && (
+                          <p className="text-[10px] text-[#94A3B8] mt-3 font-mono uppercase tracking-wider">
+                            {new Date(item.created_at).toLocaleDateString()} {new Date(item.created_at).toLocaleTimeString()}
+                          </p>
+                        )}
+                      </div>
+                      <ChevronDown className={`w-5 h-5 text-[#64748B] shrink-0 mt-1 transition-transform ${
+                        expandedId === item.id ? 'rotate-180' : ''
+                      }`} />
+                    </div>
+                  </button>
+                  {expandedId === item.id && (
+                    <div className="flex justify-end mt-2 animate-in fade-in duration-200">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleDismiss(item.id)
+                        }}
+                        disabled={dismissingId === item.id}
+                        className="px-4 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-bold hover:bg-emerald-100 transition-colors disabled:opacity-50 cursor-pointer"
+                      >
+                        <Check className="w-4 h-4 inline mr-1" />
+                        Dismiss
+                      </button>
+                    </div>
                   )}
                 </div>
-                {item.feedback_text && (
-                  <p className="text-sm text-[#1E1A5F] leading-relaxed whitespace-pre-wrap">
-                    {item.feedback_text}
-                  </p>
-                )}
-                <p className="text-[10px] text-[#94A3B8] mt-3 font-mono uppercase tracking-wider">
-                  {new Date(item.created_at).toLocaleDateString()} {new Date(item.created_at).toLocaleTimeString()}
-                </p>
-              </div>
-              <button
-                onClick={() => handleDismiss(item.id)}
-                disabled={dismissingId === item.id}
-                className="shrink-0 w-10 h-10 rounded-xl bg-white border border-[#E2E8F0] flex items-center justify-center hover:border-emerald-300 hover:bg-emerald-50 transition-all cursor-pointer disabled:opacity-50"
-                title="Dismiss feedback"
-              >
-                <Check className="w-5 h-5 text-emerald-500" />
-              </button>
+              ))}
             </div>
-          ))}
+          )}
         </div>
       )}
     </div>

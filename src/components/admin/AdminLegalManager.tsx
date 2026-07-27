@@ -17,6 +17,7 @@ interface AdminLegalManagerProps {
 }
 
 export function AdminLegalManager({ initialVersion }: AdminLegalManagerProps) {
+  const [isOpen, setIsOpen] = useState(false)
   const [termsOpen, setTermsOpen] = useState(false)
   const [privacyOpen, setPrivacyOpen] = useState(false)
 
@@ -63,99 +64,116 @@ export function AdminLegalManager({ initialVersion }: AdminLegalManagerProps) {
   }
 
   return (
-    <div className="bg-white border border-[#E2E8F0] rounded-[2.5rem] p-10 md:p-12 text-[#1E1A5F]">
-      <h2 className="font-headline text-2xl font-bold tracking-tight mb-6">
-        Legal Document Management
-      </h2>
-      <p className="text-sm text-[#64748B] mb-8">
-        Update the Terms of Service and Privacy Policy. Changes will be versioned and immediately take effect for all users.
-      </p>
+    <div className="bg-white border border-[#E2E8F0] rounded-[2.5rem] overflow-hidden text-[#1E1A5F]">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between p-6 md:p-8 hover:bg-[#F8FAFC] transition-colors cursor-pointer"
+      >
+        <div className="flex items-center gap-3">
+          <span className="font-headline text-2xl font-bold tracking-tight">
+            Legal Document Management
+          </span>
+        </div>
+        {isOpen ? (
+          <ChevronUp className="w-5 h-5 text-[#64748B]" />
+        ) : (
+          <ChevronDown className="w-5 h-5 text-[#64748B]" />
+        )}
+      </button>
 
-      {success && (
-        <div className="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center gap-3">
-          <Check className="w-5 h-5 text-emerald-600" />
-          <p className="text-sm font-medium text-emerald-700">{success}</p>
+      {isOpen && (
+        <div className="px-6 md:px-8 pb-8 md:pb-12 animate-in fade-in zoom-in-95 duration-200">
+          <p className="text-sm text-[#64748B] mb-8">
+            Update the Terms of Service and Privacy Policy. Changes will be versioned and immediately take effect for all users.
+          </p>
+
+          {success && (
+            <div className="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center gap-3">
+              <Check className="w-5 h-5 text-emerald-600" />
+              <p className="text-sm font-medium text-emerald-700">{success}</p>
+            </div>
+          )}
+
+          {error && (
+            <div className="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200">
+              <p className="text-sm font-medium text-rose-700">{error}</p>
+            </div>
+          )}
+
+          <div className="space-y-4">
+            <div className="border border-[#E2E8F0] rounded-2xl overflow-hidden">
+              <button
+                onClick={() => setTermsOpen(!termsOpen)}
+                className="w-full flex items-center justify-between p-6 hover:bg-[#F8FAFC] transition-colors cursor-pointer"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-lg font-bold text-[#1E1A5F]">Update Terms of Service</span>
+                </div>
+                {termsOpen ? (
+                  <ChevronUp className="w-5 h-5 text-[#64748B]" />
+                ) : (
+                  <ChevronDown className="w-5 h-5 text-[#64748B]" />
+                )}
+              </button>
+
+              {termsOpen && (
+                <div className="px-6 pb-6 animate-in fade-in zoom-in-95 duration-200">
+                  <textarea
+                    value={termsDraft}
+                    onChange={(e) => setTermsDraft(e.target.value)}
+                    placeholder="Enter Terms of Service text here..."
+                    className="w-full h-64 bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl p-6 font-mono text-sm text-[#1E1A5F] focus:outline-none focus:border-[#D84C9F]/50 focus:bg-white transition-all resize-y shadow-inner"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="border border-[#E2E8F0] rounded-2xl overflow-hidden">
+              <button
+                onClick={() => setPrivacyOpen(!privacyOpen)}
+                className="w-full flex items-center justify-between p-6 hover:bg-[#F8FAFC] transition-colors cursor-pointer"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-lg font-bold text-[#1E1A5F]">Update Privacy Policy</span>
+                </div>
+                {privacyOpen ? (
+                  <ChevronUp className="w-5 h-5 text-[#64748B]" />
+                ) : (
+                  <ChevronDown className="w-5 h-5 text-[#64748B]" />
+                )}
+              </button>
+
+              {privacyOpen && (
+                <div className="px-6 pb-6 animate-in fade-in zoom-in-95 duration-200">
+                  <textarea
+                    value={privacyDraft}
+                    onChange={(e) => setPrivacyDraft(e.target.value)}
+                    placeholder="Enter Privacy Policy text here..."
+                    className="w-full h-64 bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl p-6 font-mono text-sm text-[#1E1A5F] focus:outline-none focus:border-[#D84C9F]/50 focus:bg-white transition-all resize-y shadow-inner"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-8 pt-6 border-t border-[#E2E8F0]">
+            <button
+              onClick={handlePublish}
+              disabled={submitting}
+              className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#D84C9F] to-[#DE5298] text-white font-black text-sm uppercase tracking-[2px] hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Publishing...
+                </>
+              ) : (
+                'Publish New Version'
+              )}
+            </button>
+          </div>
         </div>
       )}
-
-      {error && (
-        <div className="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200">
-          <p className="text-sm font-medium text-rose-700">{error}</p>
-        </div>
-      )}
-
-      <div className="space-y-4">
-        <div className="border border-[#E2E8F0] rounded-2xl overflow-hidden">
-          <button
-            onClick={() => setTermsOpen(!termsOpen)}
-            className="w-full flex items-center justify-between p-6 hover:bg-[#F8FAFC] transition-colors cursor-pointer"
-          >
-            <div className="flex items-center gap-3">
-              <span className="text-lg font-bold text-[#1E1A5F]">Update Terms of Service</span>
-            </div>
-            {termsOpen ? (
-              <ChevronUp className="w-5 h-5 text-[#64748B]" />
-            ) : (
-              <ChevronDown className="w-5 h-5 text-[#64748B]" />
-            )}
-          </button>
- 
-          {termsOpen && (
-            <div className="px-6 pb-6 animate-in fade-in zoom-in-95 duration-200">
-              <textarea
-                value={termsDraft}
-                onChange={(e) => setTermsDraft(e.target.value)}
-                placeholder="Enter Terms of Service text here..."
-                className="w-full h-64 bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl p-6 font-mono text-sm text-[#1E1A5F] focus:outline-none focus:border-[#D84C9F]/50 focus:bg-white transition-all resize-y shadow-inner"
-              />
-            </div>
-          )}
-        </div>
- 
-        <div className="border border-[#E2E8F0] rounded-2xl overflow-hidden">
-          <button
-            onClick={() => setPrivacyOpen(!privacyOpen)}
-            className="w-full flex items-center justify-between p-6 hover:bg-[#F8FAFC] transition-colors cursor-pointer"
-          >
-            <div className="flex items-center gap-3">
-              <span className="text-lg font-bold text-[#1E1A5F]">Update Privacy Policy</span>
-            </div>
-            {privacyOpen ? (
-              <ChevronUp className="w-5 h-5 text-[#64748B]" />
-            ) : (
-              <ChevronDown className="w-5 h-5 text-[#64748B]" />
-            )}
-          </button>
-
-          {privacyOpen && (
-            <div className="px-6 pb-6 animate-in fade-in zoom-in-95 duration-200">
-              <textarea
-                value={privacyDraft}
-                onChange={(e) => setPrivacyDraft(e.target.value)}
-                placeholder="Enter Privacy Policy text here..."
-                className="w-full h-64 bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl p-6 font-mono text-sm text-[#1E1A5F] focus:outline-none focus:border-[#D84C9F]/50 focus:bg-white transition-all resize-y shadow-inner"
-              />
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="mt-8 pt-6 border-t border-[#E2E8F0]">
-        <button
-          onClick={handlePublish}
-          disabled={submitting}
-          className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#D84C9F] to-[#DE5298] text-white font-black text-sm uppercase tracking-[2px] hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer"
-        >
-          {submitting ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              Publishing...
-            </>
-          ) : (
-            'Publish New Version'
-          )}
-        </button>
-      </div>
     </div>
   )
 }
