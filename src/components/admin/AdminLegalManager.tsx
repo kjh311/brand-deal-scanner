@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { ChevronDown, ChevronUp, Check, Loader2 } from 'lucide-react'
 import { publishLegalVersion } from '@/app/actions/legal'
@@ -20,6 +20,16 @@ export function AdminLegalManager({ initialVersion }: AdminLegalManagerProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [termsOpen, setTermsOpen] = useState(false)
   const [privacyOpen, setPrivacyOpen] = useState(false)
+  const contentRef = useRef<HTMLDivElement>(null)
+  const [contentHeight, setContentHeight] = useState(0)
+
+  useEffect(() => {
+    if (isOpen && contentRef.current) {
+      setContentHeight(contentRef.current.scrollHeight)
+    } else {
+      setContentHeight(0)
+    }
+  }, [isOpen])
 
   const initialTerms = initialVersion?.terms_text ?? ''
   const initialPrivacy = initialVersion?.privacy_text ?? ''
@@ -81,8 +91,12 @@ export function AdminLegalManager({ initialVersion }: AdminLegalManagerProps) {
         )}
       </button>
 
-      {isOpen && (
-        <div className="px-6 md:px-8 pb-8 md:pb-12 animate-in fade-in zoom-in-95 duration-200">
+      <div
+        ref={contentRef}
+        className="overflow-hidden transition-all duration-300 ease-in-out"
+        style={{ maxHeight: isOpen ? `${contentHeight + 200}px` : '0px', opacity: isOpen ? 1 : 0 }}
+      >
+        <div className="px-6 md:px-8 pb-8 md:pb-12">
           <p className="text-sm text-[#64748B] mb-8">
             Update the Terms of Service and Privacy Policy. Changes will be versioned and immediately take effect for all users.
           </p>
@@ -117,7 +131,7 @@ export function AdminLegalManager({ initialVersion }: AdminLegalManagerProps) {
               </button>
 
               {termsOpen && (
-                <div className="px-6 pb-6 animate-in fade-in zoom-in-95 duration-200">
+                <div className="px-6 pb-6">
                   <textarea
                     value={termsDraft}
                     onChange={(e) => setTermsDraft(e.target.value)}
@@ -144,7 +158,7 @@ export function AdminLegalManager({ initialVersion }: AdminLegalManagerProps) {
               </button>
 
               {privacyOpen && (
-                <div className="px-6 pb-6 animate-in fade-in zoom-in-95 duration-200">
+                <div className="px-6 pb-6">
                   <textarea
                     value={privacyDraft}
                     onChange={(e) => setPrivacyDraft(e.target.value)}
@@ -173,7 +187,7 @@ export function AdminLegalManager({ initialVersion }: AdminLegalManagerProps) {
             </button>
           </div>
         </div>
-      )}
+      </div>
     </div>
   )
 }

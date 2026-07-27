@@ -139,6 +139,7 @@ create table public.scan_feedback (
   feedback_text text,
   dismissed boolean default false not null,
   used_on_homepage boolean default false not null,
+  added_to_homepage boolean default false not null,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
@@ -173,6 +174,30 @@ create policy "Admins can dismiss feedback"
 create index scan_feedback_profile_id_idx on public.scan_feedback(profile_id);
 create index scan_feedback_dismissed_idx on public.scan_feedback(dismissed);
 create index scan_feedback_created_at_idx on public.scan_feedback(created_at desc);
+
+-- =============================================
+-- TESTIMONIALS TABLE
+-- =============================================
+create table public.testimonials (
+  id uuid default uuid_generate_v4() primary key,
+  scan_feedback_id uuid references public.scan_feedback(id) on delete cascade not null,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  user_name text not null,
+  avatar_url text,
+  rating integer not null check (rating >= 1 and rating <= 5),
+  comment text,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+alter table public.testimonials enable row level security;
+
+create policy "Anyone can view testimonials"
+  on public.testimonials for select
+  using (true);
+
+create policy "Admins can insert testimonials"
+  on public.testimonials for insert
+  with check (true);
 
 -- =============================================
 -- DIAGNOSTICS & AUTOMATION

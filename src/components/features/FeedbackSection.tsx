@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useCallback, useRef, useEffect } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Star } from 'lucide-react'
 
@@ -17,14 +17,16 @@ export function FeedbackSection({ contractId }: FeedbackSectionProps) {
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isOpen, setIsOpen] = useState(false)
-  const contentRef = useRef<HTMLDivElement>(null)
-  const [contentHeight, setContentHeight] = useState(0)
 
   useEffect(() => {
-    if (isOpen && contentRef.current) {
-      setContentHeight(contentRef.current.scrollHeight)
-    } else {
-      setContentHeight(0)
+    if (isOpen) {
+      const timer = setTimeout(() => {
+        const el = document.getElementById('feedback-accordion-content')
+        if (el) {
+          el.style.maxHeight = el.scrollHeight + 'px'
+        }
+      }, 10)
+      return () => clearTimeout(timer)
     }
   }, [isOpen])
 
@@ -123,9 +125,9 @@ export function FeedbackSection({ contractId }: FeedbackSectionProps) {
       </div>
 
       <div
-        ref={contentRef}
-        className="overflow-hidden transition-all duration-300 ease-in-out"
-        style={{ maxHeight: isOpen ? `${contentHeight + 100}px` : '0px', opacity: isOpen ? 1 : 0 }}
+        id="feedback-accordion-content"
+        className="overflow-hidden transition-all duration-500 ease-in-out"
+        style={{ maxHeight: isOpen ? '2000px' : '0px', opacity: isOpen ? 1 : 0 }}
       >
         <div className="px-5 sm:px-10 md:px-12 pb-5 sm:pb-10 md:pb-12 space-y-8">
     <div className="space-y-3">
