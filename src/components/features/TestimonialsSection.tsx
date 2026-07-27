@@ -15,10 +15,8 @@ interface Testimonial {
 
 export function TestimonialsSection() {
   const marqueeRef = useRef<HTMLDivElement>(null)
-  const containerRef = useRef<HTMLDivElement>(null)
   const [testimonials, setTestimonials] = useState<Testimonial[]>([])
   const [loading, setLoading] = useState(true)
-  const [shouldScroll, setShouldScroll] = useState(false)
 
   useEffect(() => {
     const fetchTestimonials = async () => {
@@ -40,50 +38,22 @@ export function TestimonialsSection() {
   }, [])
 
   useEffect(() => {
-    if (testimonials.length === 0) {
-      setShouldScroll(false)
+    const marquee = marqueeRef.current
+    if (!marquee) return
+
+    const containerWidth = marquee.parentElement?.clientWidth || 0
+    const cardWidth = 350
+    const gap = 24
+    const visibleCards = Math.floor(containerWidth / (cardWidth + gap))
+
+    if (testimonials.length <= visibleCards) {
+      marquee.style.animation = 'none'
       return
     }
 
-    const container = containerRef.current
-    const marquee = marqueeRef.current
-    if (!container || !marquee) return
-
-    const containerWidth = container.clientWidth
-    const totalContentWidth = 320 * testimonials.length + 24 * (testimonials.length - 1)
-
-    setShouldScroll(totalContentWidth > containerWidth)
-
-    if (!shouldScroll) return
-
-    let animationId: number
-    let offset = 0
-    const speed = 0.5
-
-    const animate = () => {
-      offset -= speed
-      if (Math.abs(offset) >= totalContentWidth) {
-        offset = 0
-      }
-      marquee.style.transform = `translateX(${offset}px)`
-      animationId = requestAnimationFrame(animate)
-    }
-
-    animationId = requestAnimationFrame(animate)
-
-    const handleMouseEnter = () => cancelAnimationFrame(animationId)
-    const handleMouseLeave = () => {
-      animationId = requestAnimationFrame(animate)
-    }
-
-    marquee.addEventListener('mouseenter', handleMouseEnter)
-    marquee.addEventListener('mouseleave', handleMouseLeave)
-
-    return () => {
-      cancelAnimationFrame(animationId)
-      marquee.removeEventListener('mouseenter', handleMouseEnter)
-      marquee.removeEventListener('mouseleave', handleMouseLeave)
-    }
+    const totalWidth = testimonials.length * (cardWidth + gap) * 2
+    marquee.style.animation = `scroll ${totalWidth}ms linear infinite`
+    marquee.style.animationPlayState = 'running'
   }, [testimonials])
 
   if (loading) {
@@ -93,8 +63,6 @@ export function TestimonialsSection() {
   if (testimonials.length === 0) {
     return null
   }
-
-  const displayedTestimonials = shouldScroll ? [...testimonials, ...testimonials] : testimonials
 
   return (
     <section className="py-16 sm:py-20 px-5 sm:px-10 bg-transparent" id="testimonials">
@@ -106,20 +74,18 @@ export function TestimonialsSection() {
           </h2>
         </div>
 
-        <div ref={containerRef} className="relative overflow-hidden">
-          {shouldScroll && (
-            <>
-              <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-[#221A7F] via-[#7B2CBF] to-transparent z-10 pointer-events-none" />
-              <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-[#221A7F] via-[#7B2CBF] to-transparent z-10 pointer-events-none" />
-            </>
-          )}
+        <div className="relative overflow-hidden">
+          <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-[#221A7F] via-[#7B2CBF] to-transparent z-10 pointer-events-none" />
+          <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-[#221A7F] via-[#7B2CBF] to-transparent z-10 pointer-events-none" />
 
           <div
             ref={marqueeRef}
-            className="flex gap-6 transition-transform duration-100 cursor-pointer"
+            className="flex gap-6"
             style={{ willChange: 'transform' }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.animationPlayState = 'paused' }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.animationPlayState = 'running' }}
           >
-            {displayedTestimonials.map((t, i) => (
+            {[...testimonials, ...testimonials].map((t, i) => (
               <div
                 key={`${t.id}-${i}`}
                 className="min-w-[320px] max-w-[350px] flex-shrink-0 bg-[#1a1a3e]/80 border border-white/10 backdrop-blur-sm rounded-2xl p-6 flex flex-col text-white shadow-xl hover:bg-[#1a1a3e] transition-colors duration-300"
@@ -153,6 +119,12 @@ export function TestimonialsSection() {
           </div>
         </div>
       </div>
+      <style>{`
+        @keyframes scroll {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+      `}</style>
     </section>
   )
 }
