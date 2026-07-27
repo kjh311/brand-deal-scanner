@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useRef, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Star } from 'lucide-react'
 
@@ -12,10 +12,21 @@ export function FeedbackSection({ contractId }: FeedbackSectionProps) {
   const [rating, setRating] = useState(0)
   const [hover, setHover] = useState(0)
   const [feedback, setFeedback] = useState('')
+  const [usedOnHomepage, setUsedOnHomepage] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isOpen, setIsOpen] = useState(false)
+  const contentRef = useRef<HTMLDivElement>(null)
+  const [contentHeight, setContentHeight] = useState(0)
+
+  useEffect(() => {
+    if (isOpen && contentRef.current) {
+      setContentHeight(contentRef.current.scrollHeight)
+    } else {
+      setContentHeight(0)
+    }
+  }, [isOpen])
 
   const handleSubmit = useCallback(async () => {
     if (rating === 0) {
@@ -36,7 +47,7 @@ export function FeedbackSection({ contractId }: FeedbackSectionProps) {
         return
       }
 
-      const { error: insertError } = await supabase
+      const { insertError } = await supabase
         .from('scan_feedback')
         .insert({
           profile_id: user.id,
@@ -44,6 +55,7 @@ export function FeedbackSection({ contractId }: FeedbackSectionProps) {
           rating,
           feedback_text: feedback.trim() || null,
           dismissed: false,
+          used_on_homepage: usedOnHomepage,
         })
 
       if (insertError) {
@@ -56,7 +68,7 @@ export function FeedbackSection({ contractId }: FeedbackSectionProps) {
     } finally {
       setSubmitting(false)
     }
-  }, [rating, feedback, contractId])
+  }, [rating, feedback, contractId, usedOnHomepage])
 
   if (submitted) {
     return (
@@ -76,9 +88,9 @@ export function FeedbackSection({ contractId }: FeedbackSectionProps) {
 
   return (
     <div className="bg-white border border-[#E2E8F0] rounded-[2.5rem] overflow-hidden text-[#1E1A5F]">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
+      <div
         className="w-full flex items-center justify-between p-5 sm:p-10 md:p-12 hover:bg-[#F8FAFC] transition-colors cursor-pointer"
+        onClick={() => setIsOpen(!isOpen)}
       >
         <div className="text-center flex-1">
           <h3 className="font-headline text-2xl font-bold tracking-tight mb-2">
@@ -86,9 +98,8 @@ export function FeedbackSection({ contractId }: FeedbackSectionProps) {
           </h3>
           <div className="flex justify-center gap-1.5 sm:gap-3 mt-3">
             {[1, 2, 3, 4, 5].map((star) => (
-              <button
+              <div
                 key={star}
-                type="button"
                 onClick={(e) => {
                   e.stopPropagation()
                   setRating(star)
@@ -105,25 +116,41 @@ export function FeedbackSection({ contractId }: FeedbackSectionProps) {
                       : 'text-[#CBD5E1]'
                   }`}
                 />
-              </button>
+              </div>
             ))}
           </div>
-         </div>
-       </button>
+        </div>
+      </div>
 
-      {isOpen && (
-        <div className="px-5 sm:px-10 md:px-12 pb-5 sm:pb-10 md:pb-12 space-y-8 animate-in fade-in zoom-in-95 duration-200">
-          <div className="space-y-3">
-            <textarea
-              value={feedback}
-              onChange={(e) => setFeedback(e.target.value)}
-              placeholder="Tell us how we can improve this scan or what caught your eye..."
-              rows={4}
-              className="w-full bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl p-4 sm:p-5 text-[#1E1A5F] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#D84C9F]/50 focus:bg-white transition-all resize-none text-sm sm:text-base"
-            />
-          </div>
+      <div
+        ref={contentRef}
+        className="overflow-hidden transition-all duration-300 ease-in-out"
+        style={{ maxHeight: isOpen ? `${contentHeight + 100}px` : '0px', opacity: isOpen ? 1 : 0 }}
+      >
+        <div className="px-5 sm:px-10 md:px-12 pb-5 sm:pb-10 md:pb-12 space-y-8">
+    <div className="space-y-3">
+             <textarea
+               value={feedback}
+               onChange={(e) => setFeedback(e.target.value)}
+               placeholder="Tell us how we can improve this scan or what caught your eye..."
+               rows={4}
+               className="w-full bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl p-4 sm:p-5 text-[#1E1A5F] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#D84C9F]/50 focus:bg-white transition-all resize-none text-sm sm:text-base"
+             />
+           </div>
 
-          {error && (
+           {rating === 5 && (
+             <label className="flex items-start gap-2 cursor-pointer">
+               <input
+                 type="checkbox"
+                 checked={usedOnHomepage}
+                 onChange={(e) => setUsedOnHomepage(e.target.checked)}
+                 className="mt-1 accent-[#D84C9F]"
+               />
+               <span className="text-sm text-[#64748B]">Can we use this testimonial on our homepage?</span>
+             </label>
+           )}
+
+           {error && (
             <p className="text-rose-500 text-sm text-center font-medium">
               {error}
             </p>
@@ -146,7 +173,7 @@ export function FeedbackSection({ contractId }: FeedbackSectionProps) {
             </button>
           </div>
         </div>
-      )}
+      </div>
     </div>
   )
 }

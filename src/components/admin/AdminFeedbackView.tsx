@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Star, Check, ChevronDown, ChevronUp } from 'lucide-react'
+import { Star, Check, ChevronRight } from 'lucide-react'
 
 interface FeedbackItem {
   id: string
@@ -11,6 +11,7 @@ interface FeedbackItem {
   feedback_text: string | null
   dismissed: boolean
   created_at: string
+  used_on_homepage: boolean
   profiles?: {
     email: string | null
   } | null
@@ -23,9 +24,9 @@ interface AdminFeedbackViewProps {
 export function AdminFeedbackView({ initialFeedback }: AdminFeedbackViewProps) {
   const [feedback, setFeedback] = useState<FeedbackItem[]>(initialFeedback)
   const [dismissingId, setDismissingId] = useState<string | null>(null)
+  const [addingHomepageId, setAddingHomepageId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isOpen, setIsOpen] = useState(false)
-  const [expandedId, setExpandedId] = useState<string | null>(null)
 
   useEffect(() => {
     const supabase = createClient()
@@ -72,6 +73,25 @@ export function AdminFeedbackView({ initialFeedback }: AdminFeedbackViewProps) {
     setFeedback(prev => prev.filter(item => item.id !== id))
   }
 
+  const handleAddToHomepage = async (id: string) => {
+    setAddingHomepageId(id)
+    const supabase = createClient()
+    const { error } = await supabase
+      .from('scan_feedback')
+      .update({ used_on_homepage: true })
+      .eq('id', id)
+
+    if (error) {
+      console.error('Add to homepage failed:', error)
+    } else {
+      setFeedback(prev => prev.map(item =>
+        item.id === id ? { ...item, used_on_homepage: true } : item
+      ))
+    }
+
+    setAddingHomepageId(null)
+  }
+
   return (
     <div className="bg-white border border-[#E2E8F0] rounded-[2.5rem] overflow-hidden text-[#1E1A5F]">
       <button
@@ -89,9 +109,9 @@ export function AdminFeedbackView({ initialFeedback }: AdminFeedbackViewProps) {
           )}
         </div>
         {isOpen ? (
-          <ChevronUp className="w-5 h-5 text-[#64748B]" />
+          <ChevronRight className="w-5 h-5 text-[#D84C9F]" />
         ) : (
-          <ChevronDown className="w-5 h-5 text-[#64748B]" />
+          <ChevronRight className="w-5 h-5 text-[#CBD5E1]" />
         )}
       </button>
 
@@ -113,73 +133,70 @@ export function AdminFeedbackView({ initialFeedback }: AdminFeedbackViewProps) {
           ) : (
             <div className="space-y-4">
               {feedback.map((item) => (
-                <div key={item.id}>
-                  <button
-                    onClick={() => setExpandedId(expandedId === item.id ? null : item.id)}
-                    className="w-full text-left"
-                  >
-                    <div className={`bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl p-6 flex gap-6 items-start transition-all duration-300 ${
-                      dismissingId === item.id ? 'opacity-0 translate-x-4' : ''
-                    }`}>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-3 mb-3">
-                          <span className="text-[10px] font-mono text-[#64748B] uppercase tracking-wider bg-white px-2 py-1 rounded-lg border border-[#E2E8F0]">
-                            {item.profile_id.slice(0, 8)}...
-                          </span>
-                          <div className="flex gap-0.5">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <Star
-                                key={star}
-                                className={`w-4 h-4 ${
-                                  star <= item.rating
-                                    ? 'text-amber-400 fill-amber-400'
-                                    : 'text-[#CBD5E1]'
-                                }`}
-                              />
-                            ))}
-                          </div>
-                        </div>
-                        <div className="mb-3">
-                          <p className="text-sm font-bold text-[#1E1A5F]">
-                            {item.profiles?.email || 'Anonymous Creator'}
-                          </p>
-                          {item.profiles?.email && (
-                            <p className="text-xs text-[#64748B] font-mono select-all">
-                              {item.profiles.email}
-                            </p>
-                          )}
-                        </div>
-                        {expandedId === item.id && item.feedback_text && (
-                          <p className="text-sm text-[#1E1A5F] leading-relaxed whitespace-pre-wrap">
-                            {item.feedback_text}
-                          </p>
-                        )}
-                        {expandedId === item.id && (
-                          <p className="text-[10px] text-[#94A3B8] mt-3 font-mono uppercase tracking-wider">
-                            {new Date(item.created_at).toLocaleDateString()} {new Date(item.created_at).toLocaleTimeString()}
-                          </p>
-                        )}
-                      </div>
-                      <ChevronDown className={`w-5 h-5 text-[#64748B] shrink-0 mt-1 transition-transform ${
-                        expandedId === item.id ? 'rotate-180' : ''
-                      }`} />
+                <div
+                  key={item.id}
+                  className={`bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl p-6 flex flex-col gap-4 transition-all duration-300 ${
+                    dismissingId === item.id ? 'opacity-0 translate-x-4' : ''
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-[10px] font-mono text-[#64748B] uppercase tracking-wider bg-white px-2 py-1 rounded-lg border border-[#E2E8F0]">
+                      {item.profile_id.slice(0, 8)}...
+                    </span>
+                    <div className="flex gap-0.5">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star
+                          key={star}
+                          className={`w-4 h-4 ${
+                            star <= item.rating
+                              ? 'text-amber-400 fill-amber-400'
+                              : 'text-[#CBD5E1]'
+                          }`}
+                        />
+                      ))}
                     </div>
-                  </button>
-                  {expandedId === item.id && (
-                    <div className="flex justify-end mt-2 animate-in fade-in duration-200">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleDismiss(item.id)
-                        }}
-                        disabled={dismissingId === item.id}
-                        className="px-4 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-bold hover:bg-emerald-100 transition-colors disabled:opacity-50 cursor-pointer"
-                      >
-                        <Check className="w-4 h-4 inline mr-1" />
-                        Dismiss
-                      </button>
-                    </div>
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-[#1E1A5F]">
+                      {item.profiles?.email || 'Anonymous Creator'}
+                    </p>
+                    {item.profiles?.email && (
+                      <p className="text-xs text-[#64748B] font-mono select-all">
+                        {item.profiles.email}
+                      </p>
+                    )}
+                  </div>
+                  {item.feedback_text && (
+                    <p className="text-sm text-[#1E1A5F] leading-relaxed whitespace-pre-wrap">
+                      {item.feedback_text}
+                    </p>
                   )}
+                  <p className="text-[10px] text-[#94A3B8] font-mono uppercase tracking-wider">
+                    {new Date(item.created_at).toLocaleDateString()} {new Date(item.created_at).toLocaleTimeString()}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    {item.used_on_homepage ? (
+                      <button
+                        onClick={() => handleAddToHomepage(item.id)}
+                        disabled={addingHomepageId === item.id}
+                        className="px-3 py-1 rounded-full bg-[#D84C9F]/10 border border-[#D84C9F]/30 text-[#D84C9F] text-xs font-bold hover:bg-[#D84C9F]/20 transition-colors disabled:opacity-50 cursor-pointer"
+                      >
+                        {addingHomepageId === item.id ? 'Adding...' : 'Add to homepage'}
+                      </button>
+                    ) : (
+                      <span className="text-xs font-bold text-slate-400 bg-slate-50 px-3 py-1 rounded-full border border-slate-200">
+                        Pending consent
+                      </span>
+                    )}
+                    <button
+                      onClick={() => handleDismiss(item.id)}
+                      disabled={dismissingId === item.id}
+                      className="px-3 py-1 rounded-full bg-white border border-[#E2E8F0] text-[#64748B] text-xs font-bold hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-700 transition-colors disabled:opacity-50 cursor-pointer"
+                    >
+                      <Check className="w-3 h-3 inline mr-1" />
+                      {dismissingId === item.id ? 'Dismissing...' : 'Dismiss'}
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

@@ -82,9 +82,9 @@ export function HowItWorks() {
         <div className="grid lg:grid-cols-3 gap-8 relative">
           <div className="flex flex-col gap-12">
             {[
-              { num: '1', title: 'Upload Document', desc: 'Securely upload any PDF or DOCX agreement. Our OCR engine parses it instantly.' },
+              { num: '1', title: 'Upload Document', desc: 'Securely upload and PDF, DOCX, or TXT agreement.' },
               { num: '2', title: 'Risk Analysis', desc: 'Our AI scans for exclusivity traps, usage rights, and non-payment risks.' },
-              { num: '3', title: 'Counter-Offer', desc: 'Download a redlined PDF with optimized clauses for your protection.' }
+              { num: '3', title: 'Counter-Offer', desc: 'Get a tailored email response that negotiates your terms and fixes unfair contract clauses automatically.' }
             ].map((step) => (
               <div key={step.num} className="reveal-step flex gap-6 group">
                 <div className="flex-shrink-0 w-12 h-12 rounded-full border border-[#D84C9F] flex items-center justify-center text-[#D84C9F] font-bold group-hover:bg-[#D84C9F] group-hover:text-white transition-colors">

@@ -22,7 +22,7 @@ export function Hero() {
   }, [])
 
   return (
-    <section ref={containerRef} className="relative pt-28 sm:pt-32 pb-36 sm:pb-44 px-5 sm:px-10 overflow-hidden bg-gradient-to-r from-[#221A7F] via-[#7B2CBF] to-[#D84C9F]" id="hero">
+    <section ref={containerRef} className="relative pt-28 sm:pt-32 pb-16 sm:pb-44 px-5 sm:px-10 overflow-hidden bg-gradient-to-r from-[#221A7F] via-[#7B2CBF] to-[#D84C9F]" id="hero">
       <div className="max-w-[1280px] mx-auto relative z-10">
         <div className="max-w-3xl mx-auto text-center">
           <h1 className="font-headline text-3xl sm:text-4xl lg:text-5xl text-white leading-tight stagger-in font-bold tracking-[-0.02em]">

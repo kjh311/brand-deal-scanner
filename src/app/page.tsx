@@ -1,9 +1,8 @@
 import { Navbar } from '@/components/layout/Navbar'
 import { Hero } from '@/components/features/Hero'
-import { TrustSection } from '@/components/features/TrustSection'
 import { HowItWorks } from '@/components/features/HowItWorks'
+import { TrustSection } from '@/components/features/TrustSection'
 import { PricingSection } from '@/components/features/PricingSection'
-import { TestimonialsSection } from '@/components/features/TestimonialsSection'
 import { Footer } from '@/components/layout/Footer'
 
 export default function LandingPage() {
@@ -15,7 +14,6 @@ export default function LandingPage() {
         <HowItWorks />
         <TrustSection />
         <PricingSection />
-        <TestimonialsSection />
       </main>
       <Footer />
     </div>

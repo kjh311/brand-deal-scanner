@@ -138,6 +138,7 @@ create table public.scan_feedback (
   rating integer not null check (rating >= 1 and rating <= 5),
   feedback_text text,
   dismissed boolean default false not null,
+  used_on_homepage boolean default false not null,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
