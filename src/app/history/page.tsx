@@ -184,19 +184,19 @@ export default function HistoryPage() {
              </div>
 
               <div className="bg-white border border-[#E2E8F0] rounded-[2.5rem] overflow-x-auto shadow-2xl">
-                <table className="w-full">
-                    <thead>
-                      <tr className="text-left text-[#64748B] text-[10px] uppercase font-black tracking-[3px] border-b border-[#E2E8F0]">
+                <table className="w-full block sm:table">
+                    <thead className="hidden sm:table-header-group">
+                      <tr className="text-left text-[#64748B] text-[10px] uppercase font-black tracking-[3px] border-b border-[#E2E8F0] sm:table-row">
                         <th className="px-4 py-4">Agreement</th>
                         <th className="px-4 py-4">Analyzed</th>
                         <th className="px-4 py-4">Fairness Score</th>
                         <th className="px-4 py-4 text-right">Action</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-[#E2E8F0]">
+                    <tbody className="divide-y divide-[#E2E8F0] block sm:table-row-group">
                      {isLoading ? (
-                       <tr>
-                         <td colSpan={4} className="px-4 py-20 text-center">
+                       <tr className="block sm:table-row">
+                         <td colSpan={4} className="px-4 py-20 text-center block sm:table-cell">
                              <div className="flex flex-col items-center gap-4">
                                <div className="w-8 h-8 border-2 border-[#D84C9F] border-t-transparent rounded-full animate-spin" />
                                <p className="text-xs font-mono uppercase tracking-widest text-[#64748B]">Retrieving Vault Data...</p>
@@ -212,9 +212,9 @@ export default function HistoryPage() {
                                window.location.href = `/analysis?id=${audit.id}`;
                              }
                             }}
-                            className={`group hover:bg-[#F8FAFC] transition-colors cursor-pointer ${audit.status !== 'completed' ? 'pointer-events-none opacity-60' : ''}`}
+                            className={`group hover:bg-[#F8FAFC] transition-colors cursor-pointer flex flex-col p-4 sm:table-row sm:p-0 ${audit.status !== 'completed' ? 'pointer-events-none opacity-60' : ''}`}
                          >
-                            <td className="px-4 py-4">
+                            <td className="px-0 py-2 sm:px-4 sm:py-4 block sm:table-cell">
                               <div className="flex items-center gap-3">
                                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center bg-[#F8FAFC] border border-[#E2E8F0] group-hover:border-[#D84C9F]/30 transition-colors`}>
                                   <span className="material-symbols-outlined text-lg text-[#64748B]">
@@ -222,22 +222,22 @@ export default function HistoryPage() {
                                      audit.fileType === 'image' ? 'image' : 'description'}
                                   </span>
                                 </div>
-                                <div className="min-w-0 max-w-[200px] sm:max-w-none">
+                                <div className="min-w-0 flex-1 sm:flex-initial">
                                   <p className="font-bold text-[#1E1A5F] text-sm break-words whitespace-normal">{audit.name}</p>
                                   <p className="text-[10px] font-mono text-[#64748B] uppercase tracking-widest leading-none mt-1">Source: {audit.fileType}</p>
                                 </div>
                               </div>
                             </td>
-                            <td className="px-4 py-4">
-                               <p className="text-sm font-medium text-[#64748B]">{audit.date}</p>
+                            <td className="px-0 py-2 sm:px-4 sm:py-4 block sm:table-cell">
+                               <p className="text-sm font-medium text-[#64748B]"><span className="inline sm:hidden text-xs text-[#94A3B8] font-bold mr-1">Analyzed:</span>{audit.date}</p>
                             </td>
-                            <td className="px-4 py-4">
+                            <td className="px-0 py-2 sm:px-4 sm:py-4 block sm:table-cell">
                               <span className={`inline-flex items-center px-3 py-1 rounded-lg text-[10px] font-black tracking-widest uppercase ${getRiskColor(audit.risk)}`}>
                                 {audit.risk === 'Analyzing' ? 'Scanning...' : `${audit.risk} RISK`}
                               </span>
                             </td>
-                            <td className="px-4 py-4 text-right">
-                              <div className="flex items-center justify-end gap-1">
+                            <td className="px-0 py-2 sm:px-4 sm:py-4 text-right block sm:table-cell sm:text-right">
+                              <div className="flex items-center justify-start sm:justify-end gap-1">
                                 {audit.status === 'completed' && (
                                   <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-[#F8FAFC] group-hover:bg-white text-[#64748B] group-hover:text-[#1E1A5F] transition-all shadow-lg border border-[#E2E8F0]">
                                     <span className="material-symbols-outlined text-base">visibility</span>
@@ -258,8 +258,8 @@ export default function HistoryPage() {
                           </tr>
                        ))
                      ) : (
-                       <tr>
-                         <td colSpan={4} className="px-4 py-20 text-center">
+                       <tr className="block sm:table-row">
+                         <td colSpan={4} className="px-4 py-20 text-center block sm:table-cell">
                             <div className="max-w-xs mx-auto space-y-4">
                                 <p className="text-[#64748B] text-sm">No contract history found.</p>
                                 <Link href="/upload" className="text-[#D84C9F] text-xs font-black uppercase tracking-widest hover:underline">Start your first audit →</Link>
