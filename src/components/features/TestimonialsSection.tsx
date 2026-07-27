@@ -14,9 +14,10 @@ interface Testimonial {
 }
 
 export function TestimonialsSection() {
-  const marqueeRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
   const [testimonials, setTestimonials] = useState<Testimonial[]>([])
   const [loading, setLoading] = useState(true)
+  const [needsScroll, setNeedsScroll] = useState(false)
 
   useEffect(() => {
     const fetchTestimonials = async () => {
@@ -38,22 +39,16 @@ export function TestimonialsSection() {
   }, [])
 
   useEffect(() => {
-    const marquee = marqueeRef.current
+    const container = containerRef.current
+    if (!container) return
+
+    const marquee = container.querySelector('[data-marquee]') as HTMLElement | null
     if (!marquee) return
 
-    const containerWidth = marquee.parentElement?.clientWidth || 0
-    const cardWidth = 350
-    const gap = 24
-    const visibleCards = Math.floor(containerWidth / (cardWidth + gap))
+    const containerWidth = container.clientWidth
+    const totalWidth = marquee.scrollWidth
 
-    if (testimonials.length <= visibleCards) {
-      marquee.style.animation = 'none'
-      return
-    }
-
-    const totalWidth = testimonials.length * (cardWidth + gap) * 2
-    marquee.style.animation = `scroll ${totalWidth}ms linear infinite`
-    marquee.style.animationPlayState = 'running'
+    setNeedsScroll(totalWidth > containerWidth)
   }, [testimonials])
 
   if (loading) {
@@ -74,20 +69,25 @@ export function TestimonialsSection() {
           </h2>
         </div>
 
-        <div className="relative overflow-hidden">
-          <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-[#221A7F] via-[#7B2CBF] to-transparent z-10 pointer-events-none" />
-          <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-[#221A7F] via-[#7B2CBF] to-transparent z-10 pointer-events-none" />
+        <div ref={containerRef} className="relative overflow-hidden">
+          {needsScroll && (
+            <>
+              <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-[#221A7F] via-[#7B2CBF] to-transparent z-10 pointer-events-none" />
+              <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-[#221A7F] via-[#7B2CBF] to-transparent z-10 pointer-events-none" />
+            </>
+          )}
 
           <div
-            ref={marqueeRef}
+            data-marquee
             className="flex gap-6"
-            style={{ willChange: 'transform' }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.animationPlayState = 'paused' }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.animationPlayState = 'running' }}
+            style={{
+              willChange: 'transform',
+              animation: needsScroll ? 'marquee 40s linear infinite' : 'none',
+            }}
           >
-            {[...testimonials, ...testimonials].map((t, i) => (
+            {(needsScroll ? [...testimonials, ...testimonials] : testimonials).map((t, i) => (
               <div
-                key={`${t.id}-${i}`}
+                key={needsScroll ? `${t.id}-${i}` : t.id}
                 className="min-w-[320px] max-w-[350px] flex-shrink-0 bg-[#1a1a3e]/80 border border-white/10 backdrop-blur-sm rounded-2xl p-6 flex flex-col text-white shadow-xl hover:bg-[#1a1a3e] transition-colors duration-300"
               >
                 <div className="flex gap-1 text-amber-400 mb-4">
@@ -120,9 +120,15 @@ export function TestimonialsSection() {
         </div>
       </div>
       <style>{`
-        @keyframes scroll {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
+        @keyframes marquee {
+          0% { transform: translate3d(0, 0, 0); }
+          100% { transform: translate3d(-50%, 0, 0); }
+        }
+        [data-marquee] {
+          animation-play-state: running;
+        }
+        [data-marquee]:hover {
+          animation-play-state: paused;
         }
       `}</style>
     </section>
