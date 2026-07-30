@@ -54,7 +54,6 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
 
   if (mode === "subscription") {
     const productId = session.metadata?.productId
-    const creditsToGrant = parseInt(session.metadata?.credits || "5")
     const planName = productId ? PLAN_NAMES[productId] || "plus" : "plus"
 
     const { error: profileError } = await supabase
@@ -67,19 +66,11 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       .eq("id", userId)
 
     if (profileError) throw new Error(`Supabase error (subscription profile): ${profileError.message}`)
-
-    const { error: creditError } = await supabase.rpc("increment_credits", {
-      user_id: userId,
-      amount: creditsToGrant,
-    })
-
-    if (creditError) throw new Error(`Supabase error (subscription credits): ${creditError.message}`)
   }
 }
 
 async function handleSubscriptionUpdated(
   subscription: Stripe.Subscription,
-  previousAttributes?: any
 ) {
   const customerId = subscription.customer as string
   const status = subscription.status
@@ -139,21 +130,6 @@ async function handleSubscriptionUpdated(
   if (updateError) {
     throw new Error(`Sync error: ${updateError.message}`)
   }
-
-  if (previousAttributes?.items && oldPlan !== newPlan) {
-    const oldCredits = oldPlan === "agency" ? 100 : oldPlan === "professional" ? 20 : oldPlan === "plus" ? 5 : 0
-    const newCredits = PLAN_CREDITS[newProductId] || 0
-
-    if (newCredits > oldCredits) {
-      const topUp = newCredits - oldCredits
-
-      const { error: creditError } = await supabase.rpc("increment_credits", {
-        user_id: profile.id,
-        amount: topUp,
-      })
-      if (creditError) console.error(`Credit top-up failed: ${creditError.message}`)
-    }
-  }
 }
 
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
@@ -174,14 +150,27 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
 }
 
 async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
-  const customerId = invoice.customer as string
-  const subscriptionId = (invoice as any).subscription as string
+  const invoiceAny = invoice as any
+  const customerId = typeof invoice.customer === "string" ? invoice.customer : invoice.customer?.id
+  const subscriptionId =
+    (typeof invoiceAny.subscription === "string" ? invoiceAny.subscription : invoiceAny.subscription?.id) ||
+    (invoice.lines?.data[0]?.subscription as string) ||
+    invoiceAny.parent?.subscription
 
-  if (!subscriptionId) return
+  console.log(`📄 Handling Invoice Payment: ${invoice.id} | Customer: ${customerId} | Sub: ${subscriptionId}`)
 
-  const subscription = await stripe.subscriptions.retrieve(subscriptionId)
-  const newProductId = subscription.items.data[0].plan.product as string
+  if (!customerId) {
+    console.warn(`⚠️ No customer found on invoice ${invoice.id}, skipping credit grant`)
+    return
+  }
 
+  // Verify the invoice is actually paid
+  if (invoice.status !== "paid") {
+    console.warn(`⚠️ Invoice ${invoice.id} status is '${invoice.status}', not 'paid'. Skipping credit grant.`)
+    return
+  }
+
+  // Find user by stripe_customer_id
   const { data: profile, error: findError } = await supabase
     .from("profiles")
     .select("id, plan")
@@ -189,29 +178,47 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
     .single()
 
   if (findError || !profile) {
-    console.error(`User with customer ID ${customerId} not found`)
+    console.error(`❌ User with customer ID ${customerId} not found in Supabase`)
     return
   }
 
-  const periodEnd = (subscription as any).current_period_end || (subscription as any).currentPeriodEnd
-  const nextBillingDate = periodEnd ? new Date(periodEnd * 1000).toISOString() : new Date().toISOString()
-
-  const newPlan = newProductId ? PLAN_NAMES[newProductId] || profile.plan : profile.plan
-
-  const { error: updateError } = await supabase
-    .from("profiles")
-    .update({
-      plan: newPlan,
-      next_billing_date: nextBillingDate,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", profile.id)
-
-  if (updateError) {
-    throw new Error(`Sync error: ${updateError.message}`)
+  // Sync next_billing_date from invoice period
+  const linePeriodEnd = invoice.lines?.data[0]?.period?.end || (invoice as any).period_end
+  if (linePeriodEnd) {
+    const nextBillingDate = new Date(linePeriodEnd * 1000).toISOString()
+    await supabase
+      .from("profiles")
+      .update({ next_billing_date: nextBillingDate })
+      .eq("id", profile.id)
+    console.log(`📅 Updated next_billing_date to ${nextBillingDate} for User ${profile.id}`)
   }
 
-  const creditsToGrant = PLAN_CREDITS[newProductId] || 0
+  // STOP IF USER IS CANCELED OR ON NO PLAN
+  if (!profile.plan || profile.plan === "none") {
+    console.warn(`🛑 User ${profile.id} is on plan '${profile.plan}'. Skipping credit grant.`)
+    return
+  }
+
+  // Prevent credit grant if subscription is ending at period end
+  if (subscriptionId) {
+    try {
+      const sub = await stripe.subscriptions.retrieve(subscriptionId)
+      if (sub.cancel_at_period_end || sub.status === "canceled") {
+        console.log(`🛑 Subscription ${subscriptionId} is ending at period end. Skipping monthly credit grant.`)
+        return
+      }
+    } catch (err: any) {
+      console.warn("Failed to inspect subscription status in Stripe:", err.message)
+    }
+  }
+
+  const planProductId = profile.plan === "agency" ? "prod_Uf03Msy5G3OZn2"
+    : profile.plan === "professional" ? "prod_Uf01XdkL0cOXn6"
+    : "prod_Uezx3sCcamylDq"
+
+  const creditsToGrant = PLAN_CREDITS[planProductId] || 5
+
+  console.log(`🔄 Renewal for User ${profile.id} (plan: ${profile.plan}): Granting ${creditsToGrant} credits`)
 
   const { error: creditError } = await supabase.rpc("increment_credits", {
     user_id: profile.id,
@@ -219,8 +226,11 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
   })
 
   if (creditError) {
-    console.error(`Supabase error (renewal credits): ${creditError.message}`)
+    console.error(`❌ Credit renewal failed for User ${profile.id}: ${creditError.message}`)
+    throw new Error(`Credit renewal failed: ${creditError.message}`)
   }
+
+  console.log(`✅ Renewal successful for User ${profile.id}: ${creditsToGrant} credits granted`)
 }
 
 Deno.serve(async (req) => {
@@ -276,8 +286,7 @@ Deno.serve(async (req) => {
       case "customer.subscription.created":
       case "customer.subscription.updated":
         await handleSubscriptionUpdated(
-          event.data.object as Stripe.Subscription,
-          (event.data as any).previous_attributes
+          event.data.object as Stripe.Subscription
         )
         break
       case "customer.subscription.deleted":

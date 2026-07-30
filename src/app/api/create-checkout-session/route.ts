@@ -13,7 +13,7 @@ export const runtime = 'nodejs';
 
 export async function POST(req: NextRequest) {
   try {
-    const { priceId, mode, credits, isPortalOnly, quantity = 1 } = await req.json();
+    const { priceId, mode, isPortalOnly, quantity = 1 } = await req.json();
 
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -87,7 +87,6 @@ export async function POST(req: NextRequest) {
         priceId: finalPriceId || '',
         productId: finalProductId || '',
         originalId: priceId || '',
-        credits: credits?.toString() || '0',
       },
     });
 
