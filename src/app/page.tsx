@@ -1,6 +1,7 @@
 import { Navbar } from '@/components/layout/Navbar'
 import { Hero } from '@/components/features/Hero'
 import { HowItWorks } from '@/components/features/HowItWorks'
+import { MockupDemo } from '@/components/features/MockupDemo'
 import { TrustSection } from '@/components/features/TrustSection'
 import { PricingSection } from '@/components/features/PricingSection'
 import { TestimonialsSection } from '@/components/features/TestimonialsSection'
@@ -16,6 +17,7 @@ export default function LandingPage() {
         <TrustSection />
         <PricingSection />
         <TestimonialsSection />
+        <MockupDemo />
       </main>
       <Footer />
     </div>

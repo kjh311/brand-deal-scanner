@@ -249,10 +249,52 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
 }
 
 async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
-  const customerId = invoice.customer as string;
-  const subscriptionId = (invoice as any).subscription as string;
-  
-  console.log(`📄 Handling Invoice Payment: ${invoice.id} | Customer: ${customerId}`);
-  if (!subscriptionId) return;
-  console.log(`✅ Recurring payment succeeded for sub: ${subscriptionId}`);
+  const customerId = typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id;
+
+  // Extract subscription ID safely from root or line items
+  const subscriptionId =
+    (typeof invoice.subscription === 'string' ? invoice.subscription : (invoice.subscription as any)?.id) ||
+    (invoice.lines?.data[0]?.subscription as string) ||
+    (invoice.parent as any)?.subscription;
+
+  console.log(`📄 Handling Invoice Payment: ${invoice.id} | Customer: ${customerId} | Sub: ${subscriptionId}`);
+
+  // If customer exists, proceed with credit grant (even for initial invoice payments)
+  if (!customerId) {
+    console.warn(`⚠️ No customer found on invoice ${invoice.id}, skipping`);
+    return;
+  }
+
+  // Find user by stripe_customer_id
+  const { data: profile, error: findError } = await supabaseAdmin
+    .from('profiles')
+    .select('id, plan')
+    .eq('stripe_customer_id', customerId)
+    .single();
+
+  if (findError || !profile) {
+    console.error(`❌ User with customer ID ${customerId} not found in Supabase`);
+    return;
+  }
+
+  // Determine credits to grant based on the plan's product ID
+  const planProductId = profile.plan === 'agency' ? 'prod_Uf03Msy5G3OZn2'
+    : profile.plan === 'professional' ? 'prod_Uf01XdkL0cOXn6'
+    : 'prod_Uezx3sCcamylDq';
+
+  const creditsToGrant = PLAN_CREDITS[planProductId] || 5;
+
+  console.log(`🔄 Renewal for User ${profile.id} (plan: ${profile.plan}): Granting ${creditsToGrant} credits`);
+
+  const { error: creditError } = await supabaseAdmin.rpc('increment_credits', {
+    user_id: profile.id,
+    amount: creditsToGrant,
+  });
+
+  if (creditError) {
+    console.error(`❌ Credit renewal failed for User ${profile.id}: ${creditError.message}`);
+    throw new Error(`Credit renewal failed: ${creditError.message}`);
+  }
+
+  console.log(`✅ Renewal successful for User ${profile.id}: ${creditsToGrant} credits granted`);
 }
