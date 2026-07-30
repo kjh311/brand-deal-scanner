@@ -252,10 +252,11 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
   const customerId = typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id;
 
   // Extract subscription ID safely from root or line items
+  const invoiceAny = invoice as any;
   const subscriptionId =
-    (typeof invoice.subscription === 'string' ? invoice.subscription : (invoice.subscription as any)?.id) ||
+    (typeof invoiceAny.subscription === 'string' ? invoiceAny.subscription : invoiceAny.subscription?.id) ||
     (invoice.lines?.data[0]?.subscription as string) ||
-    (invoice.parent as any)?.subscription;
+    invoiceAny.parent?.subscription;
 
   console.log(`📄 Handling Invoice Payment: ${invoice.id} | Customer: ${customerId} | Sub: ${subscriptionId}`);
 
