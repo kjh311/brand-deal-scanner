@@ -24,13 +24,15 @@ const PLAN_CREDITS: Record<string, number> = {
 
 function extractCancellationReason(subscription: Stripe.Subscription): string | null {
   const sub = subscription as any;
-  return (
-    sub.metadata?.cancellation_reason ||
-    sub.cancellation_details?.reason ||
-    sub.cancellation_details?.feedback ||
-    sub.cancellation_details?.comment ||
-    null
-  );
+  const feedback = sub.cancellation_details?.feedback;
+  const comment = sub.cancellation_details?.comment;
+  const reasonCode = sub.cancellation_details?.reason;
+  const metadataReason = sub.metadata?.cancellation_reason;
+
+  if (feedback && comment) {
+    return `${feedback}: ${comment}`;
+  }
+  return metadataReason || comment || feedback || reasonCode || null;
 }
 
 export async function POST(req: NextRequest) {
@@ -116,6 +118,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
         plan: productId === 'prod_Uf03Msy5G3OZn2' ? 'agency' : (productId === 'prod_Uf01XdkL0cOXn6' ? 'professional' : 'plus'),
         stripe_customer_id: customerId,
         cancellation_reason: null,
+        credits: 0,
         updated_at: new Date().toISOString(),
       })
       .eq('id', userId);
@@ -170,14 +173,12 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     updateData.plan = 'none';
     updateData.next_billing_date = null;
     updateData.credits = 0;
-  } else if (status === 'active') {
-    if (isCancelling) {
-      updateData.credits = 0;
-    }
+  } else if (status === 'active' && !isCancelling) {
     if (periodEnd) {
       updateData.next_billing_date = new Date(periodEnd * 1000).toISOString();
     }
   }
+  // When isCancelling and status === 'active', preserve credits and next_billing_date until subscription is deleted
 
   const { error: updateError } = await supabaseAdmin
     .from('profiles')
