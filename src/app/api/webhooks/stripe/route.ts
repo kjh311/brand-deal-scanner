@@ -154,44 +154,71 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription, prev
   const periodEndSeconds =
     subAny.current_period_end ||
     subAny.currentPeriodEnd ||
-    subscription.items?.data[0]?.current_period_end;
+    subscription.items?.data[0]?.current_period_end ||
+    subAny.latest_invoice?.lines?.data?.[0]?.period?.end;
   console.log(`🧐 current_period_end raw:`, subAny.current_period_end, `currentPeriodEnd raw:`, subAny.currentPeriodEnd, `line item raw:`, subscription.items?.data[0]?.current_period_end);
   const nextBillingDate = periodEndSeconds
     ? new Date(periodEndSeconds * 1000).toISOString()
-    : new Date().toISOString();
+    : null;
   
   let targetPlan = profile.plan;
+  const cancelAtPeriodEnd = subscription.cancel_at_period_end;
   if (status === 'active') {
-    targetPlan = newPlan;
+    if (cancelAtPeriodEnd) {
+      targetPlan = profile.plan;
+    } else {
+      targetPlan = newPlan;
+    }
   } else if (status === 'canceled' || status === 'unpaid') {
     targetPlan = 'none';
   }
 
   const updateData: any = {
     plan: targetPlan,
-    next_billing_date: nextBillingDate,
     cancellation_reason: null,
     updated_at: new Date().toISOString(),
   };
 
-  // Capture cancellation reason only when subscription is actually being canceled
-  const cancelAtPeriodEnd = subscription.cancel_at_period_end
-  if ((status === "canceled" || status === "unpaid" || cancelAtPeriodEnd) &&
-      (subscription.cancel_at || subscription.canceled_at || subscription.cancellation_details)) {
+  if (status === 'canceled' || status === 'unpaid') {
+    updateData.next_billing_date = null;
+    updateData.credits = 0;
+  } else if (nextBillingDate) {
+    updateData.next_billing_date = nextBillingDate;
+  }
+
+  // Clear cancellation reason when user is actively subscribed (resubscribe)
+  if (status === 'active' && !cancelAtPeriodEnd) {
+    updateData.cancellation_reason = null;
+  }
+
+  // Set cancellation reason when subscription is being canceled at period end
+  if (cancelAtPeriodEnd) {
     const feedback = subscription.cancellation_details?.feedback;
     const comment = subscription.cancellation_details?.comment;
     const reasonCode = subscription.cancellation_details?.reason;
+    let reason = 'Cancellation Requested';
+    if (feedback && comment) {
+      reason = `${feedback}: ${comment}`;
+    } else {
+      reason = comment || feedback || reasonCode || 'Cancellation Requested';
+    }
+    updateData.cancellation_reason = reason;
+    console.log(`📉 Cancellation requested. Reason: ${reason}`);
+  }
 
-    // Combine feedback and comment if both exist, otherwise fallback to reason codes
+  // Set cancellation reason for fully canceled/unpaid subscriptions
+  if (status === 'canceled' || status === 'unpaid') {
+    const feedback = subscription.cancellation_details?.feedback;
+    const comment = subscription.cancellation_details?.comment;
+    const reasonCode = subscription.cancellation_details?.reason;
     let reason = 'User cancelled';
     if (feedback && comment) {
       reason = `${feedback}: ${comment}`;
     } else {
       reason = comment || feedback || reasonCode || 'User cancelled';
     }
-      
     updateData.cancellation_reason = reason;
-    console.log(`📉 Churn marker detected. Combined Reason: ${reason}`);
+    console.log(`📉 Cancellation finalized. Reason: ${reason}`);
   }
 
   const { error: updateError, data: updateResult } = await supabaseAdmin
@@ -211,10 +238,6 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription, prev
 
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   const customerId = subscription.customer as string;
-  const cancellationReason = 
-    subscription.cancellation_details?.comment || 
-    subscription.cancellation_details?.reason || 
-    'User cancelled';
 
   console.log(`🗑️ Handling Subscription Deletion: ${subscription.id} | Customer: ${customerId}`);
 
@@ -224,7 +247,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
       plan: 'none',
       credits: 0,
       next_billing_date: null,
-      cancellation_reason: cancellationReason,
+      cancellation_reason: null,
       updated_at: new Date().toISOString(),
     })
     .eq('stripe_customer_id', customerId);

@@ -91,8 +91,13 @@ async function handleSubscriptionUpdated(
   const oldPlan = profile.plan
   const newPlan = newProductId ? PLAN_NAMES[newProductId] || oldPlan : oldPlan
 
-  const periodEnd = (subscription as any).current_period_end || (subscription as any).currentPeriodEnd
-  const nextBillingDate = periodEnd ? new Date(periodEnd * 1000).toISOString() : new Date().toISOString()
+  const subAny = subscription as any
+  const periodEnd =
+    subAny.current_period_end ||
+    subAny.currentPeriodEnd ||
+    subscription.items?.data[0]?.current_period_end ||
+    subAny.latest_invoice?.lines?.data?.[0]?.period?.end
+  const nextBillingDate = periodEnd ? new Date(periodEnd * 1000).toISOString() : null
 
   const cancelAtPeriodEnd = subscription.cancel_at_period_end
 
@@ -116,9 +121,10 @@ async function handleSubscriptionUpdated(
   // Keep billing date while user still has access; only null on full cancellation
   if (status === "canceled" || status === "unpaid") {
     updateData.next_billing_date = null
-  } else {
+  } else if (nextBillingDate) {
     updateData.next_billing_date = nextBillingDate
   }
+  // If nextBillingDate is null (periodEnd unavailable) and status is active, preserve existing next_billing_date
 
   // Reset credits on full cancellation
   if (status === "canceled" || status === "unpaid") {
@@ -130,20 +136,31 @@ async function handleSubscriptionUpdated(
     updateData.cancellation_reason = null
   }
 
-  // Capture cancellation reason only when subscription is actually being canceled
-  if ((status === "canceled" || status === "unpaid" || cancelAtPeriodEnd) &&
-      (subscription.cancel_at || subscription.canceled_at || subscription.cancellation_details)) {
+  // Set cancellation reason when subscription is being canceled
+  if (cancelAtPeriodEnd) {
     const feedback = subscription.cancellation_details?.feedback
     const comment = subscription.cancellation_details?.comment
     const reasonCode = subscription.cancellation_details?.reason
+    let reason = "Cancellation Requested"
+    if (feedback && comment) {
+      reason = `${feedback}: ${comment}`
+    } else {
+      reason = comment || feedback || reasonCode || "Cancellation Requested"
+    }
+    updateData.cancellation_reason = reason
+  }
 
+  // Set cancellation reason for fully canceled/unpaid subscriptions
+  if (status === "canceled" || status === "unpaid") {
+    const feedback = subscription.cancellation_details?.feedback
+    const comment = subscription.cancellation_details?.comment
+    const reasonCode = subscription.cancellation_details?.reason
     let reason = "User cancelled"
     if (feedback && comment) {
       reason = `${feedback}: ${comment}`
     } else {
       reason = comment || feedback || reasonCode || "User cancelled"
     }
-
     updateData.cancellation_reason = reason
   }
 
@@ -160,14 +177,13 @@ async function handleSubscriptionUpdated(
 
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   const customerId = subscription.customer as string
-  const cancellationReason = subscription.cancellation_details?.comment || subscription.cancellation_details?.reason || "User cancelled"
 
   const { error } = await supabase
     .from("profiles")
     .update({
       plan: "none",
       credits: 0,
-      cancellation_reason: cancellationReason,
+      cancellation_reason: null,
       next_billing_date: null,
       updated_at: new Date().toISOString(),
     })
