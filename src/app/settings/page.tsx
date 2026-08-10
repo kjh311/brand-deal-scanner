@@ -8,6 +8,27 @@ import { handlePortal } from '@/lib/stripe-client'
 
 import { useRouter } from 'next/navigation'
 
+function formatDate(dateString: string | null): string | null {
+  if (!dateString) return null
+  const date = new Date(dateString)
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  })
+}
+
+function getLastDayOfUse(dateString: string | null): string | null {
+  if (!dateString) return null
+  const date = new Date(dateString)
+  date.setDate(date.getDate() - 1)
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  })
+}
+
 export default function SettingsPage() {
   const router = useRouter()
   const [updating, setUpdating] = useState(false)
@@ -17,6 +38,8 @@ export default function SettingsPage() {
   const [credits, setCredits] = useState<number>(0)
   const [plan, setPlan] = useState<string>('Free')
   const [hasActivePlan, setHasActivePlan] = useState(false)
+  const [nextBillingDate, setNextBillingDate] = useState<string | null>(null)
+  const [cancellationReason, setCancellationReason] = useState<string | null>(null)
 
   useEffect(() => {
     const supabase = createClient()
@@ -24,17 +47,19 @@ export default function SettingsPage() {
       const { data: { user } } = await supabase.auth.getUser()
       setUser(user)
       if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('credits, plan, stripe_customer_id')
-          .eq('id', user.id)
-          .single()
-          
-        if (profile) {
-          setCredits(profile.credits || 0)
-          setPlan(profile.plan && profile.plan !== 'none' ? profile.plan : 'No Active Subscription')
-          setHasActivePlan(profile.plan !== null && profile.plan !== 'none')
-        }
+         const { data: profile } = await supabase
+           .from('profiles')
+           .select('credits, plan, stripe_customer_id, next_billing_date, cancellation_reason')
+           .eq('id', user.id)
+           .single()
+           
+         if (profile) {
+           setCredits(profile.credits || 0)
+           setPlan(profile.plan && profile.plan !== 'none' ? profile.plan : 'No Active Subscription')
+           setHasActivePlan(profile.plan !== null && profile.plan !== 'none')
+           setNextBillingDate(profile.next_billing_date || null)
+           setCancellationReason(profile.cancellation_reason || null)
+         }
       }
       setLoading(false)
     }
@@ -96,17 +121,31 @@ export default function SettingsPage() {
                     </div>
                  </div>
  
-                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="p-6 rounded-3xl bg-[#F8FAFC] border border-[#E2E8F0]">
-                       <p className="text-[10px] font-black uppercase tracking-[3px] text-[#64748B] mb-2">Current Plan</p>
-                       <p className="text-xl font-bold text-emerald-600 capitalize">{plan}</p>
-                    </div>
-                    <div className="p-6 rounded-3xl bg-[#F8FAFC] border border-[#E2E8F0]">
-                       <p className="text-[10px] font-black uppercase tracking-[3px] text-[#64748B] mb-2">Available Credits</p>
-                       <p className="text-xl font-bold text-[#1E1A5F]">{credits} Scans</p>
-                    </div>
-                 </div>
-               </section>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                     <div className="p-6 rounded-3xl bg-[#F8FAFC] border border-[#E2E8F0]">
+                        <p className="text-[10px] font-black uppercase tracking-[3px] text-[#64748B] mb-2">Current Plan</p>
+                        <p className="text-xl font-bold text-emerald-600 capitalize">{plan}</p>
+                     </div>
+                     <div className="p-6 rounded-3xl bg-[#F8FAFC] border border-[#E2E8F0]">
+                        <p className="text-[10px] font-black uppercase tracking-[3px] text-[#64748B] mb-2">Available Credits</p>
+                        <p className="text-xl font-bold text-[#1E1A5F]">{credits} Scans</p>
+                     </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-[#E2E8F0] space-y-2">
+                     {cancellationReason && nextBillingDate ? (
+                        <div className="flex items-center justify-between">
+                           <span className="text-sm text-[#64748B]">Last Day of Use</span>
+                           <span className="text-sm font-medium text-rose-600">{getLastDayOfUse(nextBillingDate)}</span>
+                        </div>
+                     ) : nextBillingDate ? (
+                        <div className="flex items-center justify-between">
+                           <span className="text-sm text-[#64748B]">Next Billing Date</span>
+                           <span className="text-sm font-medium text-[#1E1A5F]">{formatDate(nextBillingDate)}</span>
+                        </div>
+                     ) : null}
+                  </div>
+                </section>
 
                {/* Billing Management */}
                <section className="bg-white border border-[#E2E8F0] rounded-[2.5rem] p-5 sm:p-10 text-[#1E1A5F]">

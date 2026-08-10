@@ -108,6 +108,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
         .update({
           plan: productId === 'prod_Uf03Msy5G3OZn2' ? 'agency' : (productId === 'prod_Uf01XdkL0cOXn6' ? 'professional' : 'plus'),
           stripe_customer_id: customerId,
+          cancellation_reason: null,
           updated_at: new Date().toISOString(),
         })
         .eq('id', userId);
@@ -169,6 +170,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription, prev
   const updateData: any = {
     plan: targetPlan,
     next_billing_date: nextBillingDate,
+    cancellation_reason: null,
     updated_at: new Date().toISOString(),
   };
 

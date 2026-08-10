@@ -61,6 +61,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       .update({
         plan: planName,
         stripe_customer_id: customerId,
+        cancellation_reason: null,
         updated_at: new Date().toISOString(),
       })
       .eq("id", userId)
@@ -93,17 +94,40 @@ async function handleSubscriptionUpdated(
   const periodEnd = (subscription as any).current_period_end || (subscription as any).currentPeriodEnd
   const nextBillingDate = periodEnd ? new Date(periodEnd * 1000).toISOString() : new Date().toISOString()
 
+  const cancelAtPeriodEnd = subscription.cancel_at_period_end
+
   let targetPlan = oldPlan
   if (status === "active") {
-    targetPlan = newPlan
+    if (cancelAtPeriodEnd) {
+      // Keep current plan until period ends
+      targetPlan = oldPlan
+    } else {
+      targetPlan = newPlan
+    }
   } else if (status === "canceled" || status === "unpaid") {
     targetPlan = "none"
   }
 
   const updateData: Record<string, any> = {
     plan: targetPlan,
-    next_billing_date: nextBillingDate,
     updated_at: new Date().toISOString(),
+  }
+
+  // Clear billing date if subscription is ending
+  if (cancelAtPeriodEnd || status === "canceled" || status === "unpaid") {
+    updateData.next_billing_date = null
+  } else {
+    updateData.next_billing_date = nextBillingDate
+  }
+
+  // Reset credits on full cancellation
+  if (status === "canceled" || status === "unpaid") {
+    updateData.credits = 0
+  }
+
+  // Clear cancellation reason when user is actively subscribed (resubscribe)
+  if (status === "active" && !cancelAtPeriodEnd) {
+    updateData.cancellation_reason = null
   }
 
   if (subscription.cancel_at || subscription.canceled_at || subscription.cancellation_details) {
@@ -140,6 +164,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     .from("profiles")
     .update({
       plan: "none",
+      credits: 0,
       cancellation_reason: cancellationReason,
       next_billing_date: null,
       updated_at: new Date().toISOString(),
@@ -182,24 +207,14 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
     return
   }
 
-  // Sync next_billing_date from invoice period
-  const linePeriodEnd = invoice.lines?.data[0]?.period?.end || (invoice as any).period_end
-  if (linePeriodEnd) {
-    const nextBillingDate = new Date(linePeriodEnd * 1000).toISOString()
-    await supabase
-      .from("profiles")
-      .update({ next_billing_date: nextBillingDate })
-      .eq("id", profile.id)
-    console.log(`📅 Updated next_billing_date to ${nextBillingDate} for User ${profile.id}`)
-  }
-
   // STOP IF USER IS CANCELED OR ON NO PLAN
   if (!profile.plan || profile.plan === "none") {
-    console.warn(`🛑 User ${profile.id} is on plan '${profile.plan}'. Skipping credit grant.`)
+    console.warn(`🛑 User ${profile.id} is on plan '${profile.plan}'. Skipping credit grant and billing date sync.`)
     return
   }
 
   // Prevent credit grant if subscription is ending at period end
+  let subCancelAtPeriodEnd = false
   if (subscriptionId) {
     try {
       const sub = await stripe.subscriptions.retrieve(subscriptionId)
@@ -207,8 +222,22 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
         console.log(`🛑 Subscription ${subscriptionId} is ending at period end. Skipping monthly credit grant.`)
         return
       }
+      subCancelAtPeriodEnd = sub.cancel_at_period_end
     } catch (err: any) {
       console.warn("Failed to inspect subscription status in Stripe:", err.message)
+    }
+  }
+
+  // Sync next_billing_date from invoice period (only for active subscriptions)
+  if (!subCancelAtPeriodEnd) {
+    const linePeriodEnd = invoice.lines?.data[0]?.period?.end || (invoice as any).period_end
+    if (linePeriodEnd) {
+      const nextBillingDate = new Date(linePeriodEnd * 1000).toISOString()
+      await supabase
+        .from("profiles")
+        .update({ next_billing_date: nextBillingDate })
+        .eq("id", profile.id)
+      console.log(`📅 Updated next_billing_date to ${nextBillingDate} for User ${profile.id}`)
     }
   }
 
