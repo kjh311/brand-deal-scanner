@@ -8,21 +8,30 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-// Define the events we specifically care about
 const RELEVANT_EVENTS = new Set([
   'checkout.session.completed',
   'invoice.payment_succeeded',
   'customer.subscription.created',
   'customer.subscription.updated',
-  'customer.subscription.deleted'
+  'customer.subscription.deleted',
 ]);
 
-// Map Product IDs to their credit counts for proration logic
 const PLAN_CREDITS: Record<string, number> = {
-  'prod_Uezx3sCcamylDq': 5,    // Plus
-  'prod_Uf01XdkL0cOXn6': 20,   // Professional
-  'prod_Uf03Msy5G3OZn2': 100,  // Agency
+  'prod_Uezx3sCcamylDq': 5,
+  'prod_Uf01XdkL0cOXn6': 20,
+  'prod_Uf03Msy5G3OZn2': 100,
 };
+
+function extractCancellationReason(subscription: Stripe.Subscription): string | null {
+  const sub = subscription as any;
+  return (
+    sub.metadata?.cancellation_reason ||
+    sub.cancellation_details?.reason ||
+    sub.cancellation_details?.feedback ||
+    sub.cancellation_details?.comment ||
+    null
+  );
+}
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
@@ -42,9 +51,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: `Verification failed: ${err.message}` }, { status: 400 });
   }
 
-  // Filter early: Ignore events we don't care about with a 200 status
   if (!RELEVANT_EVENTS.has(event.type)) {
-    return NextResponse.json({ received: true });
+    return NextResponse.json({ received: true }, { status: 200 });
   }
 
   console.log(`🔔 Processing event: ${event.type}`);
@@ -59,7 +67,7 @@ export async function POST(req: NextRequest) {
         break;
       case 'customer.subscription.created':
       case 'customer.subscription.updated':
-        await handleSubscriptionUpdated(event.data.object as Stripe.Subscription, (event.data as any).previous_attributes);
+        await handleSubscriptionUpdated(event.data.object as Stripe.Subscription);
         break;
       case 'customer.subscription.deleted':
         await handleSubscriptionDeleted(event.data.object as Stripe.Subscription);
@@ -72,7 +80,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Webhook handler failed' }, { status: 500 });
   }
 
-  return NextResponse.json({ received: true });
+  return NextResponse.json({ received: true }, { status: 200 });
 }
 
 async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) {
@@ -87,7 +95,6 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
   }
 
   if (mode === 'payment') {
-    // Retrieve the actual quantity the user selected
     const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
     const firstItem = lineItems.data[0];
     const quantity = firstItem?.quantity || 1;
@@ -98,35 +105,33 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     });
     if (error) throw new Error(`Supabase error (credits): ${error.message}`);
     console.log(`Top-up successful: ${quantity} items purchased, ${quantity} credits granted to User ${userId}`);
-  } 
-  
+  }
+
   if (mode === 'subscription') {
-      const productId = session.metadata?.productId;
+    const productId = session.metadata?.productId;
 
-      const { error: profileError } = await supabaseAdmin
-        .from('profiles')
-        .update({
-          plan: productId === 'prod_Uf03Msy5G3OZn2' ? 'agency' : (productId === 'prod_Uf01XdkL0cOXn6' ? 'professional' : 'plus'),
-          stripe_customer_id: customerId,
-          cancellation_reason: null,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', userId);
-      
-      if (profileError) throw new Error(`Supabase error (subscription profile): ${profileError.message}`);
+    const { error: profileError } = await supabaseAdmin
+      .from('profiles')
+      .update({
+        plan: productId === 'prod_Uf03Msy5G3OZn2' ? 'agency' : (productId === 'prod_Uf01XdkL0cOXn6' ? 'professional' : 'plus'),
+        stripe_customer_id: customerId,
+        cancellation_reason: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', userId);
 
-      console.log(`✅ Subscription created: User ${userId} profile updated (plan + stripe_customer_id linked). Credits will be granted on invoice.payment_succeeded.`);
-    }
+    if (profileError) throw new Error(`Supabase error (subscription profile): ${profileError.message}`);
+
+    console.log(`✅ Subscription created: User ${userId} profile updated (plan + stripe_customer_id linked). Credits will be granted on invoice.payment_succeeded.`);
+  }
 }
 
-async function handleSubscriptionUpdated(subscription: Stripe.Subscription, previousAttributes?: any) {
+async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   const customerId = subscription.customer as string;
   const status = subscription.status;
-  const newProductId = subscription.items.data[0].plan.product as string;
 
-  console.log(`🔄 Handling Subscription Update: ${subscription.id} | Customer: ${customerId} | Status: ${status}`);
+  console.log(`🔄 Handling Subscription Update: ${subscription.id} | Customer: ${customerId} | Status: ${status} | cancel_at_period_end: ${subscription.cancel_at_period_end}`);
 
-  // Find user by stripe_customer_id
   const { data: profile, error: findError } = await supabaseAdmin
     .from('profiles')
     .select('id, plan')
@@ -138,108 +143,60 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription, prev
     return;
   }
 
-  
-  const newPlan = newProductId === 'prod_Uf03Msy5G3OZn2' ? 'agency' : (newProductId === 'prod_Uf01XdkL0cOXn6' ? 'professional' : 'plus');
-
-  // 1. Sync Plan Status & Name
-  console.log(`🧐 Diagnostic: 
-    - cancel_at_period_end: ${subscription.cancel_at_period_end}
-    - status: ${status}
-    - cancel_at: ${subscription.cancel_at}
-    - canceled_at: ${subscription.canceled_at}
-    - cancellation_details: ${JSON.stringify(subscription.cancellation_details)}
-  `);
-  
   const subAny = subscription as any;
-  const periodEndSeconds =
+  const periodEnd =
     subAny.current_period_end ||
     subAny.currentPeriodEnd ||
     subscription.items?.data[0]?.current_period_end ||
     subAny.latest_invoice?.lines?.data?.[0]?.period?.end;
-  console.log(`🧐 current_period_end raw:`, subAny.current_period_end, `currentPeriodEnd raw:`, subAny.currentPeriodEnd, `line item raw:`, subscription.items?.data[0]?.current_period_end);
-  const nextBillingDate = periodEndSeconds
-    ? new Date(periodEndSeconds * 1000).toISOString()
-    : null;
-  
-  let targetPlan = profile.plan;
+
   const cancelAtPeriodEnd = subscription.cancel_at_period_end;
-  if (status === 'active') {
-    if (cancelAtPeriodEnd) {
-      targetPlan = profile.plan;
-    } else {
-      targetPlan = newPlan;
-    }
-  } else if (status === 'canceled' || status === 'unpaid') {
-    targetPlan = 'none';
+  const isCancelling = cancelAtPeriodEnd || !!subscription.cancel_at || !!subscription.canceled_at;
+
+  const cancellationReason = isCancelling
+    ? extractCancellationReason(subscription) || 'Cancellation Requested'
+    : null;
+
+  if (cancellationReason) {
+    console.log(`📉 Cancellation reason: ${cancellationReason}`);
   }
 
   const updateData: any = {
-    plan: targetPlan,
-    cancellation_reason: null,
+    cancellation_reason: cancellationReason,
     updated_at: new Date().toISOString(),
   };
 
   if (status === 'canceled' || status === 'unpaid') {
+    updateData.plan = 'none';
     updateData.next_billing_date = null;
     updateData.credits = 0;
-  } else if (nextBillingDate) {
-    updateData.next_billing_date = nextBillingDate;
-  }
-
-  // Clear cancellation reason when user is actively subscribed (resubscribe)
-  if (status === 'active' && !cancelAtPeriodEnd) {
-    updateData.cancellation_reason = null;
-  }
-
-  // Set cancellation reason when subscription is being canceled at period end
-  if (cancelAtPeriodEnd) {
-    const feedback = subscription.cancellation_details?.feedback;
-    const comment = subscription.cancellation_details?.comment;
-    const reasonCode = subscription.cancellation_details?.reason;
-    let reason = 'Cancellation Requested';
-    if (feedback && comment) {
-      reason = `${feedback}: ${comment}`;
-    } else {
-      reason = comment || feedback || reasonCode || 'Cancellation Requested';
+  } else if (status === 'active') {
+    if (isCancelling) {
+      updateData.credits = 0;
     }
-    updateData.cancellation_reason = reason;
-    console.log(`📉 Cancellation requested. Reason: ${reason}`);
-  }
-
-  // Set cancellation reason for fully canceled/unpaid subscriptions
-  if (status === 'canceled' || status === 'unpaid') {
-    const feedback = subscription.cancellation_details?.feedback;
-    const comment = subscription.cancellation_details?.comment;
-    const reasonCode = subscription.cancellation_details?.reason;
-    let reason = 'User cancelled';
-    if (feedback && comment) {
-      reason = `${feedback}: ${comment}`;
-    } else {
-      reason = comment || feedback || reasonCode || 'User cancelled';
+    if (periodEnd) {
+      updateData.next_billing_date = new Date(periodEnd * 1000).toISOString();
     }
-    updateData.cancellation_reason = reason;
-    console.log(`📉 Cancellation finalized. Reason: ${reason}`);
   }
 
-  const { error: updateError, data: updateResult } = await supabaseAdmin
+  const { error: updateError } = await supabaseAdmin
     .from('profiles')
     .update(updateData)
-    .eq('id', profile.id)
-    .select();
+    .eq('id', profile.id);
 
   if (updateError) {
     console.error(`❌ Supabase update failed: ${updateError.message}`);
     throw new Error(`Sync error: ${updateError.message}`);
   }
 
-  console.log(`Billing date synchronized for Customer ${customerId}: ${nextBillingDate}`);
-  console.log(`✅ Supabase update finished. Rows affected: ${updateResult?.length || 0}`);
+  console.log(`✅ Subscription updated for User ${profile.id}: plan=${updateData.plan || profile.plan}, next_billing_date=${updateData.next_billing_date || 'unchanged'}, cancellation_reason=${cancellationReason || 'null'}`);
 }
 
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   const customerId = subscription.customer as string;
+  const cancellationReason = extractCancellationReason(subscription);
 
-  console.log(`🗑️ Handling Subscription Deletion: ${subscription.id} | Customer: ${customerId}`);
+  console.log(`🗑️ Handling Subscription Deletion: ${subscription.id} | Customer: ${customerId} | Reason: ${cancellationReason || 'N/A'}`);
 
   const { error } = await supabaseAdmin
     .from('profiles')
@@ -256,8 +213,8 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     console.error(`❌ Deletion sync error for customer ${customerId}: ${error.message}`);
     throw new Error(`Deletion sync error: ${error.message}`);
   }
-  
-  console.log(`✅ Cancellation finalized for Customer ${customerId}: Profile plan set to 'none' and credits reset to 0.`);
+
+  console.log(`✅ Cancellation finalized for Customer ${customerId}: plan set to 'none', credits reset to 0.`);
 }
 
 async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
@@ -275,13 +232,11 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
     return;
   }
 
-  // Verify the invoice is actually paid
   if (invoice.status !== 'paid') {
     console.warn(`⚠️ Invoice ${invoice.id} status is '${invoice.status}', not 'paid'. Skipping credit grant.`);
     return;
   }
 
-  // Find user by stripe_customer_id
   const { data: profile, error: findError } = await supabaseAdmin
     .from('profiles')
     .select('id, plan')
@@ -310,20 +265,19 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
     return;
   }
 
-  // Prevent credit grant if subscription is ending at period end
+  // Prevent credit grant if subscription is ending or canceled
   if (subscriptionId) {
     try {
       const sub = await stripe.subscriptions.retrieve(subscriptionId);
-      if (sub.cancel_at_period_end || sub.status === 'canceled') {
-        console.log(`🛑 Subscription ${subscriptionId} is ending at period end. Skipping monthly credit grant.`);
+      if (sub.cancel_at_period_end || sub.status === 'canceled' || sub.cancel_at || sub.canceled_at) {
+        console.log(`🛑 Subscription ${subscriptionId} is canceled or ending. Skipping monthly credit grant.`);
         return;
       }
-    } catch (err) {
-      console.warn('Failed to inspect subscription status in Stripe:', err);
+    } catch (err: any) {
+      console.warn('Failed to inspect subscription status in Stripe:', err.message);
     }
   }
 
-  // Determine credits to grant based on the plan's product ID
   const planProductId = profile.plan === 'agency' ? 'prod_Uf03Msy5G3OZn2'
     : profile.plan === 'professional' ? 'prod_Uf01XdkL0cOXn6'
     : 'prod_Uezx3sCcamylDq';
