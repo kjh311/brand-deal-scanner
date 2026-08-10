@@ -113,8 +113,8 @@ async function handleSubscriptionUpdated(
     updated_at: new Date().toISOString(),
   }
 
-  // Clear billing date if subscription is ending
-  if (cancelAtPeriodEnd || status === "canceled" || status === "unpaid") {
+  // Keep billing date while user still has access; only null on full cancellation
+  if (status === "canceled" || status === "unpaid") {
     updateData.next_billing_date = null
   } else {
     updateData.next_billing_date = nextBillingDate
@@ -130,7 +130,9 @@ async function handleSubscriptionUpdated(
     updateData.cancellation_reason = null
   }
 
-  if (subscription.cancel_at || subscription.canceled_at || subscription.cancellation_details) {
+  // Capture cancellation reason only when subscription is actually being canceled
+  if ((status === "canceled" || status === "unpaid" || cancelAtPeriodEnd) &&
+      (subscription.cancel_at || subscription.canceled_at || subscription.cancellation_details)) {
     const feedback = subscription.cancellation_details?.feedback
     const comment = subscription.cancellation_details?.comment
     const reasonCode = subscription.cancellation_details?.reason

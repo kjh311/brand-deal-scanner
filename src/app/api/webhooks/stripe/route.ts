@@ -174,8 +174,10 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription, prev
     updated_at: new Date().toISOString(),
   };
 
-  // Capture cancellation reason if ANY cancellation markers are present
-  if (subscription.cancel_at || subscription.canceled_at || subscription.cancellation_details) {
+  // Capture cancellation reason only when subscription is actually being canceled
+  const cancelAtPeriodEnd = subscription.cancel_at_period_end
+  if ((status === "canceled" || status === "unpaid" || cancelAtPeriodEnd) &&
+      (subscription.cancel_at || subscription.canceled_at || subscription.cancellation_details)) {
     const feedback = subscription.cancellation_details?.feedback;
     const comment = subscription.cancellation_details?.comment;
     const reasonCode = subscription.cancellation_details?.reason;
