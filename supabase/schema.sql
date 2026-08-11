@@ -10,6 +10,8 @@ create table public.profiles (
   user_name text,
   avatar_url text,
   credit_balance integer default 0 not null,
+  credits integer default 0 not null,
+  none_expire_credits integer default 0 not null,
   subscription_tier text default 'free' not null,
   admin boolean default false not null,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,

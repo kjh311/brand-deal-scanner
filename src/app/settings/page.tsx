@@ -36,6 +36,7 @@ export default function SettingsPage() {
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [credits, setCredits] = useState<number>(0)
+  const [noneExpireCredits, setNoneExpireCredits] = useState<number>(0)
   const [plan, setPlan] = useState<string>('Free')
   const [hasActivePlan, setHasActivePlan] = useState(false)
   const [nextBillingDate, setNextBillingDate] = useState<string | null>(null)
@@ -48,13 +49,14 @@ export default function SettingsPage() {
       setUser(user)
       if (user) {
          const { data: profile } = await supabase
-           .from('profiles')
-           .select('credits, plan, stripe_customer_id, next_billing_date, cancellation_reason')
-           .eq('id', user.id)
-           .single()
-           
-         if (profile) {
-           setCredits(profile.credits || 0)
+            .from('profiles')
+            .select('credits, none_expire_credits, plan, stripe_customer_id, next_billing_date, cancellation_reason')
+            .eq('id', user.id)
+            .single()
+            
+          if (profile) {
+            setCredits(profile.credits || 0)
+            setNoneExpireCredits(profile.none_expire_credits || 0)
            setPlan(profile.plan && profile.plan !== 'none' ? profile.plan : 'No Active Subscription')
            setHasActivePlan(profile.plan !== null && profile.plan !== 'none')
            setNextBillingDate(profile.next_billing_date || null)
@@ -126,10 +128,14 @@ export default function SettingsPage() {
                         <p className="text-[10px] font-black uppercase tracking-[3px] text-[#64748B] mb-2">Current Plan</p>
                         <p className="text-xl font-bold text-emerald-600 capitalize">{plan}</p>
                      </div>
-                     <div className="p-6 rounded-3xl bg-[#F8FAFC] border border-[#E2E8F0]">
-                        <p className="text-[10px] font-black uppercase tracking-[3px] text-[#64748B] mb-2">Available Credits</p>
-                        <p className="text-xl font-bold text-[#1E1A5F]">{credits} Scans</p>
-                     </div>
+                      <div className="p-6 rounded-3xl bg-[#F8FAFC] border border-[#E2E8F0]">
+                         <p className="text-[10px] font-black uppercase tracking-[3px] text-[#64748B] mb-2">Subscription Credits</p>
+                         <p className="text-xl font-bold text-[#1E1A5F]">{credits} Scans</p>
+                      </div>
+                      <div className="p-6 rounded-3xl bg-[#FEF3C7] border border-[#FDE68A]">
+                         <p className="text-[10px] font-black uppercase tracking-[3px] text-[#92400E] mb-2">Top-Up Credits</p>
+                         <p className="text-xl font-bold text-[#92400E]">{noneExpireCredits} Scans (never expires)</p>
+                      </div>
                   </div>
 
                   <div className="pt-4 border-t border-[#E2E8F0] space-y-2">

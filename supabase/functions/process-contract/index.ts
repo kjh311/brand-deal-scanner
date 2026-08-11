@@ -321,15 +321,16 @@ Deno.serve(async (req) => {
     console.log(`[PRIVACY] Clearing extracted text for record: ${recordId}`);
     await supabase.from('contracts').update({ extracted_text: null }).eq('id', recordId);
 
-    // 4. Credit System: Subtract 1 credit from user profile
-    console.log(`[CREDITS] Subtracting 1 credit from user: ${record.user_id}`);
-    const { data: profileData } = await supabase.from('profiles').select('credits').eq('id', record.user_id).single();
-    if (profileData) {
-      const { error: updateError } = await supabase.from('profiles')
-        .update({ credits: (profileData.credits || 0) - 1 })
-        .eq('id', record.user_id);
+    // 4. Credit System: Deduct 1 scan credit via RPC (consumes subscription credits first, then non-expiring)
+    console.log(`[CREDITS] Deducting 1 scan credit from user: ${record.user_id}`);
+    const { data: success, error: creditError } = await supabase.rpc('deduct_scan_credit', {
+      user_id: record.user_id,
+    });
 
-      if (updateError) console.error(`[CREDITS] Failed to update credits: ${updateError.message}`);
+    if (creditError) {
+      console.error(`[CREDITS] RPC error: ${creditError.message}`);
+    } else if (!success) {
+      console.error(`[CREDITS] Insufficient credits for user: ${record.user_id}`);
     }
 
     return new Response(JSON.stringify({ success: true }), { headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } });

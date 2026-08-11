@@ -1,5 +1,14 @@
--- Rename full_name to user_name in profiles table
-ALTER TABLE public.profiles RENAME COLUMN full_name TO user_name;
+-- Rename full_name to user_name in profiles table (idempotent)
+-- Only rename if the column still exists as full_name
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'full_name'
+  ) THEN
+    ALTER TABLE public.profiles RENAME COLUMN full_name TO user_name;
+  END IF;
+END $$;
 
 -- Update handle_new_user function to use user_name
 create or replace function public.handle_new_user()

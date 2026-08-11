@@ -15,10 +15,9 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
-    // Fetch the customer ID, plan, credits, and next billing date from the database
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('stripe_customer_id, plan, credits, next_billing_date')
+      .select('stripe_customer_id, plan, credits, none_expire_credits, next_billing_date')
       .eq('id', user.id)
       .single();
 
@@ -29,7 +28,6 @@ export async function GET(req: NextRequest) {
     let currentPeriodEnd: number | null = null;
 
     if (profile?.stripe_customer_id) {
-      // List active/trialing subscriptions to get renewal date
       const subscriptions = await stripe.subscriptions.list({
         customer: profile.stripe_customer_id,
         status: 'active',
@@ -45,6 +43,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       plan: profile.plan || 'Free',
       credits: profile.credits || 0,
+      none_expire_credits: profile.none_expire_credits || 0,
       stripe_customer_id: profile.stripe_customer_id,
       currentPeriodEnd,
       nextBillingDate: profile.next_billing_date,

@@ -87,6 +87,7 @@ export async function POST(req: NextRequest) {
         priceId: finalPriceId || '',
         productId: finalProductId || '',
         originalId: priceId || '',
+        ...(mode === 'payment' ? { credits: String(quantity) } : {}),
       },
     });
 

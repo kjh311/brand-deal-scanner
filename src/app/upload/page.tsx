@@ -65,7 +65,7 @@ export default function UploadPage() {
           const data = await res.json()
           setSubStatus(data)
 
-          const userCredits = data.credits || 0
+          const userCredits = (data.credits || 0) + (data.none_expire_credits || 0)
 
           if (userCredits === 0) {
             // Scenario A (No Stripe Customer ID): If credits === 0 AND stripe_customer_id IS NULL, redirect to /plans

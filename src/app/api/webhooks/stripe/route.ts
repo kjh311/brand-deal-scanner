@@ -105,17 +105,24 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     throw new Error('Missing client_reference_id in checkout session');
   }
 
-  if (mode === 'payment') {
-    const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
-    const firstItem = lineItems.data[0];
-    const quantity = firstItem?.quantity || 1;
+   if (mode === 'payment') {
+    const creditsParam = session.metadata?.credits;
+    let amount = 0;
 
-    const { error } = await supabaseAdmin.rpc('increment_credits', {
+    if (creditsParam) {
+      amount = parseInt(creditsParam, 10);
+    } else {
+      const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
+      const firstItem = lineItems.data[0];
+      amount = firstItem?.quantity || 1;
+    }
+
+    const { error } = await supabaseAdmin.rpc('increment_non_expiring_credits', {
       user_id: userId,
-      amount: quantity,
+      amount: amount,
     });
-    if (error) throw new Error(`Supabase error (credits): ${error.message}`);
-    console.log(`Top-up successful: ${quantity} items purchased, ${quantity} credits granted to User ${userId}`);
+    if (error) throw new Error(`Supabase error (none_expire_credits): ${error.message}`);
+    console.log(`Top-up successful: ${amount} non-expiring credits granted to User ${userId}`);
   }
 
   if (mode === 'subscription') {
@@ -178,6 +185,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     updated_at: new Date().toISOString(),
   };
 
+  // Reset subscription credits only; never touch none_expire_credits
   if (status === 'canceled' || status === 'unpaid') {
     updateData.plan = 'none';
     updateData.next_billing_date = null;
@@ -223,7 +231,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     throw new Error(`Deletion sync error: ${error.message}`);
   }
 
-  console.log(`✅ Cancellation finalized for Customer ${customerId}: plan set to 'none', credits reset to 0.`);
+  console.log(`✅ Cancellation finalized for Customer ${customerId}: plan set to 'none', credits reset to 0. Non-expiring credits preserved.`);
 }
 
 async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {

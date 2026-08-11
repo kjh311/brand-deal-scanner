@@ -9,6 +9,7 @@ export function Navbar() {
   const router = useRouter()
   const [user, setUser] = useState<any>(null)
   const [credits, setCredits] = useState<number | null>(null)
+  const [noneExpireCredits, setNoneExpireCredits] = useState<number | null>(null)
   const [plan, setPlan] = useState<string | null>(null)
   const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -27,12 +28,13 @@ export function Navbar() {
       if (user) {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('credits, plan, admin')
+          .select('credits, none_expire_credits, plan, admin')
           .eq('id', user.id)
           .single()
 
         if (profile) {
           setCredits(profile.credits)
+          setNoneExpireCredits(profile.none_expire_credits || 0)
           setPlan(profile.plan)
           setIsAdmin(profile.admin || false)
         }
@@ -84,6 +86,9 @@ export function Navbar() {
         (payload: any) => {
           if (payload.new && payload.new.credits !== undefined) {
             setCredits(payload.new.credits)
+          }
+          if (payload.new && payload.new.none_expire_credits !== undefined) {
+            setNoneExpireCredits(payload.new.none_expire_credits)
           }
         }
       )
@@ -165,7 +170,7 @@ export function Navbar() {
                className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/5 border border-white/10 hover:border-primary/50 text-xs font-black uppercase tracking-[2px] text-white cursor-pointer transition-all"
             >
               <span className="material-symbols-outlined text-primary text-sm">token</span>
-              <span>{credits ?? 0} Credits</span>
+              <span>{(credits ?? 0) + (noneExpireCredits ?? 0)} Credits</span>
             </Link>
           )}
 
