@@ -22,6 +22,8 @@ const PLAN_CREDITS: Record<string, number> = {
   'prod_Uf03Msy5G3OZn2': 100,
 };
 
+const processedEventIds = new Set<string>();
+
 function extractCancellationReason(subscription: Stripe.Subscription): string | null {
   const sub = subscription as any;
   const feedback = sub.cancellation_details?.feedback;
@@ -57,7 +59,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ received: true }, { status: 200 });
   }
 
-  console.log(`🔔 Processing event: ${event.type}`);
+  // Idempotency check: skip already-processed events
+  if (processedEventIds.has(event.id)) {
+    console.log(`⚠️ Duplicate event ${event.id} (${event.type}), skipping`);
+    return NextResponse.json({ received: true }, { status: 200 });
+  }
+  processedEventIds.add(event.id);
+
+  console.log(`🔔 Processing event: ${event.type} (id: ${event.id})`);
 
   try {
     switch (event.type) {
@@ -178,7 +187,6 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
       updateData.next_billing_date = new Date(periodEnd * 1000).toISOString();
     }
   }
-  // When isCancelling and status === 'active', preserve credits and next_billing_date until subscription is deleted
 
   const { error: updateError } = await supabaseAdmin
     .from('profiles')
@@ -190,7 +198,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     throw new Error(`Sync error: ${updateError.message}`);
   }
 
-  console.log(`✅ Subscription updated for User ${profile.id}: plan=${updateData.plan || profile.plan}, next_billing_date=${updateData.next_billing_date || 'unchanged'}, cancellation_reason=${cancellationReason || 'null'}`);
+  console.log(`✅ Subscription updated for User ${profile.id}: plan=${updateData.plan || profile.plan}, cancellation_reason=${cancellationReason || 'null'}`);
 }
 
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
