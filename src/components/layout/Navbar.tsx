@@ -144,7 +144,7 @@ export function Navbar() {
     ...(isAdmin ? [{ label: 'Admin', icon: 'admin_panel_settings', href: '/admin' }] : []),
   ] : [
     { label: 'How it Works', icon: 'lightbulb', href: '/#how-it-works' },
-    { label: 'Pricing', icon: 'payments', href: '/#pricing' },
+    { label: 'Plans', icon: 'payments', href: '/plans' },
     { label: 'Success Stories', icon: 'verified', href: '/#testimonials' },
   ]
 
