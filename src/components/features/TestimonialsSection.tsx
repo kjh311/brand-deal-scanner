@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Star } from 'lucide-react'
+import { Star, ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface Testimonial {
   id: string
@@ -15,9 +15,11 @@ interface Testimonial {
 
 export function TestimonialsSection() {
   const containerRef = useRef<HTMLDivElement>(null)
+  const autoAdvanceRef = useRef<NodeJS.Timeout | null>(null)
   const [testimonials, setTestimonials] = useState<Testimonial[]>([])
   const [loading, setLoading] = useState(true)
-  const [needsScroll, setNeedsScroll] = useState(false)
+  const [canScrollPrev, setCanScrollPrev] = useState(false)
+  const [canScrollNext, setCanScrollNext] = useState(false)
 
   useEffect(() => {
     const fetchTestimonials = async () => {
@@ -38,57 +40,122 @@ export function TestimonialsSection() {
     fetchTestimonials()
   }, [])
 
-  useEffect(() => {
+  const updateButtons = () => {
+    const container = containerRef.current
+    if (!container) {
+      setCanScrollPrev(false)
+      setCanScrollNext(false)
+      return
+    }
+    const { scrollLeft, scrollWidth, clientWidth } = container
+    setCanScrollPrev(scrollLeft > 10)
+    setCanScrollNext(scrollLeft + clientWidth < scrollWidth - 10)
+  }
+
+  const scrollNext = () => {
     const container = containerRef.current
     if (!container) return
+    container.scrollBy({ left: container.clientWidth, behavior: 'smooth' })
+    setTimeout(updateButtons, 500)
+  }
 
-    const marquee = container.querySelector('[data-marquee]') as HTMLElement | null
-    if (!marquee) return
+  const scrollPrev = () => {
+    const container = containerRef.current
+    if (!container) return
+    container.scrollBy({ left: -container.clientWidth, behavior: 'smooth' })
+    setTimeout(updateButtons, 500)
+  }
 
-    const containerWidth = container.clientWidth
-    const totalWidth = marquee.scrollWidth
+  const startAutoAdvance = () => {
+    stopAutoAdvance()
+    autoAdvanceRef.current = setInterval(() => {
+      const container = containerRef.current
+      if (!container) return
+      const { scrollLeft, scrollWidth, clientWidth } = container
+      if (scrollLeft + clientWidth >= scrollWidth - 20) {
+        container.scrollTo({ left: 0, behavior: 'smooth' })
+      } else {
+        scrollNext()
+      }
+    }, 5000)
+  }
 
-    setNeedsScroll(totalWidth > containerWidth)
+  const stopAutoAdvance = () => {
+    if (autoAdvanceRef.current) {
+      clearInterval(autoAdvanceRef.current)
+      autoAdvanceRef.current = null
+    }
+  }
+
+  useEffect(() => {
+    updateButtons()
+    if (testimonials.length > 3) {
+      startAutoAdvance()
+    }
+    const handleResize = () => updateButtons()
+    window.addEventListener('resize', handleResize)
+    return () => {
+      stopAutoAdvance()
+      window.removeEventListener('resize', handleResize)
+    }
   }, [testimonials])
 
-  if (loading) {
-    return null
-  }
-
-  if (testimonials.length === 0) {
-    return null
-  }
+  if (loading) return null
+  if (testimonials.length === 0) return null
 
   return (
     <section className="py-16 sm:py-20 px-5 sm:px-10 bg-transparent" id="testimonials">
       <div className="max-w-[1280px] mx-auto">
         <div className="text-center mb-16">
-          <p className="text-xs font-mono uppercase tracking-wider text-white/80 mb-4">SUCCESS STORIES</p>
+          <p className="text-xs font-mono uppercase tracking-wider text-white/80 mb-4">
+            SUCCESS STORIES
+          </p>
           <h2 className="font-headline text-3xl sm:text-4xl text-white font-bold tracking-[-0.02em]">
             Trusted by the Creator Economy
           </h2>
         </div>
 
-        <div ref={containerRef} className="relative overflow-hidden">
-          {needsScroll && (
+        <div className="relative">
+          {testimonials.length > 3 && (
             <>
-              <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-[#221A7F] via-[#7B2CBF] to-transparent z-10 pointer-events-none" />
-              <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-[#221A7F] via-[#7B2CBF] to-transparent z-10 pointer-events-none" />
+              <button
+                onClick={scrollPrev}
+                disabled={!canScrollPrev}
+                className={`absolute left-0 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-[#221A7F]/80 border border-white/20 flex items-center justify-center text-white transition-all duration-200 ${
+                  canScrollPrev
+                    ? 'opacity-100 hover:bg-[#221A7F] cursor-pointer'
+                    : 'opacity-40 cursor-not-allowed'
+                }`}
+                aria-label="Previous testimonials"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <button
+                onClick={scrollNext}
+                disabled={!canScrollNext}
+                className={`absolute right-0 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-[#221A7F]/80 border border-white/20 flex items-center justify-center text-white transition-all duration-200 ${
+                  canScrollNext
+                    ? 'opacity-100 hover:bg-[#221A7F] cursor-pointer'
+                    : 'opacity-40 cursor-not-allowed'
+                }`}
+                aria-label="Next testimonials"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
             </>
           )}
 
           <div
-            data-marquee
-            className="flex gap-6"
-            style={{
-              willChange: 'transform',
-              animation: needsScroll ? 'marquee 40s linear infinite' : 'none',
-            }}
+            ref={containerRef}
+            className="flex gap-6 overflow-x-auto scroll-px-4 hide-scrollbar scroll-smooth scroll-snap-type-x"
+            onMouseEnter={stopAutoAdvance}
+            onMouseLeave={startAutoAdvance}
+            onScroll={updateButtons}
           >
-            {(needsScroll ? [...testimonials, ...testimonials] : testimonials).map((t, i) => (
+            {testimonials.map((t) => (
               <div
-                key={needsScroll ? `${t.id}-${i}` : t.id}
-                className="min-w-[320px] max-w-[350px] flex-shrink-0 bg-[#1a1a3e]/80 border border-white/10 backdrop-blur-sm rounded-2xl p-6 flex flex-col text-white shadow-xl hover:bg-[#1a1a3e] transition-colors duration-300"
+                key={t.id}
+                className="min-w-[280px] sm:min-w-[320px] flex-shrink-0 scroll-snap-start bg-[#1a1a3e]/80 border border-white/10 backdrop-blur-sm rounded-2xl p-6 flex flex-col text-white shadow-xl hover:bg-[#1a1a3e] transition-colors duration-300"
               >
                 <div className="flex gap-1 text-amber-400 mb-4">
                   {[1, 2, 3, 4, 5].map((s) => (
@@ -120,16 +187,8 @@ export function TestimonialsSection() {
         </div>
       </div>
       <style>{`
-        @keyframes marquee {
-          0% { transform: translate3d(0, 0, 0); }
-          100% { transform: translate3d(-50%, 0, 0); }
-        }
-        [data-marquee] {
-          animation-play-state: running;
-        }
-        [data-marquee]:hover {
-          animation-play-state: paused;
-        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
     </section>
   )
