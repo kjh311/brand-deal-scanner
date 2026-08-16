@@ -218,12 +218,11 @@ export function Navbar() {
             ) : (
               !loading && (
                 <div className="flex items-center gap-4">
-                  <Link href="/login" className="hidden md:inline-block text-xs font-black uppercase tracking-[2px] text-slate-400 hover:text-white transition-colors">Login</Link>
                   <Link
                     href="/login"
                     className="hidden md:inline-block px-6 py-2.5 rounded-xl bg-white text-slate-950 font-black text-xs uppercase tracking-[2px] hover:scale-105 active:scale-95 transition-all shadow-xl"
                   >
-                    Start Scanning
+                    Login
                   </Link>
 
                   {/* Logged Out Hamburger */}
