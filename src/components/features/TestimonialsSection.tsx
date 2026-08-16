@@ -16,6 +16,7 @@ interface Testimonial {
 export function TestimonialsSection() {
   const containerRef = useRef<HTMLDivElement>(null)
   const autoAdvanceRef = useRef<NodeJS.Timeout | null>(null)
+  const pageIndexRef = useRef(0)
   const [testimonials, setTestimonials] = useState<Testimonial[]>([])
   const [loading, setLoading] = useState(true)
   const [canScrollPrev, setCanScrollPrev] = useState(false)
@@ -40,6 +41,24 @@ export function TestimonialsSection() {
     fetchTestimonials()
   }, [])
 
+  const computePagePositions = () => {
+    const container = containerRef.current
+    if (!container) return [0]
+    const cards = Array.from(container.children) as HTMLElement[]
+    if (cards.length === 0) return [0]
+
+    const positions = [0]
+    let pageStartIdx = 0
+    for (let i = 1; i < cards.length; i++) {
+      const pageRight = cards[pageStartIdx].offsetLeft + container.clientWidth
+      if (cards[i].offsetLeft >= pageRight - 1) {
+        positions.push(cards[i].offsetLeft)
+        pageStartIdx = i
+      }
+    }
+    return positions
+  }
+
   const updateButtons = () => {
     const container = containerRef.current
     if (!container) {
@@ -50,22 +69,42 @@ export function TestimonialsSection() {
     const { scrollLeft, scrollWidth, clientWidth } = container
     setCanScrollPrev(scrollLeft > 10)
     setCanScrollNext(scrollLeft + clientWidth < scrollWidth - 10)
+
+    const positions = computePagePositions()
+    let closest = 0
+    let minDist = Infinity
+    for (let i = 0; i < positions.length; i++) {
+      const dist = Math.abs(scrollLeft - positions[i])
+      if (dist < minDist) {
+        minDist = dist
+        closest = i
+      }
+    }
+    pageIndexRef.current = closest
   }
 
   const scrollNext = () => {
     const container = containerRef.current
     if (!container) return
-    const cardWidth = window.innerWidth < 640 ? 280 + 24 : 320 + 24
-    container.scrollBy({ left: cardWidth, behavior: 'smooth' })
-    setTimeout(updateButtons, 500)
+    
+    // Scroll by one card width (280px) plus gap (12px on small screens, 24px on larger)
+    // Using 292px as a safe average that works across breakpoints
+    container.scrollBy({
+      left: 292,
+      behavior: 'smooth'
+    })
   }
 
   const scrollPrev = () => {
     const container = containerRef.current
     if (!container) return
-    const cardWidth = window.innerWidth < 640 ? 280 + 24 : 320 + 24
-    container.scrollBy({ left: -cardWidth, behavior: 'smooth' })
-    setTimeout(updateButtons, 500)
+    
+    // Scroll by one card width (280px) plus gap (12px on small screens, 24px on larger)
+    // Using 292px as a safe average that works across breakpoints
+    container.scrollBy({
+      left: -292,
+      behavior: 'smooth'
+    })
   }
 
   const startAutoAdvance = () => {
@@ -94,7 +133,9 @@ export function TestimonialsSection() {
     if (testimonials.length > 3) {
       startAutoAdvance()
     }
-    const handleResize = () => updateButtons()
+    const handleResize = () => {
+      updateButtons()
+    }
     window.addEventListener('resize', handleResize)
     return () => {
       stopAutoAdvance()
