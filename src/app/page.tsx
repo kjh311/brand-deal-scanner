@@ -16,8 +16,18 @@ export default function LandingPage() {
         <TrustSection />
 
         {/* Plans CTA */}
-        <div className="py-16 sm:py-20 px-5 sm:px-10">
-          <div className="max-w-[1280px] mx-auto text-center">
+        <div className="relative bg-white/5 py-16 sm:py-20 px-5 sm:px-10">
+          <div className="absolute -top-[44px] left-0 w-full h-[44px] overflow-hidden pointer-events-none z-10">
+            <svg className="block w-full h-full text-white/5" viewBox="0 0 1440 44" preserveAspectRatio="none">
+              <path d="M0,44 C180,0 540,44 720,22 C900,0 1080,44 1440,44 L1440,0 L0,0 Z" fill="currentColor" />
+            </svg>
+          </div>
+          <div className="absolute -bottom-[44px] left-0 w-full h-[44px] overflow-hidden pointer-events-none z-10">
+            <svg className="block w-full h-full text-white/5" viewBox="0 0 1440 44" preserveAspectRatio="none">
+              <path d="M0,0 C180,44 540,0 720,22 C900,44 1080,0 1440,0 L1440,44 L0,44 Z" fill="currentColor" />
+            </svg>
+          </div>
+          <div className="max-w-[1280px] mx-auto text-center relative z-20">
             <h2 className="font-headline text-3xl sm:text-4xl text-white font-bold tracking-[-0.02em] mb-4">
               Find Your Plan
             </h2>
