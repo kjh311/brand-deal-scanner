@@ -221,7 +221,7 @@ export default function PlansPage() {
               <div
                 key={plan.id}
                 onClick={() => handleSelect(plan)}
-                className="plan-card bg-white border-[3px] rounded-2xl p-6 flex flex-col h-full shadow-2xl relative cursor-pointer hover:shadow-[0_0_25px_var(--glow-color),_0_0_45px_var(--glow-color)] transition-shadow duration-300"
+                className="plan-card bg-white border-[3px] rounded-2xl p-6 flex flex-col h-full shadow-2xl relative cursor-pointer hover:shadow-[0_0_25px_var(--glow-color),_0_0_45px_var(--glow-color)] transition-all duration-300 hover:scale-[1.02]"
                 style={{
                   borderColor: plan.color + '60',
                   '--glow-color': plan.color + '55'

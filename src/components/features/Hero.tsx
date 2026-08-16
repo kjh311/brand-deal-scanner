@@ -27,7 +27,7 @@ export function Hero() {
         <div className="max-w-3xl mx-auto text-center">
           <h1 className="font-headline text-3xl sm:text-4xl lg:text-5xl text-white leading-tight stagger-in font-bold tracking-[-0.02em]">
             Don't Sign Away Your Rights. <br />
-            <span className="text-[#FFD166]">Scan Your Deals</span> in Seconds.
+            <span className="text-[#FFD166]">Scan Your Brand Deals</span> in Seconds.
           </h1>
           <p className="text-base sm:text-lg text-white/90 max-w-2xl mx-auto mt-4 stagger-in">
             Spot the predatory clauses, and flip the script with a professional counter-offer. Protect your brand—and pocket what you're actually worth.
