@@ -58,7 +58,8 @@ export function TestimonialsSection() {
   const scrollNext = () => {
     const container = containerRef.current
     if (!container) return
-    const step = window.innerWidth < 640 ? CARD_WIDTH + CARD_GAP : CARD_WIDTH + CARD_GAP
+    const firstCard = container.querySelector<HTMLDivElement>(' > div')
+    const step = (firstCard?.offsetWidth ?? CARD_WIDTH) + CARD_GAP
     container.scrollBy({ left: step, behavior: 'smooth' })
     setTimeout(updateButtons, 500)
   }
@@ -66,7 +67,8 @@ export function TestimonialsSection() {
   const scrollPrev = () => {
     const container = containerRef.current
     if (!container) return
-    const step = window.innerWidth < 640 ? CARD_WIDTH + CARD_GAP : CARD_WIDTH + CARD_GAP
+    const firstCard = container.querySelector<HTMLDivElement>(' > div')
+    const step = (firstCard?.offsetWidth ?? CARD_WIDTH) + CARD_GAP
     container.scrollBy({ left: -step, behavior: 'smooth' })
     setTimeout(updateButtons, 500)
   }
@@ -151,8 +153,7 @@ export function TestimonialsSection() {
 
             <div
               ref={containerRef}
-              className="hide-scrollbar flex gap-6 overflow-x-auto scroll-smooth px-4 sm:px-0"
-              style={{ scrollSnapType: 'x mandatory' }}
+              className="hide-scrollbar flex gap-6 overflow-x-auto scroll-smooth scroll-snap-type-x snap-mandatory px-4 sm:px-0"
               onMouseEnter={stopAutoAdvance}
               onMouseLeave={startAutoAdvance}
               onScroll={updateButtons}
@@ -160,7 +161,7 @@ export function TestimonialsSection() {
               {testimonials.map((t) => (
                 <div
                   key={t.id}
-                  className="w-[280px] sm:w-[320px] flex-shrink-0 scroll-snap-align-center sm:scroll-snap-align-start scroll-snap-stop-always bg-[#1a1a3e]/80 border border-white/10 backdrop-blur-sm rounded-2xl p-6 flex flex-col text-white shadow-xl hover:bg-[#1a1a3e] transition-colors duration-300"
+                  className="flex-1 min-w-[280px] sm:min-w-[320px] scroll-snap-start bg-[#1a1a3e]/80 border border-white/10 backdrop-blur-sm rounded-2xl p-6 flex flex-col text-white shadow-xl hover:bg-[#1a1a3e] transition-colors duration-300"
                 >
                   <div className="flex gap-1 text-amber-400 mb-4">
                     {[1, 2, 3, 4, 5].map((s) => (
@@ -195,7 +196,7 @@ export function TestimonialsSection() {
             {testimonials.map((t) => (
               <div
                 key={t.id}
-                className="w-[280px] sm:w-[320px] flex-shrink-0 bg-[#1a1a3e]/80 border border-white/10 backdrop-blur-sm rounded-2xl p-6 flex flex-col text-white shadow-xl hover:bg-[#1a1a3e] transition-colors duration-300"
+                className="flex-1 min-w-[280px] sm:min-w-[320px] flex-shrink-0 bg-[#1a1a3e]/80 border border-white/10 backdrop-blur-sm rounded-2xl p-6 flex flex-col text-white shadow-xl hover:bg-[#1a1a3e] transition-colors duration-300"
               >
                 <div className="flex gap-1 text-amber-400 mb-4">
                   {[1, 2, 3, 4, 5].map((s) => (
