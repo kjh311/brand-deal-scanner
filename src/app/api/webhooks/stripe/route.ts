@@ -281,11 +281,13 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
     console.log(`📅 Updated next_billing_date to ${nextBillingDate} for User ${profile.id}`);
   }
 
-  // STOP IF USER IS CANCELED OR ON NO PLAN
-  if (!profile.plan || profile.plan === 'none') {
-    console.warn(`🛑 User ${profile.id} is on plan '${profile.plan}'. Skipping credit grant.`);
-    return;
-  }
+  // Derive Product ID directly from Invoice Line Item
+  const invoiceLineItem = invoice.lines?.data[0] as any;
+  const productId = typeof invoiceLineItem?.price?.product === 'string' 
+    ? invoiceLineItem.price.product 
+    : invoiceLineItem?.price?.product?.id;
+
+  console.log(`🔍 Derived Product ID: ${productId || 'unknown'} | Stored profile plan: ${profile.plan || 'none'}`);
 
   // Prevent credit grant if subscription is ending or canceled
   if (subscriptionId) {
@@ -300,13 +302,9 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
     }
   }
 
-  const planProductId = profile.plan === 'agency' ? 'prod_Uf03Msy5G3OZn2'
-    : profile.plan === 'professional' ? 'prod_Uf01XdkL0cOXn6'
-    : 'prod_Uezx3sCcamylDq';
+  const creditsToGrant = (productId && PLAN_CREDITS[productId]) || PLAN_CREDITS[profile.plan] || 5;
 
-  const creditsToGrant = PLAN_CREDITS[planProductId] || 5;
-
-  console.log(`🔄 Renewal for User ${profile.id} (plan: ${profile.plan}): Granting ${creditsToGrant} credits`);
+  console.log(`🔄 Renewal for User ${profile.id} (productId: ${productId || 'none'}, plan: ${profile.plan || 'none'}): Granting ${creditsToGrant} credits`);
 
   const { error: creditError } = await supabaseAdmin.rpc('increment_credits', {
     user_id: profile.id,
