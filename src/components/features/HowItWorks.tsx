@@ -198,17 +198,17 @@ export function HowItWorks() {
             </div>
 
             {/* Step 1: Analysis Results View */}
-            <div className={`absolute inset-0 p-6 sm:p-10 flex flex-col justify-center transition-all duration-500 ${activeStep === 1 ? 'opacity-100 translate-x-0 scale-100 pointer-events-auto' : 'opacity-0 translate-x-8 scale-95 pointer-events-none'
+            <div className={`absolute inset-0 p-4 sm:p-10 flex flex-col justify-center transition-all duration-500 ${activeStep === 1 ? 'opacity-100 translate-x-0 scale-100 pointer-events-auto' : 'opacity-0 translate-x-8 scale-95 pointer-events-none'
             }`}>
               {/* Alert Banner */}
-              <div className="w-full mb-4 bg-red-50 border border-red-200 rounded-xl p-3 flex items-center gap-2 shrink-0">
-                <AlertTriangle className="w-5 h-5 text-red-600 shrink-0 animate-pulse" />
-                <span className="text-sm font-bold text-red-700">This contract has predatory clauses</span>
+              <div className="w-full mb-3 sm:mb-4 bg-red-50 border border-red-200 rounded-xl p-2.5 sm:p-3 flex items-center gap-2 shrink-0">
+                <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 shrink-0 animate-pulse" />
+                <span className="text-xs sm:text-sm font-bold text-red-700">This contract has predatory clauses</span>
               </div>
 
-              <div className="flex flex-col md:flex-row items-center gap-8 w-full">
+              <div className="flex flex-col md:flex-row items-center gap-4 sm:gap-8 w-full">
                 {/* Score Circle */}
-                <div className="relative w-40 h-40 sm:w-48 sm:h-48 flex items-center justify-center shrink-0">
+                <div className="relative w-28 h-28 sm:w-48 sm:h-48 flex items-center justify-center shrink-0">
                   <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
                     <circle cx="50" cy="50" r="40" fill="transparent" stroke="#E2E8F0" strokeWidth="10" />
                     <circle
@@ -225,38 +225,38 @@ export function HowItWorks() {
                     />
                   </svg>
                   <div className="absolute flex flex-col items-center">
-                    <span className="text-4xl sm:text-5xl font-bold text-[#1E1A5F]">{scoreVal}</span>
-                    <span className="text-[10px] sm:text-xs font-mono uppercase tracking-wider text-emerald-500 font-bold">HEALTHY</span>
+                    <span className="text-3xl sm:text-5xl font-bold text-[#1E1A5F]">{scoreVal}</span>
+                    <span className="text-[8px] sm:text-xs font-mono uppercase tracking-wider text-emerald-500 font-bold">HEALTHY</span>
                   </div>
                 </div>
 
                 {/* Score Warnings List */}
-                <div className="flex-1 flex flex-col gap-4">
+                <div className="flex-1 flex flex-col gap-2.5 sm:gap-4 w-full">
                   <div className={`flex items-center gap-3 transition-all duration-500 ${activeStep === 1 ? 'opacity-100 translate-y-0 delay-300' : 'opacity-0 translate-y-2'
                   }`}>
-                    <div className="p-2 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center">
-                      <CheckCircle2 className="w-5 h-5 text-[#53e16f]" />
+                    <div className="p-1.5 sm:p-2 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center shrink-0">
+                      <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-[#53e16f]" />
                     </div>
                     <div>
-                      <h5 className="font-headline font-bold text-[#1E1A5F]">Standard Usage Rights</h5>
-                      <p className="text-xs sm:text-sm text-[#64748B]">Usage limited to 12 months on social media channels.</p>
+                      <h5 className="font-headline font-bold text-sm sm:text-base text-[#1E1A5F] leading-tight">Standard Usage Rights</h5>
+                      <p className="text-[11px] sm:text-sm text-[#64748B] leading-snug">Usage limited to 12 months on social media channels.</p>
                     </div>
                   </div>
                   
                   <div className={`flex items-center gap-3 transition-all duration-500 ${activeStep === 1 ? 'opacity-100 translate-y-0 delay-[800ms]' : 'opacity-0 translate-y-2'
                   }`}>
-                    <div className="p-2 rounded-lg bg-red-50 border border-red-200 flex items-center justify-center">
-                      <AlertTriangle className="w-5 h-5 text-red-500 animate-pulse" />
+                    <div className="p-1.5 sm:p-2 rounded-lg bg-red-50 border border-red-200 flex items-center justify-center shrink-0">
+                      <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 animate-pulse" />
                     </div>
                     <div>
-                      <h5 className="font-headline font-bold text-[#1E1A5F]">Broad Exclusivity Trap</h5>
-                      <p className="text-xs sm:text-sm text-[#64748B]">Prohibits work with all "beverage" brands for 2 years.</p>
+                      <h5 className="font-headline font-bold text-sm sm:text-base text-[#1E1A5F] leading-tight">Broad Exclusivity Trap</h5>
+                      <p className="text-[11px] sm:text-sm text-[#64748B] leading-snug">Prohibits work with all "beverage" brands for 2 years.</p>
                     </div>
                   </div>
 
-                  <div className={`mt-2 p-3 sm:p-4 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] transition-all duration-500 ${activeStep === 1 ? 'opacity-100 translate-y-0 delay-[1400ms]' : 'opacity-0 translate-y-2'
+                  <div className={`mt-1 sm:mt-2 p-2.5 sm:p-4 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] transition-all duration-500 ${activeStep === 1 ? 'opacity-100 translate-y-0 delay-[1400ms]' : 'opacity-0 translate-y-2'
                   }`}>
-                    <p className="text-[11px] font-mono text-[#D84C9F] font-bold leading-normal">
+                    <p className="text-[10px] sm:text-[11px] font-mono text-[#D84C9F] font-bold leading-normal">
                       AI Recommendation: Strike clause 4.2. Limit exclusivity to direct competitors only (e.g., Brand X, Brand Y).
                     </p>
                   </div>
