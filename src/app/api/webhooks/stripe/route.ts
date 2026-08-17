@@ -38,12 +38,17 @@ function extractCancellationReason(subscription: Stripe.Subscription): string | 
 }
 
 export async function POST(req: NextRequest) {
+  if (!webhookSecret) {
+    console.error('CRITICAL CONFIGURATION ERROR: STRIPE_WEBHOOK_SECRET is not configured or is empty.');
+    return NextResponse.json({ error: 'Webhook configuration error' }, { status: 500 });
+  }
+
   const body = await req.text();
   const signature = req.headers.get('stripe-signature');
 
-  if (!signature || !webhookSecret) {
-    console.error('❌ Webhook Error: Missing signature or secret');
-    return NextResponse.json({ error: 'Missing configuration' }, { status: 400 });
+  if (!signature) {
+    console.error('❌ Webhook Error: Missing stripe-signature header');
+    return NextResponse.json({ error: 'Missing stripe-signature header' }, { status: 400 });
   }
 
   let event: Stripe.Event;
@@ -51,7 +56,7 @@ export async function POST(req: NextRequest) {
   try {
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
   } catch (err: any) {
-    console.error(`❌ Webhook signature verification failed: ${err.message}`);
+    console.error('Stripe signature verification failed:', err.message);
     return NextResponse.json({ error: `Verification failed: ${err.message}` }, { status: 400 });
   }
 
