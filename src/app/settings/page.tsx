@@ -34,6 +34,7 @@ export default function SettingsPage() {
   const [updating, setUpdating] = useState(false)
   const [cancelling, setCancelling] = useState(false)
   const [user, setUser] = useState<any>(null)
+  const [profileName, setProfileName] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [credits, setCredits] = useState<number>(0)
   const [noneExpireCredits, setNoneExpireCredits] = useState<number>(0)
@@ -41,6 +42,8 @@ export default function SettingsPage() {
   const [hasActivePlan, setHasActivePlan] = useState(false)
   const [nextBillingDate, setNextBillingDate] = useState<string | null>(null)
   const [cancellationReason, setCancellationReason] = useState<string | null>(null)
+  const [isEditingName, setIsEditingName] = useState(false)
+  const [editedName, setEditedName] = useState('')
 
   useEffect(() => {
     const supabase = createClient()
@@ -50,11 +53,27 @@ export default function SettingsPage() {
       if (user) {
          const { data: profile } = await supabase
             .from('profiles')
-            .select('credits, none_expire_credits, plan, stripe_customer_id, next_billing_date, cancellation_reason')
+            .select('credits, none_expire_credits, plan, stripe_customer_id, next_billing_date, cancellation_reason, user_name')
             .eq('id', user.id)
             .single()
             
           if (profile) {
+            // If user_name is NULL in profiles but exists in user_metadata, sync it
+            const metadataName = user?.user_metadata?.full_name || user?.user_metadata?.user_name
+            if (!profile.user_name && metadataName) {
+              const { error: syncError } = await supabase
+                .from('profiles')
+                .update({ user_name: metadataName })
+                .eq('id', user.id)
+              
+              if (syncError) {
+                console.error('Failed to sync user_name from metadata:', syncError)
+              } else {
+                setProfileName(metadataName)
+              }
+            } else {
+              setProfileName(profile.user_name || null)
+            }
             setCredits(profile.credits || 0)
             setNoneExpireCredits(profile.none_expire_credits || 0)
            setPlan(profile.plan && profile.plan !== 'none' ? profile.plan : 'No Active Subscription')
@@ -93,6 +112,45 @@ export default function SettingsPage() {
     }
   }
 
+  const handleSaveName = async () => {
+    if (!user || !user.id) return
+
+    const supabase = createClient()
+    
+    try {
+      const { error: authError } = await supabase.auth.updateUser({
+        user_metadata: {
+          ...user.user_metadata,
+          user_name: editedName || null,
+        }
+      } as unknown as Parameters<typeof supabase.auth.updateUser>[0])
+      
+      if (authError) {
+        console.error('Failed to update user metadata:', authError)
+        return
+      }
+
+      await supabase
+        .from('profiles')
+        .update({ user_name: editedName || null })
+        .eq('id', user.id)
+
+      const updatedUser = {
+        ...user,
+        user_metadata: {
+          ...user.user_metadata,
+          user_name: editedName || null,
+        }
+      }
+      setUser(updatedUser)
+      setProfileName(editedName || null)
+    } catch (err) {
+      console.error('Failed to update user name:', err)
+    } finally {
+      setIsEditingName(false)
+    }
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-r from-[#221A7F] via-[#7B2CBF] to-[#D84C9F] text-white">
 
@@ -108,20 +166,70 @@ export default function SettingsPage() {
  
           <div className="max-w-2xl mx-auto space-y-8">
                             {/* Profile Card */}
-               <section className="bg-white border border-[#E2E8F0] rounded-[2.5rem] p-5 sm:p-10 space-y-8 text-[#1E1A5F]">
-                 <div className="flex items-center gap-6 pb-8 border-b border-[#E2E8F0]">
-                    <div className="w-20 h-20 rounded-3xl border-2 border-[#D84C9F]/30 flex items-center justify-center overflow-hidden bg-[#F8FAFC] shadow-2xl shrink-0">
-                       {user?.user_metadata?.avatar_url ? (
-                         <img src={user.user_metadata.avatar_url} alt="Profile" className="w-full h-full object-cover" />
-                       ) : (
-                         <span className="material-symbols-outlined text-[#D84C9F] text-4xl">person</span>
-                       )}
-                    </div>
-                    <div>
-                       <h2 className="text-2xl font-bold text-[#1E1A5F]">{user?.user_metadata?.user_name || 'Creator'}</h2>
-                       <p className="text-[#64748B] text-sm">{user?.email}</p>
-                    </div>
-                 </div>
+                <section className="bg-white border border-[#E2E8F0] rounded-[2.5rem] p-5 sm:p-10 space-y-8 text-[#1E1A5F]">
+                  <div className="flex items-center gap-6 pb-8 border-b border-[#E2E8F0]">
+                     <div className="w-20 h-20 rounded-3xl border-2 border-[#D84C9F]/30 flex items-center justify-center overflow-hidden bg-[#F8FAFC] shadow-2xl shrink-0">
+                        {user?.user_metadata?.avatar_url ? (
+                          <img src={user.user_metadata.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="material-symbols-outlined text-[#D84C9F] text-4xl">person</span>
+                        )}
+                     </div>
+                     <div className="flex-1">
+                        {isEditingName ? (
+                          <>
+                            <input
+                              type="text"
+                              value={editedName}
+                              onChange={(e) => setEditedName(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleSaveName()
+                                if (e.key === 'Escape') {
+                                  setIsEditingName(false)
+                                  setEditedName('')
+                                }
+                              }}
+                              className="text-2xl font-bold text-[#1E1A5F] bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-4 py-2 w-full mb-2 focus:outline-none focus:ring-2 focus:ring-[#D84C9F]/50"
+                              placeholder="Enter your name"
+                            />
+                            <div className="flex gap-2">
+                              <button
+                                onClick={handleSaveName}
+                                className="px-3 py-1.5 bg-emerald-500 text-white rounded-lg text-sm font-medium hover:bg-emerald-600 transition-colors"
+                              >
+                                Save
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setIsEditingName(false)
+                                  setEditedName('')
+                                }}
+                                className="px-3 py-1.5 bg-[#E2E8F0] text-[#64748B] rounded-lg text-sm font-medium hover:bg-[#CBD5E1] transition-colors"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="flex items-center gap-2 mb-1">
+                              <h2 className="text-2xl font-bold text-[#1E1A5F]">{profileName || 'Creator'}</h2>
+                              <button
+                                onClick={() => {
+                                  setEditedName(profileName || '')
+                                  setIsEditingName(true)
+                                }}
+                                className="p-1 rounded-lg text-[#64748B] hover:text-[#1E1A5F] hover:bg-[#F8FAFC] transition-colors"
+                                aria-label="Edit display name"
+                              >
+                                <span className="material-symbols-outlined text-sm">edit</span>
+                              </button>
+                            </div>
+                            <p className="text-[#64748B] text-sm">{user?.email}</p>
+                          </>
+                        )}
+                     </div>
+                  </div>
  
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                      <div className="p-6 rounded-3xl bg-[#F8FAFC] border border-[#E2E8F0]">
