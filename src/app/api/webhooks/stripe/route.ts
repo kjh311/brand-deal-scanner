@@ -20,6 +20,9 @@ const PLAN_CREDITS: Record<string, number> = {
   'prod_Uezx3sCcamylDq': 5,
   'prod_Uf01XdkL0cOXn6': 20,
   'prod_Uf03Msy5G3OZn2': 100,
+  'plus': 5,
+  'professional': 20,
+  'agency': 100,
 };
 
 const processedEventIds = new Set<string>();
@@ -131,12 +134,32 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
   }
 
   if (mode === 'subscription') {
-    const productId = session.metadata?.productId;
+    let productId = session.metadata?.productId;
+
+    // Fallback: derive productId from line items if not present in metadata
+    if (!productId) {
+      try {
+        const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
+        const firstItem = lineItems.data[0] as any;
+        productId = typeof firstItem?.price?.product === 'string' 
+          ? firstItem.price.product 
+          : firstItem?.price?.product?.id;
+        console.log(`🔍 Fallback: Derived productId from line items: ${productId || 'unknown'}`);
+      } catch (err: any) {
+        console.error('Failed to list line items for checkout session:', err.message);
+      }
+    }
+
+    const plan = productId === 'prod_Uf03Msy5G3OZn2' ? 'agency' 
+      : productId === 'prod_Uf01XdkL0cOXn6' ? 'professional' 
+      : 'plus';
+
+    console.log(`📦 Subscription mode: resolved productId to ${productId || 'none'} -> plan: ${plan}`);
 
     const { error: profileError } = await supabaseAdmin
       .from('profiles')
       .update({
-        plan: productId === 'prod_Uf03Msy5G3OZn2' ? 'agency' : (productId === 'prod_Uf01XdkL0cOXn6' ? 'professional' : 'plus'),
+        plan: plan,
         stripe_customer_id: customerId,
         cancellation_reason: null,
         credits: 0,
@@ -146,7 +169,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
 
     if (profileError) throw new Error(`Supabase error (subscription profile): ${profileError.message}`);
 
-    console.log(`✅ Subscription created: User ${userId} profile updated (plan + stripe_customer_id linked). Credits will be granted on invoice.payment_succeeded.`);
+    console.log(`✅ Subscription created: User ${userId} profile updated (plan set to '${plan}' + stripe_customer_id linked). Credits will be granted on invoice.payment_succeeded.`);
   }
 }
 

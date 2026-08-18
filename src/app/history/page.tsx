@@ -47,7 +47,7 @@ export default function HistoryPage() {
         const mapped: Audit[] = data.map(c => {
           const score = c.health_score;
           let risk: Audit['risk'] = 'Analyzing';
-          
+
           if (c.status === 'completed') {
             if (score >= 70) risk = 'Low';
             else if (score >= 40) risk = 'Medium';
@@ -73,7 +73,7 @@ export default function HistoryPage() {
         })
 
         setAudits(mapped)
-        
+
         // Calculate Stats
         const healthy = mapped.filter(a => a.risk === 'Low').length
         const highRisk = mapped.filter(a => a.risk === 'High').length
@@ -90,8 +90,8 @@ export default function HistoryPage() {
     fetchAudits()
   }, [])
 
-  const filteredAudits = filter === 'All' 
-    ? audits 
+  const filteredAudits = filter === 'All'
+    ? audits
     : audits.filter(a => a.risk === filter)
 
   const handleDelete = async (id: string) => {
@@ -122,13 +122,13 @@ export default function HistoryPage() {
 
       <main className="pt-32 pb-12 px-6 md:px-10 max-w-[1280px] mx-auto w-full">
         <div className="flex flex-col lg:flex-row gap-12">
-          
+
           {/* Sidebar Stats */}
           <aside className="w-full lg:w-80 flex flex-col gap-8 shrink-0">
-             <div>
-               <h1 className="font-headline text-4xl font-bold tracking-tight text-white mb-2">History</h1>
-               <p className="text-white/70">Welcome back, {userName}.</p>
-             </div>
+            <div>
+              <h1 className="font-headline text-4xl font-bold tracking-tight text-white mb-2">History</h1>
+              <p className="text-white/70">Welcome back, {userName}.</p>
+            </div>
 
             <div className="grid grid-cols-1 gap-4">
               <div className="bg-white border border-[#E2E8F0] rounded-3xl p-6">
@@ -149,132 +149,132 @@ export default function HistoryPage() {
             </div>
 
             <div className="bg-white border border-[#E2E8F0] rounded-[2.5rem] p-8 space-y-6">
-               <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
-                    <span className="material-symbols-outlined text-primary">analytics</span>
-                  </div>
-                   <div>
-                     <p className="font-bold text-[#1E1A5F] text-sm">Need a new audit?</p>
-                     <p className="text-xs text-[#64748B]">Upload and scan in seconds.</p>
-                   </div>
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-primary">analytics</span>
                 </div>
-                <Link href="/upload" className="block w-full text-center py-4 rounded-2xl bg-[#D84C9F] text-white font-black text-sm hover:scale-[1.02] transition-transform">
-                  Scan New Contract
-                </Link>
+                <div>
+                  <p className="font-bold text-[#1E1A5F] text-sm">Need a new audit?</p>
+                  <p className="text-xs text-[#64748B]">Upload and scan in seconds.</p>
+                </div>
+              </div>
+              <Link href="/upload" className="block w-full text-center py-4 rounded-2xl bg-[#D84C9F] text-white font-black text-sm hover:scale-[1.02] transition-transform">
+                Scan New Contract
+              </Link>
             </div>
           </aside>
 
           {/* Table Content */}
           <section className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-8">
-                <div className="flex flex-wrap gap-2">
-                 {(['All', 'Low', 'Medium', 'High'] as const).map(r => (
-                   <button
-                     key={r}
-                     onClick={() => setFilter(r)}
-                     className={`px-3 sm:px-6 py-2 rounded-xl text-xs font-bold transition-all
-                       ${filter === r 
-                         ? 'bg-[#1E1A5F] text-white shadow-xl' 
-                         : 'bg-[#F8FAFC] text-[#64748B] hover:bg-white border border-[#E2E8F0]'}`}
-                   >
-                     {r}
-                   </button>
-                 ))}
-               </div>
-             </div>
+              <div className="flex flex-wrap gap-2">
+                {(['All', 'Low', 'Medium', 'High'] as const).map(r => (
+                  <button
+                    key={r}
+                    onClick={() => setFilter(r)}
+                    className={`px-3 sm:px-6 py-2 rounded-xl text-xs font-bold transition-all
+                       ${filter === r
+                        ? 'bg-[#1E1A5F] text-white shadow-xl'
+                        : 'bg-[#F8FAFC] text-[#64748B] hover:bg-white border border-[#E2E8F0]'}`}
+                  >
+                    {r}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-              <div className="bg-white border border-[#E2E8F0] rounded-[2.5rem] overflow-x-auto shadow-2xl">
-                <table className="w-full block sm:table">
-                    <thead className="hidden sm:table-header-group">
-                      <tr className="text-left text-[#64748B] text-[10px] uppercase font-black tracking-[3px] border-b border-[#E2E8F0] sm:table-row">
-                        <th className="px-4 py-4">Agreement</th>
-                        <th className="px-4 py-4">Analyzed</th>
-                        <th className="px-4 py-4">Fairness Score</th>
-                        <th className="px-4 py-4 text-right">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#E2E8F0] block sm:table-row-group">
-                     {isLoading ? (
-                       <tr className="block sm:table-row">
-                         <td colSpan={4} className="px-4 py-20 text-center block sm:table-cell">
-                             <div className="flex flex-col items-center gap-4">
-                               <div className="w-8 h-8 border-2 border-[#D84C9F] border-t-transparent rounded-full animate-spin" />
-                               <p className="text-xs font-mono uppercase tracking-widest text-[#64748B]">Retrieving Vault Data...</p>
-                             </div>
-                         </td>
-                       </tr>
-                     ) : filteredAudits.length > 0 ? (
-                       filteredAudits.map((audit) => (
-                         <tr 
-                           key={audit.id} 
-                           onClick={() => {
-                             if (audit.status === 'completed') {
-                               window.location.href = `/analysis?id=${audit.id}`;
-                             }
-                            }}
-                            className={`group hover:bg-[#F8FAFC] transition-colors cursor-pointer flex flex-col p-4 sm:table-row sm:p-0 ${audit.status !== 'completed' ? 'pointer-events-none opacity-60' : ''}`}
-                         >
-                            <td className="px-0 py-2 sm:px-4 sm:py-4 block sm:table-cell">
-                              <div className="flex items-center gap-3">
-                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center bg-[#F8FAFC] border border-[#E2E8F0] group-hover:border-[#D84C9F]/30 transition-colors`}>
-                                  <span className="material-symbols-outlined text-lg text-[#64748B]">
-                                    {audit.fileType === 'pdf' ? 'picture_as_pdf' : 
-                                     audit.fileType === 'image' ? 'image' : 'description'}
-                                  </span>
-                                </div>
-                                <div className="min-w-0 flex-1 sm:flex-initial">
-                                  <p className="font-bold text-[#1E1A5F] text-sm break-words whitespace-normal">{audit.name}</p>
-                                  <p className="text-[10px] font-mono text-[#64748B] uppercase tracking-widest leading-none mt-1">Source: {audit.fileType}</p>
-                                </div>
-                              </div>
-                            </td>
-                            <td className="px-0 py-2 sm:px-4 sm:py-4 block sm:table-cell">
-                               <p className="text-sm font-medium text-[#64748B]"><span className="inline sm:hidden text-xs text-[#94A3B8] font-bold mr-1">Analyzed:</span>{audit.date}</p>
-                            </td>
-                            <td className="px-0 py-2 sm:px-4 sm:py-4 block sm:table-cell">
-                              <span className={`inline-flex items-center px-3 py-1 rounded-lg text-[10px] font-black tracking-widest uppercase ${getRiskColor(audit.risk)}`}>
-                                {audit.risk === 'Analyzing' ? 'Scanning...' : `${audit.risk} RISK`}
+            <div className="bg-white border border-[#E2E8F0] rounded-[2.5rem] overflow-x-auto shadow-2xl">
+              <table className="w-full block sm:table">
+                <thead className="hidden sm:table-header-group">
+                  <tr className="text-left text-[#64748B] text-[10px] uppercase font-black tracking-[3px] border-b border-[#E2E8F0] sm:table-row">
+                    <th className="px-4 py-4">Agreement</th>
+                    <th className="px-4 py-4">Analyzed</th>
+                    <th className="px-4 py-4">Fairness Score</th>
+                    <th className="px-4 py-4 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#E2E8F0] block sm:table-row-group">
+                  {isLoading ? (
+                    <tr className="block sm:table-row">
+                      <td colSpan={4} className="px-4 py-20 text-center block sm:table-cell">
+                        <div className="flex flex-col items-center gap-4">
+                          <div className="w-8 h-8 border-2 border-[#D84C9F] border-t-transparent rounded-full animate-spin" />
+                          <p className="text-xs font-mono uppercase tracking-widest text-[#64748B]">Retrieving Vault Data...</p>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : filteredAudits.length > 0 ? (
+                    filteredAudits.map((audit) => (
+                      <tr
+                        key={audit.id}
+                        onClick={() => {
+                          if (audit.status === 'completed') {
+                            window.location.href = `/analysis?id=${audit.id}`;
+                          }
+                        }}
+                        className={`group hover:bg-[#F8FAFC] transition-colors cursor-pointer flex flex-col p-4 sm:table-row sm:p-0 ${audit.status !== 'completed' ? 'pointer-events-none opacity-60' : ''}`}
+                      >
+                        <td className="px-0 py-2 sm:px-4 sm:py-4 block sm:table-cell">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center bg-[#F8FAFC] border border-[#E2E8F0] group-hover:border-[#D84C9F]/30 transition-colors`}>
+                              <span className="material-symbols-outlined text-lg text-[#64748B]">
+                                {audit.fileType === 'pdf' ? 'picture_as_pdf' :
+                                  audit.fileType === 'image' ? 'image' : 'description'}
                               </span>
-                            </td>
-                            <td className="px-0 py-2 sm:px-4 sm:py-4 text-right block sm:table-cell sm:text-right">
-                              <div className="flex items-center justify-start sm:justify-end gap-1">
-                                {audit.status === 'completed' && (
-                                  <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-[#F8FAFC] group-hover:bg-white text-[#64748B] group-hover:text-[#1E1A5F] transition-all shadow-lg border border-[#E2E8F0]">
-                                    <span className="material-symbols-outlined text-base">visibility</span>
-                                  </div>
-                                )}
-                                <button 
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDelete(audit.id);
-                                  }} 
-                                  className="w-9 h-9 flex items-center justify-center rounded-lg bg-[#F8FAFC] hover:bg-rose-500/10 text-[#64748B] hover:text-rose-500 transition-all cursor-pointer relative z-10 border border-[#E2E8F0]"
-                                  title="Delete"
-                                >
-                                  <span className="material-symbols-outlined text-base">delete</span>
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                       ))
-                     ) : (
-                       <tr className="block sm:table-row">
-                         <td colSpan={4} className="px-4 py-20 text-center block sm:table-cell">
-                            <div className="max-w-xs mx-auto space-y-4">
-                                <p className="text-[#64748B] text-sm">No contract history found.</p>
-                                <Link href="/upload" className="text-[#D84C9F] text-xs font-black uppercase tracking-widest hover:underline">Start your first audit →</Link>
                             </div>
-                         </td>
-                       </tr>
-                     )}
-                    </tbody>
-                  </table>
-                </div>
-            </section>
-         </div>
-       </main>
+                            <div className="min-w-0 flex-1 sm:flex-initial">
+                              <p className="font-bold text-[#1E1A5F] text-sm break-words whitespace-normal">{audit.name}</p>
+                              <p className="text-[10px] font-mono text-[#64748B] uppercase tracking-widest leading-none mt-1">Source: {audit.fileType}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-0 py-2 sm:px-4 sm:py-4 block sm:table-cell">
+                          <p className="text-sm font-medium text-[#64748B]"><span className="inline sm:hidden text-xs text-[#94A3B8] font-bold mr-1">Analyzed:</span>{audit.date}</p>
+                        </td>
+                        <td className="px-0 py-2 sm:px-4 sm:py-4 block sm:table-cell">
+                          <span className={`inline-flex items-center px-3 py-1 rounded-lg text-[10px] font-black tracking-widest uppercase ${getRiskColor(audit.risk)}`}>
+                            {audit.risk === 'Analyzing' ? 'Scanning...' : `${audit.risk} RISK`}
+                          </span>
+                        </td>
+                        <td className="px-0 py-2 sm:px-4 sm:py-4 text-right block sm:table-cell sm:text-right">
+                          <div className="flex items-center justify-start sm:justify-end gap-1">
+                            {audit.status === 'completed' && (
+                              <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-[#F8FAFC] group-hover:bg-white text-[#64748B] group-hover:text-[#1E1A5F] transition-all shadow-lg border border-[#E2E8F0]">
+                                <span className="material-symbols-outlined text-base">visibility</span>
+                              </div>
+                            )}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDelete(audit.id);
+                              }}
+                              className="w-9 h-9 flex items-center justify-center rounded-lg bg-[#F8FAFC] hover:bg-rose-500/10 text-[#64748B] hover:text-rose-500 transition-all cursor-pointer relative z-10 border border-[#E2E8F0]"
+                              title="Delete"
+                            >
+                              <span className="material-symbols-outlined text-base">delete</span>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr className="block sm:table-row">
+                      <td colSpan={4} className="px-4 py-20 text-center block sm:table-cell">
+                        <div className="max-w-xs mx-auto space-y-4">
+                          <p className="text-[#64748B] text-sm">No contract history found.</p>
+                          <Link href="/upload" className="text-[#D84C9F] text-xs font-black uppercase tracking-widest hover:underline">Start your first audit →</Link>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </main>
 
-      <Footer  />
+      <Footer />
     </div>
   )
 }
