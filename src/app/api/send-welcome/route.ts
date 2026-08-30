@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server'
 export async function POST(request: Request) {
   try {
     const body = await request.json()
+    console.log('[Send Welcome API] Received request payload:', body)
 
     // Handle both direct POST payloads and Supabase webhook payloads
     const email = body.email || body.record?.email
@@ -12,6 +13,8 @@ export async function POST(request: Request) {
     if (!email) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 })
     }
+
+    console.log('[Send Welcome API] Sending to:', email, '| From:', EMAIL_FROM)
 
     const data = await resend.emails.send({
       from: EMAIL_FROM,
@@ -51,8 +54,10 @@ export async function POST(request: Request) {
       `,
     })
 
+    console.log('[Send Welcome API] Resend success:', data)
     return NextResponse.json({ success: true, data })
   } catch (error) {
+    console.error('[Send Welcome API] Resend error:', error)
     const message = error instanceof Error ? error.message : 'Failed to send email'
     return NextResponse.json({ error: message }, { status: 500 })
   }
