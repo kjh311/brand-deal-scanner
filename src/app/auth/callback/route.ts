@@ -10,10 +10,26 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error) {
-      // Successful authentication - check if first time user
+      // Successful authentication - fetch user details
       const { data: { user } } = await supabase.auth.getUser()
       const next = searchParams.get('next') ?? '/history'
-      
+
+      // Send welcome email (non-blocking - errors should not break auth flow)
+      if (user?.email) {
+        try {
+          await fetch(`${origin}/api/send-welcome`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: user.email,
+              name: user.user_metadata?.full_name,
+            }),
+          })
+        } catch (emailError) {
+          console.error('Failed to send welcome email:', emailError)
+        }
+      }
+
       if (user?.id) {
         const { data: profile } = await supabase
           .from('profiles')

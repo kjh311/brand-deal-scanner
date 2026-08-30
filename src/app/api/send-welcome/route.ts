@@ -4,7 +4,10 @@ import { NextResponse } from 'next/server'
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { email, name } = body
+
+    // Handle both direct POST payloads and Supabase webhook payloads
+    const email = body.email || body.record?.email
+    const name = body.name || body.record?.raw_user_meta_data?.full_name || body.record?.raw_user_meta_data?.user_name
 
     if (!email) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 })
