@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { sendWelcomeEmail } from '@/lib/resend'
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url)
@@ -18,18 +19,14 @@ export async function GET(request: Request) {
 
       // Send welcome email (non-blocking - errors should not break auth flow)
       try {
-        const emailPayload = {
-          email: session.user.email,
-          name: session.user.user_metadata?.full_name || session.user.user_metadata?.username || session.user.user_metadata?.name,
-        }
-        console.log('[Auth Callback] Triggering welcome email to:', emailPayload.email)
+        const email = session.user.email
+        const name = session.user.user_metadata?.full_name || session.user.user_metadata?.username || session.user.user_metadata?.name
 
-        const res = await fetch(`${requestUrl.origin}/api/send-welcome`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(emailPayload),
-        })
-        console.log('[Auth Callback] Email API status:', res.status)
+        if (email) {
+          console.log('[Auth Callback] Triggering welcome email to:', email)
+          await sendWelcomeEmail({ email, name })
+          console.log('[Auth Callback] Welcome email sent successfully')
+        }
       } catch (err) {
         console.error('[Auth Callback] Email trigger failed:', err)
       }
