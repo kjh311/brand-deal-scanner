@@ -4,15 +4,30 @@ import { NextResponse } from 'next/server'
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  // Optional: support a 'next' param to redirect to a specific page after login
-  const next = searchParams.get('next') ?? '/history'
 
   if (code) {
     const supabase = await createClient()
     const { error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error) {
-      // Successful authentication - redirect to dashboard (or the 'next' param)
+      // Successful authentication - check if first time user
+      const { data: { user } } = await supabase.auth.getUser()
+      const next = searchParams.get('next') ?? '/history'
+      
+      if (user?.id) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('user_name')
+          .eq('id', user.id)
+          .single()
+        
+        // If user_name is NULL, redirect to settings
+        if (!profile?.user_name) {
+          return NextResponse.redirect(`${origin}/settings`)
+        }
+      }
+      
+      // Redirect to dashboard (or the 'next' param)
       return NextResponse.redirect(`${origin}${next}`)
     }
   }

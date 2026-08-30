@@ -55,12 +55,21 @@ export function AuthCard({ mode }: AuthCardProps) {
           return
         }
 
+        // After successful signup, update the profiles table with user_name
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          await supabase
+            .from('profiles')
+            .update({ user_name: username.trim() })
+            .eq('id', user.id)
+        }
+
         // Success — show confirmation message (no redirect to dashboard)
         setSignUpSuccess(true)
 
       } else {
         // === LOGIN ===
-        const { error: signInError } = await supabase.auth.signInWithPassword({
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
           email: email.trim(),
           password,
         });
@@ -70,7 +79,20 @@ export function AuthCard({ mode }: AuthCardProps) {
           return;
         }
 
-        // Successful login
+        // Successful login - check if first time (user_name not set in profiles)
+        if (signInData?.user?.id) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('user_name')
+            .eq('id', signInData.user.id)
+            .single()
+
+          if (!profile?.user_name) {
+            router.push('/settings')
+            return
+          }
+        }
+        
         router.push('/history');
       }
     } catch (err: any) {
