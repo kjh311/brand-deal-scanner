@@ -363,20 +363,27 @@ Deno.serve(async (req) => {
           if (beforeCredits > 0 && afterCredits === 0) {
             console.log(`[Credit System] Zero balance reached (exact transition) for user: ${updatedProfile.email}`);
             
-            const siteUrl = Deno.env.get('NEXT_PUBLIC_SITE_URL') || 'https://www.branddealfixer.com';
-            const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-
-            // Fire and forget: execute asynchronously without await to isolate latency
-            fetch(`${siteUrl}/api/send-zero-credits`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${serviceKey}`,
-              },
-              body: JSON.stringify({ email: updatedProfile.email }),
-            }).catch((err) => {
-              console.error('[Credit Check] Failed to send out-of-credits email:', err);
-            });
+            // Await fetch to ensure serverless function does not terminate and abort the request
+            try {
+              const siteUrl = Deno.env.get('NEXT_PUBLIC_SITE_URL') || 'https://www.branddealfixer.com';
+              const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+              const res = await fetch(`${siteUrl}/api/send-zero-credits`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${serviceKey}`,
+                },
+                body: JSON.stringify({ email: updatedProfile.email }),
+              });
+              if (!res.ok) {
+                const errText = await res.text();
+                console.error(`[Credit System] Failed to trigger zero credit email: ${errText}`);
+              } else {
+                console.log(`[Credit System] Successfully triggered zero credit email for ${updatedProfile.email}`);
+              }
+            } catch (err: any) {
+              console.error('[Credit Check] Failed to send out-of-credits email:', err.message || err);
+            }
           }
         }
       } catch (err: any) {

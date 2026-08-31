@@ -347,7 +347,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   let profile = null;
   const { data: directProfile, error: findError } = await supabaseAdmin
     .from('profiles')
-    .select('id, email, credits, none_expire_credits')
+    .select('id, email, credits, none_expire_credits, cancellation_reason')
     .eq('stripe_customer_id', customerId)
     .single();
 
@@ -361,7 +361,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
       if (email) {
         const { data: emailProfile } = await supabaseAdmin
           .from('profiles')
-          .select('id, email, credits, none_expire_credits')
+          .select('id, email, credits, none_expire_credits, cancellation_reason')
           .eq('email', email)
           .single();
         if (emailProfile) {
@@ -395,7 +395,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
 
   console.log(`✅ Cancellation finalized for Customer ${customerId}: plan set to 'none', credits reset to 0. Non-expiring credits preserved.`);
 
-  if (profile) {
+  if (profile && !profile.cancellation_reason) {
     try {
       const periodEnd = (subscription as any).current_period_end || Math.floor(Date.now() / 1000);
       await sendCancellationEmail({
@@ -408,6 +408,8 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     } catch (emailErr: any) {
       console.log('[Stripe Webhook] Error sending cancellation email:', emailErr.message);
     }
+  } else if (profile && profile.cancellation_reason) {
+    console.log(`ℹ️ Subscription deletion for User ${profile.id} skipped email dispatch (already sent during cancellation request)`);
   }
 }
 
