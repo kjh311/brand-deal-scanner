@@ -5,6 +5,7 @@ export interface PurchaseReceiptParams {
   planName: string;
   amountPaid: number;
   hostedInvoiceUrl: string | null;
+  isSubscription?: boolean;
 }
 
 export async function sendPurchaseReceiptEmail({
@@ -12,13 +13,16 @@ export async function sendPurchaseReceiptEmail({
   planName,
   amountPaid,
   hostedInvoiceUrl,
+  isSubscription = true,
 }: PurchaseReceiptParams) {
-  console.log('[sendPurchaseReceiptEmail] Sending to:', email, '| From:', EMAIL_FROM);
+  console.log('[sendPurchaseReceiptEmail] Sending to:', email, '| From:', EMAIL_FROM, '| IsSub:', isSubscription);
 
   const data = await resend.emails.send({
     from: EMAIL_FROM,
     to: [email],
-    subject: 'Your Brand Deal Fixer Receipt & Subscription Confirmation',
+    subject: isSubscription 
+      ? 'Your Brand Deal Fixer Receipt & Subscription Confirmation' 
+      : 'Your Brand Deal Fixer Receipt & Scan Credits Confirmation',
     html: `
       <!DOCTYPE html>
       <html>
@@ -34,7 +38,10 @@ export async function sendPurchaseReceiptEmail({
                   Payment Received!
                 </h1>
                 <p style="margin: 0 0 16px; color: #e2e8f0; font-size: 16px; line-height: 1.6;">
-                  Thank you for your purchase. Your subscription to Brand Deal Fixer is now active, and you're ready to start analyzing your brand deal contracts with AI-powered precision.
+                  ${isSubscription 
+                    ? "Thank you for your purchase. Your subscription to Brand Deal Fixer is now active, and you're ready to start analyzing your brand deal contracts with AI-powered precision." 
+                    : "Thank you for your purchase. Your scan credits have been added to your account, and you're ready to start analyzing your brand deal contracts with AI-powered precision."
+                  }
                 </p>
 
                 <!-- Order Breakdown Card -->
@@ -43,7 +50,7 @@ export async function sendPurchaseReceiptEmail({
                     <td style="padding: 20px 24px;">
                       <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                         <tr>
-                          <td style="padding: 8px 0; color: #94a3b8; font-size: 14px;">Plan</td>
+                          <td style="padding: 8px 0; color: #94a3b8; font-size: 14px;">${isSubscription ? 'Plan' : 'Purchase'}</td>
                           <td style="padding: 8px 0; color: #ffffff; font-size: 14px; text-align: right; font-weight: 600;">${planName}</td>
                         </tr>
                         <tr>

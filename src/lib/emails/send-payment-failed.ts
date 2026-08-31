@@ -1,4 +1,4 @@
-import { resend } from '../resend';
+import { resend, EMAIL_FROM } from '../resend';
 
 interface SendPaymentFailedEmailArgs {
   email: string;
@@ -196,7 +196,7 @@ export async function sendPaymentFailedEmail({
     `;
 
     const data = await resend.emails.send({
-      from: 'Brand Deal Fixer <support@send.branddealfixer.com>',
+      from: EMAIL_FROM,
       to: [email],
       subject: 'Action Required: Payment Failed for Brand Deal Fixer',
       html: htmlContent,

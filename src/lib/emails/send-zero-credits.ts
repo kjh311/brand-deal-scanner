@@ -1,4 +1,4 @@
-import { resend } from '../resend';
+import { resend, EMAIL_FROM } from '../resend';
 
 interface SendZeroCreditsEmailArgs {
   email: string;
@@ -6,7 +6,7 @@ interface SendZeroCreditsEmailArgs {
 
 export async function sendZeroCreditsEmail({ email }: SendZeroCreditsEmailArgs) {
   try {
-    console.log('[Credit System] Zero balance reached for user:', email);
+    console.log('[Credit System] Zero balance reached for user:', email, '| From:', EMAIL_FROM);
 
     const htmlContent = `
 <!DOCTYPE html>
@@ -160,7 +160,7 @@ export async function sendZeroCreditsEmail({ email }: SendZeroCreditsEmailArgs) 
     `;
 
     const data = await resend.emails.send({
-      from: 'Brand Deal Fixer <support@send.branddealfixer.com>',
+      from: EMAIL_FROM,
       to: [email],
       subject: 'You are out of credits — Brand Deal Fixer',
       html: htmlContent,

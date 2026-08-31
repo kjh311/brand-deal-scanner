@@ -63,6 +63,8 @@ export async function POST(req: NextRequest) {
 
     const customerId = profile?.stripe_customer_id || undefined;
 
+    const origin = req.headers.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+
     // Create the checkout session
     const session = await stripe.checkout.sessions.create({
       client_reference_id: user.id, // Attach user ID for webhook identification
@@ -81,8 +83,8 @@ export async function POST(req: NextRequest) {
         },
       ],
       mode: mode || 'subscription',
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/plans`,
+      success_url: `${origin}/history`,
+      cancel_url: `${origin}/plans`,
       metadata: {
         priceId: finalPriceId || '',
         productId: finalProductId || '',

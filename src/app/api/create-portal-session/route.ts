@@ -38,10 +38,12 @@ export async function POST(req: NextRequest) {
 
     const hasActiveSub = activeSubs.data.length > 0;
 
+    const origin = req.headers.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+
     // Create the portal session with intent-based flow
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: profile.stripe_customer_id,
-      return_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/settings`,
+      return_url: `${origin}/settings`,
       // If intent is 'update' and they have a sub, go to update flow.
       // Otherwise, the default is the manage flow (dashboard).
       ...(intent === 'update' && hasActiveSub ? {
@@ -69,9 +71,10 @@ export async function POST(req: NextRequest) {
             .single();
 
         if (profile?.stripe_customer_id) {
+            const origin = req.headers.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
             const genericSession = await stripe.billingPortal.sessions.create({
                 customer: profile.stripe_customer_id,
-                return_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/settings`,
+                return_url: `${origin}/settings`,
             });
             return NextResponse.json({ url: genericSession.url });
         }

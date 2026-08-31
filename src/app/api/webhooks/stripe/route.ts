@@ -121,7 +121,23 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
   }
 
   // Send purchase receipt email (non-blocking)
-  const customerEmail = session.customer_details?.email;
+  let customerEmail = session.customer_details?.email;
+  if (!customerEmail && userId) {
+    try {
+      const { data: profile } = await supabaseAdmin
+        .from('profiles')
+        .select('email')
+        .eq('id', userId)
+        .single();
+      if (profile?.email) {
+        customerEmail = profile.email;
+        console.log(`🔍 Resolved customer email from Supabase: ${customerEmail}`);
+      }
+    } catch (err: any) {
+      console.warn('Failed to retrieve customer email from profile:', err.message);
+    }
+  }
+
   if (customerEmail) {
     try {
       // Get invoice URL for receipt
@@ -148,6 +164,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
         planName,
         amountPaid,
         hostedInvoiceUrl,
+        isSubscription: mode === 'subscription',
       });
 
       console.log('[Resend] Purchase email sent successfully');
@@ -224,7 +241,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription, even
 
   const { data: profile, error: findError } = await supabaseAdmin
     .from('profiles')
-    .select('id, plan, email, credits, none_expire_credits')
+    .select('id, plan, email, credits, none_expire_credits, cancellation_reason')
     .eq('stripe_customer_id', customerId)
     .single();
 
@@ -283,8 +300,8 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription, even
   const previousAttributes = (event.data.previous_attributes as any);
   const cancelAtPeriodEndJustEnabled = 
     subscription.cancel_at_period_end && 
-    previousAttributes && 
-    previousAttributes.cancel_at_period_end === false;
+    ((previousAttributes && previousAttributes.cancel_at_period_end === false) ||
+     !profile.cancellation_reason);
 
   if (cancelAtPeriodEndJustEnabled) {
     try {
@@ -370,35 +387,73 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
     return;
   }
 
-  const { data: profile, error: findError } = await supabaseAdmin
-    .from('profiles')
-    .select('id, plan')
-    .eq('stripe_customer_id', customerId)
-    .single();
-
-  if (findError || !profile) {
-    console.error(`❌ User with customer ID ${customerId} not found in Supabase`);
-    return;
-  }
-
-  // Sync next_billing_date from invoice period
-  const linePeriodEnd = invoice.lines?.data[0]?.period?.end || (invoice as any).period_end;
-  if (linePeriodEnd) {
-    const nextBillingDate = new Date(linePeriodEnd * 1000).toISOString();
-    await supabaseAdmin
-      .from('profiles')
-      .update({ next_billing_date: nextBillingDate })
-      .eq('id', profile.id);
-    console.log(`📅 Updated next_billing_date to ${nextBillingDate} for User ${profile.id}`);
-  }
-
   // Derive Product ID directly from Invoice Line Item
   const invoiceLineItem = invoice.lines?.data[0] as any;
   const productId = typeof invoiceLineItem?.price?.product === 'string' 
     ? invoiceLineItem.price.product 
     : invoiceLineItem?.price?.product?.id;
 
-  console.log(`🔍 Derived Product ID: ${productId || 'unknown'} | Stored profile plan: ${profile.plan || 'none'}`);
+  const plan = productId === 'prod_Uf03Msy5G3OZn2' ? 'agency' 
+    : productId === 'prod_Uf01XdkL0cOXn6' ? 'professional' 
+    : 'plus';
+
+  console.log(`🔍 Derived Product ID: ${productId || 'unknown'} -> plan: ${plan}`);
+
+  let profile = null;
+  const { data: existingProfile } = await supabaseAdmin
+    .from('profiles')
+    .select('id, plan')
+    .eq('stripe_customer_id', customerId)
+    .single();
+
+  if (existingProfile) {
+    profile = existingProfile;
+  } else {
+    // Look up customer details in Stripe to find the email
+    try {
+      const customer = await stripe.customers.retrieve(customerId);
+      const email = (customer as Stripe.Customer).email;
+      if (email) {
+        console.log(`🔍 Customer ID ${customerId} not matched in DB. Searching by email: ${email}`);
+        const { data: emailProfile } = await supabaseAdmin
+          .from('profiles')
+          .select('id, plan')
+          .eq('email', email)
+          .single();
+
+        if (emailProfile) {
+          profile = emailProfile;
+          console.log(`🔗 Found profile via email lookup. ID: ${profile.id}`);
+        }
+      }
+    } catch (err: any) {
+      console.error('Failed to resolve customer by email fallback:', err.message);
+    }
+  }
+
+  if (!profile) {
+    console.error(`❌ User with customer ID ${customerId} not found in Supabase (even after email fallback)`);
+    return;
+  }
+
+  // Sync next_billing_date and plan status in profile
+  const updateFields: any = {
+    plan: plan,
+    stripe_customer_id: customerId,
+    updated_at: new Date().toISOString()
+  };
+
+  const linePeriodEnd = invoice.lines?.data[0]?.period?.end || (invoice as any).period_end;
+  if (linePeriodEnd) {
+    updateFields.next_billing_date = new Date(linePeriodEnd * 1000).toISOString();
+  }
+
+  await supabaseAdmin
+    .from('profiles')
+    .update(updateFields)
+    .eq('id', profile.id);
+
+  console.log(`📅 Updated plan to ${plan} and next_billing_date for User ${profile.id}`);
 
   // Prevent credit grant if subscription is ending or canceled
   if (subscriptionId) {

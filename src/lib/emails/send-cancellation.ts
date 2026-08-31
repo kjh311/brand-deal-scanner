@@ -1,4 +1,4 @@
-import { resend } from '../resend';
+import { resend, EMAIL_FROM } from '../resend';
 
 interface SendCancellationEmailArgs {
   email: string;
@@ -193,7 +193,7 @@ export async function sendCancellationEmail({
     `;
 
     const data = await resend.emails.send({
-      from: 'Brand Deal Fixer <support@send.branddealfixer.com>',
+      from: EMAIL_FROM,
       to: [email],
       subject: 'Subscription Canceled — Brand Deal Fixer',
       html: htmlContent,
