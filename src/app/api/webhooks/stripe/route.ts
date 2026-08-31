@@ -148,6 +148,25 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
           const invoice = await stripe.invoices.retrieve(invoiceId);
           hostedInvoiceUrl = invoice.hosted_invoice_url ?? null;
         }
+      } else if (session.payment_intent) {
+        // Fallback for one-time payments: get receipt URL from the charge
+        try {
+          const paymentIntentId = typeof session.payment_intent === 'string' 
+            ? session.payment_intent 
+            : session.payment_intent.id;
+          const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId) as any;
+          const chargeId = typeof paymentIntent.latest_charge === 'string'
+            ? paymentIntent.latest_charge
+            : paymentIntent.latest_charge?.id || paymentIntent.charges?.data[0]?.id;
+          
+          if (chargeId) {
+            const charge = await stripe.charges.retrieve(chargeId);
+            hostedInvoiceUrl = charge.receipt_url ?? null;
+            console.log('[Stripe Webhook] Found one-time payment receipt URL:', hostedInvoiceUrl);
+          }
+        } catch (err: any) {
+          console.warn('Failed to retrieve one-time payment receipt URL:', err.message);
+        }
       }
 
       // Get plan name and amount
@@ -296,14 +315,14 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription, even
 
   console.log(`✅ Subscription updated for User ${profile.id}: plan=${updateData.plan || profile.plan}, cancellation_reason=${cancellationReason || 'null'}`);
 
-  // Send cancellation email if cancel_at_period_end transitioned to true
+  // Send cancellation email if isCancelling is true and transitioning/explicitly cancelled
   const previousAttributes = (event.data.previous_attributes as any);
-  const cancelAtPeriodEndJustEnabled = 
-    subscription.cancel_at_period_end && 
-    ((previousAttributes && previousAttributes.cancel_at_period_end === false) ||
+  const shouldSendCancellationEmail = 
+    isCancelling && 
+    (previousAttributes?.cancel_at_period_end === false || 
      !profile.cancellation_reason);
 
-  if (cancelAtPeriodEndJustEnabled) {
+  if (shouldSendCancellationEmail) {
     try {
       await sendCancellationEmail({
         email: profile.email || '',
@@ -311,8 +330,9 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription, even
         creditsRemaining: profile.credits || 0,
         nonExpiringCredits: profile.none_expire_credits || 0,
       });
+      console.log('[Resend] Cancellation email sent successfully to:', profile.email);
     } catch (emailErr: any) {
-      console.error('[Stripe Webhook] Error sending cancellation email:', emailErr.message || emailErr);
+      console.log('[Stripe Webhook] Error sending cancellation email:', emailErr.message);
     }
   }
 }
@@ -324,15 +344,37 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   console.log(`🗑️ Handling Subscription Deletion: ${subscription.id} | Customer: ${customerId} | Reason: ${cancellationReason || 'N/A'}`);
 
   // Fetch email and credits before resetting them in the update
-  const { data: profile, error: findError } = await supabaseAdmin
+  let profile = null;
+  const { data: directProfile, error: findError } = await supabaseAdmin
     .from('profiles')
     .select('id, email, credits, none_expire_credits')
     .eq('stripe_customer_id', customerId)
     .single();
 
-  if (findError) {
-    console.warn(`[Stripe Webhook] Profile not found for customer ${customerId} during deletion email check`);
+  if (directProfile) {
+    profile = directProfile;
+  } else {
+    console.warn(`[Stripe Webhook] Profile not found for customer ${customerId} directly. Attempting fallback email lookup.`);
+    try {
+      const customer = await stripe.customers.retrieve(customerId);
+      const email = (customer as Stripe.Customer).email;
+      if (email) {
+        const { data: emailProfile } = await supabaseAdmin
+          .from('profiles')
+          .select('id, email, credits, none_expire_credits')
+          .eq('email', email)
+          .single();
+        if (emailProfile) {
+          profile = emailProfile;
+          console.log(`🔗 Found profile via customer email fallback: ${profile.id}`);
+        }
+      }
+    } catch (err: any) {
+      console.error('Failed fallback email lookup for deletion:', err.message);
+    }
   }
+
+  const updateFilter = profile?.id ? { id: profile.id } : { stripe_customer_id: customerId };
 
   const { error } = await supabaseAdmin
     .from('profiles')
@@ -341,9 +383,10 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
       credits: 0,
       next_billing_date: null,
       cancellation_reason: null,
+      stripe_customer_id: customerId,
       updated_at: new Date().toISOString(),
     })
-    .eq('stripe_customer_id', customerId);
+    .match(updateFilter);
 
   if (error) {
     console.error(`❌ Deletion sync error for customer ${customerId}: ${error.message}`);
@@ -361,8 +404,9 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
         creditsRemaining: profile.credits || 0,
         nonExpiringCredits: profile.none_expire_credits || 0,
       });
+      console.log('[Resend] Cancellation email sent successfully to:', profile.email);
     } catch (emailErr: any) {
-      console.error('[Stripe Webhook] Error sending cancellation deleted email:', emailErr.message || emailErr);
+      console.log('[Stripe Webhook] Error sending cancellation email:', emailErr.message);
     }
   }
 }

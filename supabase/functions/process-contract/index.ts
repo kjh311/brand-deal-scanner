@@ -322,6 +322,21 @@ Deno.serve(async (req) => {
     await supabase.from('contracts').update({ extracted_text: null }).eq('id', recordId);
 
     // 4. Credit System: Deduct 1 scan credit via RPC (consumes subscription credits first, then non-expiring)
+    // Fetch credits before deduction to ensure exact transition check
+    let beforeCredits = 0;
+    try {
+      const { data: beforeProfile } = await supabase
+        .from('profiles')
+        .select('credits, none_expire_credits')
+        .eq('id', record.user_id)
+        .single();
+      if (beforeProfile) {
+        beforeCredits = (beforeProfile.credits ?? 0) + (beforeProfile.none_expire_credits ?? 0);
+      }
+    } catch (err: any) {
+      console.error('[Credit System] Failed to fetch credits before deduction:', err.message);
+    }
+
     console.log(`[CREDITS] Deducting 1 scan credit from user: ${record.user_id}`);
     const { data: success, error: creditError } = await supabase.rpc('deduct_scan_credit', {
       user_id: record.user_id,
@@ -332,7 +347,7 @@ Deno.serve(async (req) => {
     } else if (!success) {
       console.error(`[CREDITS] Insufficient credits for user: ${record.user_id}`);
     } else {
-      // Successful deduction, check if user's credits hit exactly 0
+      // Successful deduction, check if user's credits transitioned exactly to 0
       try {
         const { data: updatedProfile } = await supabase
           .from('profiles')
@@ -343,28 +358,25 @@ Deno.serve(async (req) => {
         if (updatedProfile) {
           const credits = updatedProfile.credits ?? 0;
           const noneExpireCredits = updatedProfile.none_expire_credits ?? 0;
+          const afterCredits = credits + noneExpireCredits;
 
-          if (credits === 0 && noneExpireCredits === 0) {
-            console.log(`[Credit System] Zero balance reached for user: ${updatedProfile.email}`);
+          if (beforeCredits > 0 && afterCredits === 0) {
+            console.log(`[Credit System] Zero balance reached (exact transition) for user: ${updatedProfile.email}`);
             
             const siteUrl = Deno.env.get('NEXT_PUBLIC_SITE_URL') || 'https://www.branddealfixer.com';
             const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
-            const res = await fetch(`${siteUrl}/api/send-zero-credits`, {
+            // Fire and forget: execute asynchronously without await to isolate latency
+            fetch(`${siteUrl}/api/send-zero-credits`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${serviceKey}`,
               },
               body: JSON.stringify({ email: updatedProfile.email }),
+            }).catch((err) => {
+              console.error('[Credit Check] Failed to send out-of-credits email:', err);
             });
-
-            if (!res.ok) {
-              const errText = await res.text();
-              console.error(`[Credit System] Failed to trigger zero credit email: ${errText}`);
-            } else {
-              console.log(`[Credit System] Successfully triggered zero credit email for ${updatedProfile.email}`);
-            }
           }
         }
       } catch (err: any) {
