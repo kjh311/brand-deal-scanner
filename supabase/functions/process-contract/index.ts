@@ -331,6 +331,45 @@ Deno.serve(async (req) => {
       console.error(`[CREDITS] RPC error: ${creditError.message}`);
     } else if (!success) {
       console.error(`[CREDITS] Insufficient credits for user: ${record.user_id}`);
+    } else {
+      // Successful deduction, check if user's credits hit exactly 0
+      try {
+        const { data: updatedProfile } = await supabase
+          .from('profiles')
+          .select('email, credits, none_expire_credits')
+          .eq('id', record.user_id)
+          .single();
+
+        if (updatedProfile) {
+          const credits = updatedProfile.credits ?? 0;
+          const noneExpireCredits = updatedProfile.none_expire_credits ?? 0;
+
+          if (credits === 0 && noneExpireCredits === 0) {
+            console.log(`[Credit System] Zero balance reached for user: ${updatedProfile.email}`);
+            
+            const siteUrl = Deno.env.get('NEXT_PUBLIC_SITE_URL') || 'https://www.branddealfixer.com';
+            const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+            const res = await fetch(`${siteUrl}/api/send-zero-credits`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${serviceKey}`,
+              },
+              body: JSON.stringify({ email: updatedProfile.email }),
+            });
+
+            if (!res.ok) {
+              const errText = await res.text();
+              console.error(`[Credit System] Failed to trigger zero credit email: ${errText}`);
+            } else {
+              console.log(`[Credit System] Successfully triggered zero credit email for ${updatedProfile.email}`);
+            }
+          }
+        }
+      } catch (err: any) {
+        console.error('[Credit System] Error checking zero balance or triggering email:', err.message);
+      }
     }
 
     return new Response(JSON.stringify({ success: true }), { headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } });

@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { supabaseAdmin } from '@/lib/supabase/admin';
+import { sendPurchaseReceiptEmail } from '@/lib/emails/send-purchase-receipt';
+import { sendCancellationEmail } from '@/lib/emails/send-cancellation';
+import { sendPaymentFailedEmail } from '@/lib/emails/send-payment-failed';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2026-05-27.dahlia',
@@ -14,6 +17,7 @@ const RELEVANT_EVENTS = new Set([
   'customer.subscription.created',
   'customer.subscription.updated',
   'customer.subscription.deleted',
+  'invoice.payment_failed',
 ]);
 
 const PLAN_CREDITS: Record<string, number> = {
@@ -86,10 +90,13 @@ export async function POST(req: NextRequest) {
         break;
       case 'customer.subscription.created':
       case 'customer.subscription.updated':
-        await handleSubscriptionUpdated(event.data.object as Stripe.Subscription);
+        await handleSubscriptionUpdated(event.data.object as Stripe.Subscription, event);
         break;
       case 'customer.subscription.deleted':
         await handleSubscriptionDeleted(event.data.object as Stripe.Subscription);
+        break;
+      case 'invoice.payment_failed':
+        await handleInvoicePaymentFailed(event.data.object as Stripe.Invoice);
         break;
       default:
         console.warn(`⚠️ Unhandled relevant event: ${event.type}`);
@@ -111,6 +118,42 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
 
   if (!userId) {
     throw new Error('Missing client_reference_id in checkout session');
+  }
+
+  // Send purchase receipt email (non-blocking)
+  const customerEmail = session.customer_details?.email;
+  if (customerEmail) {
+    try {
+      // Get invoice URL for receipt
+      let hostedInvoiceUrl: string | null = null;
+      if (session.invoice) {
+        const invoiceId = typeof session.invoice === 'string' ? session.invoice : session.invoice?.id;
+        if (invoiceId) {
+          const invoice = await stripe.invoices.retrieve(invoiceId);
+          hostedInvoiceUrl = invoice.hosted_invoice_url ?? null;
+        }
+      }
+
+      // Get plan name and amount
+      const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
+      const firstItem = lineItems.data[0];
+      const planName = firstItem?.description || 'Brand Deal Fixer Plan';
+      const amountPaid = session.amount_total || 0;
+
+      console.log('[Stripe Webhook] Processing purchase receipt for:', customerEmail);
+      console.log('[Stripe Webhook] Invoice URL:', hostedInvoiceUrl);
+
+      await sendPurchaseReceiptEmail({
+        email: customerEmail,
+        planName,
+        amountPaid,
+        hostedInvoiceUrl,
+      });
+
+      console.log('[Resend] Purchase email sent successfully');
+    } catch (err: any) {
+      console.error('[Stripe Webhook] Failed to send purchase receipt:', err.message);
+    }
   }
 
    if (mode === 'payment') {
@@ -173,7 +216,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
   }
 }
 
-async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
+async function handleSubscriptionUpdated(subscription: Stripe.Subscription, event: Stripe.Event) {
   const customerId = subscription.customer as string;
   const status = subscription.status;
 
@@ -181,7 +224,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
 
   const { data: profile, error: findError } = await supabaseAdmin
     .from('profiles')
-    .select('id, plan')
+    .select('id, plan, email, credits, none_expire_credits')
     .eq('stripe_customer_id', customerId)
     .single();
 
@@ -235,6 +278,26 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   }
 
   console.log(`✅ Subscription updated for User ${profile.id}: plan=${updateData.plan || profile.plan}, cancellation_reason=${cancellationReason || 'null'}`);
+
+  // Send cancellation email if cancel_at_period_end transitioned to true
+  const previousAttributes = (event.data.previous_attributes as any);
+  const cancelAtPeriodEndJustEnabled = 
+    subscription.cancel_at_period_end && 
+    previousAttributes && 
+    previousAttributes.cancel_at_period_end === false;
+
+  if (cancelAtPeriodEndJustEnabled) {
+    try {
+      await sendCancellationEmail({
+        email: profile.email || '',
+        currentPeriodEnd: periodEnd || Math.floor(Date.now() / 1000),
+        creditsRemaining: profile.credits || 0,
+        nonExpiringCredits: profile.none_expire_credits || 0,
+      });
+    } catch (emailErr: any) {
+      console.error('[Stripe Webhook] Error sending cancellation email:', emailErr.message || emailErr);
+    }
+  }
 }
 
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
@@ -242,6 +305,17 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   const cancellationReason = extractCancellationReason(subscription);
 
   console.log(`🗑️ Handling Subscription Deletion: ${subscription.id} | Customer: ${customerId} | Reason: ${cancellationReason || 'N/A'}`);
+
+  // Fetch email and credits before resetting them in the update
+  const { data: profile, error: findError } = await supabaseAdmin
+    .from('profiles')
+    .select('id, email, credits, none_expire_credits')
+    .eq('stripe_customer_id', customerId)
+    .single();
+
+  if (findError) {
+    console.warn(`[Stripe Webhook] Profile not found for customer ${customerId} during deletion email check`);
+  }
 
   const { error } = await supabaseAdmin
     .from('profiles')
@@ -260,6 +334,20 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   }
 
   console.log(`✅ Cancellation finalized for Customer ${customerId}: plan set to 'none', credits reset to 0. Non-expiring credits preserved.`);
+
+  if (profile) {
+    try {
+      const periodEnd = (subscription as any).current_period_end || Math.floor(Date.now() / 1000);
+      await sendCancellationEmail({
+        email: profile.email || '',
+        currentPeriodEnd: periodEnd,
+        creditsRemaining: profile.credits || 0,
+        nonExpiringCredits: profile.none_expire_credits || 0,
+      });
+    } catch (emailErr: any) {
+      console.error('[Stripe Webhook] Error sending cancellation deleted email:', emailErr.message || emailErr);
+    }
+  }
 }
 
 async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
@@ -340,4 +428,50 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
   }
 
   console.log(`✅ Renewal successful for User ${profile.id}: ${creditsToGrant} credits granted`);
+}
+
+async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
+  const customerId = typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id;
+  
+  let customerEmail = invoice.customer_email;
+  if (!customerEmail && customerId) {
+    try {
+      const customer = await stripe.customers.retrieve(customerId);
+      customerEmail = (customer as Stripe.Customer).email;
+    } catch (err: any) {
+      console.warn('Failed to retrieve customer email from Stripe:', err.message);
+    }
+  }
+
+  if (!customerEmail) {
+    console.warn(`[Stripe Webhook] No customer email found on invoice ${invoice.id}, skipping failed payment email`);
+    return;
+  }
+
+  console.log('[Stripe Webhook] Processing failed payment notification for:', customerEmail);
+
+  let billingPortalUrl = 'https://www.branddealfixer.com/dashboard/billing';
+  if (customerId) {
+    try {
+      const session = await stripe.billingPortal.sessions.create({
+        customer: customerId,
+        return_url: 'https://www.branddealfixer.com/settings',
+      });
+      billingPortalUrl = session.url;
+    } catch (err: any) {
+      console.warn('Failed to create customer portal session:', err.message);
+    }
+  }
+
+  try {
+    const data = await sendPaymentFailedEmail({
+      email: customerEmail,
+      amountDue: invoice.amount_due || 0,
+      currency: invoice.currency || 'usd',
+      billingPortalUrl,
+    });
+    console.log('[Resend] Payment failed email sent successfully:', data);
+  } catch (emailErr: any) {
+    console.error('[Stripe Webhook] Error sending failed payment email:', emailErr.message || emailErr);
+  }
 }
