@@ -322,8 +322,17 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription, even
     (previousAttributes?.cancel_at_period_end === false || 
      !profile.cancellation_reason);
 
+  console.log('[Stripe Webhook] Evaluated cancellation email conditions:', {
+    isCancelling,
+    cancel_at_period_end: subscription.cancel_at_period_end,
+    previous_cancel_at_period_end: previousAttributes?.cancel_at_period_end,
+    db_cancellation_reason: profile.cancellation_reason,
+    shouldSendCancellationEmail
+  });
+
   if (shouldSendCancellationEmail) {
     try {
+      console.log('[Stripe Webhook] Triggering sendCancellationEmail for:', profile.email);
       await sendCancellationEmail({
         email: profile.email || '',
         currentPeriodEnd: periodEnd || Math.floor(Date.now() / 1000),
@@ -395,8 +404,16 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
 
   console.log(`✅ Cancellation finalized for Customer ${customerId}: plan set to 'none', credits reset to 0. Non-expiring credits preserved.`);
 
+  console.log('[Stripe Webhook] Evaluated deletion email condition:', {
+    hasProfile: !!profile,
+    profileEmail: profile?.email,
+    db_cancellation_reason: profile?.cancellation_reason,
+    shouldSendEmail: !!(profile && !profile.cancellation_reason)
+  });
+
   if (profile && !profile.cancellation_reason) {
     try {
+      console.log('[Stripe Webhook] Triggering sendCancellationEmail for deleted sub:', profile.email);
       const periodEnd = (subscription as any).current_period_end || Math.floor(Date.now() / 1000);
       await sendCancellationEmail({
         email: profile.email || '',

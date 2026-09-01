@@ -1,53 +1,91 @@
-import { createClient } from '@/lib/supabase/server'
-import { NextResponse } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
+import { NextResponse, type NextRequest } from 'next/server'
 import { sendWelcomeEmail } from '@/lib/resend'
 
-export async function GET(request: Request) {
-  const requestUrl = new URL(request.url)
-  const { searchParams, origin } = requestUrl
+export async function GET(request: NextRequest) {
+  const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
   const next = searchParams.get('next') ?? '/history'
 
-  console.log('[Auth Callback] Processing code exchange...')
+  console.log('[Auth Callback] Processing code exchange. Target:', next)
 
   if (code) {
-    const supabase = await createClient()
-    const { data: session, error } = await supabase.auth.exchangeCodeForSession(code)
+    const cookieStore = await cookies()
+    const redirectUrl = `${origin}${next}`
 
-    if (!error && session?.user) {
-      console.log('[Auth Callback] User confirmed:', session.user.email)
+    // Create response object early so Supabase can attach Set-Cookie headers directly to it
+    let response = NextResponse.redirect(redirectUrl)
 
-      // Send welcome email (non-blocking - errors should not break auth flow)
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll()
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              try {
+                cookieStore.set(name, value, options)
+              } catch {
+                // Server Component context fallback
+              }
+              response.cookies.set(name, value, options)
+            })
+          },
+        },
+      }
+    )
+
+    const { data: sessionData, error } = await supabase.auth.exchangeCodeForSession(code)
+
+    if (!error && sessionData?.user) {
+      console.log('[Auth Callback] Session established for user:', sessionData.user.email)
+
+      // Password reset target: return response with attached cookies immediately
+      if (next === '/update-password') {
+        return response
+      }
+
+      // Non-blocking welcome email trigger
       try {
-        const email = session.user.email
-        const name = session.user.user_metadata?.full_name || session.user.user_metadata?.username || session.user.user_metadata?.name
+        const email = sessionData.user.email
+        const name =
+          sessionData.user.user_metadata?.full_name ||
+          sessionData.user.user_metadata?.username ||
+          sessionData.user.user_metadata?.name
 
         if (email) {
-          console.log('[Auth Callback] Triggering welcome email to:', email)
           await sendWelcomeEmail({ email, name })
-          console.log('[Auth Callback] Welcome email sent successfully')
         }
       } catch (err) {
-        console.error('[Auth Callback] Email trigger failed:', err)
+        console.error('[Auth Callback] Welcome email trigger error:', err)
       }
 
       // Check if user_name is set in profiles
       const { data: profile } = await supabase
         .from('profiles')
         .select('user_name')
-        .eq('id', session.user.id)
+        .eq('id', sessionData.user.id)
         .single()
 
-      // If user_name is NULL, redirect to settings
+      // If user_name is NULL, redirect to settings with attached cookies
       if (!profile?.user_name) {
-        return NextResponse.redirect(`${origin}/settings`)
+        const settingsResponse = NextResponse.redirect(`${origin}/settings`)
+        response.cookies.getAll().forEach((c) => {
+          settingsResponse.cookies.set(c.name, c.value, c)
+        })
+        return settingsResponse
       }
 
-      // Redirect to dashboard (or the 'next' param)
-      return NextResponse.redirect(`${origin}${next}`)
+      return response
+    } else if (error) {
+      console.error('[Auth Callback] Exchange code error:', error.message)
     }
   }
 
-  // If exchange fails or no code is present, redirect to an error page
-  return NextResponse.redirect(`${origin}/auth/auth-code-error`)
+  // If code exchange fails or no code is present, redirect gracefully to forgot-password
+  return NextResponse.redirect(`${origin}/forgot-password?error=link_expired`)
 }

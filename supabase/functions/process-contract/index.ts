@@ -332,6 +332,9 @@ Deno.serve(async (req) => {
         .single();
       if (beforeProfile) {
         beforeCredits = (beforeProfile.credits ?? 0) + (beforeProfile.none_expire_credits ?? 0);
+        console.log(`[Credit System] User credits BEFORE deduction: ${beforeCredits} (monthly: ${beforeProfile.credits}, top-up: ${beforeProfile.none_expire_credits})`);
+      } else {
+        console.warn(`[Credit System] Could not retrieve profile before deduction for user ${record.user_id}`);
       }
     } catch (err: any) {
       console.error('[Credit System] Failed to fetch credits before deduction:', err.message);
@@ -347,6 +350,7 @@ Deno.serve(async (req) => {
     } else if (!success) {
       console.error(`[CREDITS] Insufficient credits for user: ${record.user_id}`);
     } else {
+      console.log(`[CREDITS] RPC deduction returned success: ${success}`);
       // Successful deduction, check if user's credits transitioned exactly to 0
       try {
         const { data: updatedProfile } = await supabase
@@ -359,7 +363,9 @@ Deno.serve(async (req) => {
           const credits = updatedProfile.credits ?? 0;
           const noneExpireCredits = updatedProfile.none_expire_credits ?? 0;
           const afterCredits = credits + noneExpireCredits;
+          console.log(`[Credit System] User credits AFTER deduction: ${afterCredits} (monthly: ${credits}, top-up: ${noneExpireCredits})`);
 
+          console.log(`[Credit System] Evaluating transition condition: beforeCredits (${beforeCredits}) > 0 && afterCredits (${afterCredits}) === 0`);
           if (beforeCredits > 0 && afterCredits === 0) {
             console.log(`[Credit System] Zero balance reached (exact transition) for user: ${updatedProfile.email}`);
             
@@ -367,6 +373,8 @@ Deno.serve(async (req) => {
             try {
               const siteUrl = Deno.env.get('NEXT_PUBLIC_SITE_URL') || 'https://www.branddealfixer.com';
               const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+              console.log(`[Credit System] Triggering email webhook at: ${siteUrl}/api/send-zero-credits | Token length: ${serviceKey?.length || 0}`);
+              
               const res = await fetch(`${siteUrl}/api/send-zero-credits`, {
                 method: 'POST',
                 headers: {
@@ -375,6 +383,8 @@ Deno.serve(async (req) => {
                 },
                 body: JSON.stringify({ email: updatedProfile.email }),
               });
+              
+              console.log(`[Credit System] Webhook fetch response status: ${res.status} (${res.statusText})`);
               if (!res.ok) {
                 const errText = await res.text();
                 console.error(`[Credit System] Failed to trigger zero credit email: ${errText}`);
@@ -384,6 +394,8 @@ Deno.serve(async (req) => {
             } catch (err: any) {
               console.error('[Credit Check] Failed to send out-of-credits email:', err.message || err);
             }
+          } else {
+            console.log('[Credit System] Transition check evaluated to false. Skipping email send.');
           }
         }
       } catch (err: any) {

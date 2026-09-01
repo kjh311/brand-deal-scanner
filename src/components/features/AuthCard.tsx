@@ -202,9 +202,19 @@ export function AuthCard({ mode }: AuthCardProps) {
             </div>
 
             <div className="flex flex-col gap-2">
-              <label htmlFor="password" className="text-xs font-mono uppercase tracking-wider text-[#64748B] ml-1">
-                Password
-              </label>
+              <div className="flex justify-between items-center ml-1">
+                <label htmlFor="password" className="text-xs font-mono uppercase tracking-wider text-[#64748B]">
+                  Password
+                </label>
+                {isLogin && (
+                  <Link
+                    href="/forgot-password"
+                    className="text-xs text-[#D84C9F] hover:underline font-medium transition-all"
+                  >
+                    Forgot password?
+                  </Link>
+                )}
+              </div>
               <div className="relative">
                 <input
                   id="password"
