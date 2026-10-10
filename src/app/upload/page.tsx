@@ -36,6 +36,7 @@ export default function UploadPage() {
   const [isLoadingSub, setIsLoadingSub] = useState(true)
   const [loadingTopUp, setLoadingTopUp] = useState(false)
   const [selectedQuantity, setSelectedQuantity] = useState(5)
+  const [isTopUpRequested, setIsTopUpRequested] = useState(false)
 
   const [legalModalOpen, setLegalModalOpen] = useState(false)
   const [legalVariant, setLegalVariant] = useState<'initial' | 'updated'>('initial')
@@ -58,6 +59,15 @@ export default function UploadPage() {
   }
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      if (params.get('topup') === 'true') {
+        setIsTopUpRequested(true)
+      }
+    }
+  }, [])
+
+  useEffect(() => {
     const initPage = async () => {
       try {
         const res = await fetch('/api/subscription-status')
@@ -65,9 +75,10 @@ export default function UploadPage() {
           const data = await res.json()
           setSubStatus(data)
 
+          const isTopUp = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('topup') === 'true'
           const userCredits = (data.credits || 0) + (data.none_expire_credits || 0)
 
-          if (userCredits === 0) {
+          if (userCredits === 0 && !isTopUp) {
             // Scenario A (No Stripe Customer ID): If credits === 0 AND stripe_customer_id IS NULL, redirect to /plans
             if (!data.stripe_customer_id) {
               router.replace('/plans')
@@ -280,7 +291,7 @@ export default function UploadPage() {
             <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
             <p className="text-sm font-bold uppercase tracking-widest text-slate-400">Loading profile...</p>
           </div>
-        ) : subStatus && ((subStatus.credits || 0) + (subStatus.none_expire_credits || 0)) === 0 ? (
+        ) : subStatus && (isTopUpRequested || ((subStatus.credits || 0) + (subStatus.none_expire_credits || 0)) === 0) ? (
           <div className="bg-white border border-[#E2E8F0] rounded-[3rem] p-5 sm:p-10 md:p-12 shadow-lg space-y-8 relative overflow-hidden group text-center py-16 animate-in fade-in zoom-in duration-500">
             <div className="relative z-10 max-w-md mx-auto space-y-6">
               <div className="w-20 h-20 rounded-2xl bg-[#FFFBEB] border border-[#FDE68A] flex items-center justify-center mx-auto shadow-sm">
@@ -353,6 +364,16 @@ export default function UploadPage() {
                   </>
                 )}
               </button>
+
+              {isTopUpRequested && subStatus && ((subStatus.credits || 0) + (subStatus.none_expire_credits || 0)) > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setIsTopUpRequested(false)}
+                  className="w-full text-center text-xs font-semibold text-slate-500 hover:text-[#1E1A5F] underline transition-colors cursor-pointer mt-2"
+                >
+                  Continue scanning with existing credits
+                </button>
+              )}
             </div>
           </div>
         ) : (

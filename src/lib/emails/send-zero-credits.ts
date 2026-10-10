@@ -139,7 +139,7 @@ export async function sendZeroCreditsEmail({ email }: SendZeroCreditsEmailArgs) 
       </div>
 
       <div class="btn-container">
-        <a href="https://www.branddealfixer.com/plans" class="btn">Buy Credit Top-Ups</a>
+        <a href="https://www.branddealfixer.com/upload?topup=true" class="btn">Buy Credit Top-Ups</a>
       </div>
 
       <div class="sign-off">
