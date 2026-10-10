@@ -1,18 +1,32 @@
-import { Resend } from 'resend';
+import { NextRequest, NextResponse } from 'next/server';
+import { sendZeroCreditsEmail } from '@/lib/emails/send-zero-credits';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
-export async function POST() {
+export async function GET(req: NextRequest) {
   try {
-    const data = await resend.emails.send({
-      from: 'Brand Deal Fixer <notifications@send.branddealfixer.com>', // Use the sub-domain/domain verified in Resend
-      to: ['kjh311@gmail.com'],
-      subject: 'Welcome to Brand Deal Fixer!',
-      html: '<h1>Welcome aboard!</h1><p>Your account is ready.</p>',
-    });
+    const { searchParams } = new URL(req.url);
+    const to = searchParams.get('to') || 'kjh311@gmail.com';
 
-    return Response.json(data);
-  } catch (error) {
-    return Response.json({ error });
+    console.log('[Test Email API] Testing zero credits email dispatch to:', to);
+    const result = await sendZeroCreditsEmail({ email: to });
+
+    return NextResponse.json({
+      success: true,
+      message: `Tested zero credits email dispatch to ${to}`,
+      result,
+      env: {
+        hasResendKey: !!process.env.RESEND_API_KEY,
+        emailFrom: process.env.EMAIL_FROM || 'Brand Deal Fixer <support@branddealfixer.com>',
+      }
+    });
+  } catch (error: any) {
+    console.error('[Test Email API] Failure:', error);
+    return NextResponse.json({
+      success: false,
+      error: error.message || error,
+    }, { status: 500 });
   }
+}
+
+export async function POST(req: NextRequest) {
+  return GET(req);
 }
