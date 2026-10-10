@@ -322,25 +322,6 @@ Deno.serve(async (req) => {
     await supabase.from('contracts').update({ extracted_text: null }).eq('id', recordId);
 
     // 4. Credit System: Deduct 1 scan credit via RPC (consumes subscription credits first, then non-expiring)
-    // Fetch credits before deduction to ensure exact transition check
-    let beforeMonthlyCredits = 0;
-    let beforeTotalCredits = 0;
-    try {
-      const { data: beforeProfile } = await supabase
-        .from('profiles')
-        .select('credits, none_expire_credits')
-        .eq('id', record.user_id)
-        .single();
-      if (beforeProfile) {
-        beforeMonthlyCredits = beforeProfile.credits ?? 0;
-        beforeTotalCredits = (beforeProfile.credits ?? 0) + (beforeProfile.none_expire_credits ?? 0);
-        console.log(`[Credit System] User credits BEFORE deduction: monthly=${beforeMonthlyCredits}, top-up=${beforeProfile.none_expire_credits}, total=${beforeTotalCredits}`);
-      } else {
-        console.warn(`[Credit System] Could not retrieve profile before deduction for user ${record.user_id}`);
-      }
-    } catch (err: any) {
-      console.error('[Credit System] Failed to fetch credits before deduction:', err.message);
-    }
 
     console.log(`[CREDITS] Deducting 1 scan credit from user: ${record.user_id}`);
     const { data: success, error: creditError } = await supabase.rpc('deduct_scan_credit', {
@@ -352,82 +333,7 @@ Deno.serve(async (req) => {
     } else if (!success) {
       console.error(`[CREDITS] Insufficient credits for user: ${record.user_id}`);
     } else {
-      console.log(`[CREDITS] RPC deduction returned success: ${success}`);
-      // Successful deduction, check if user's monthly credits or total credits transitioned to 0
-      try {
-        const { data: updatedProfile } = await supabase
-          .from('profiles')
-          .select('email, credits, none_expire_credits')
-          .eq('id', record.user_id)
-          .single();
-
-        if (updatedProfile) {
-          const credits = updatedProfile.credits ?? 0;
-          const noneExpireCredits = updatedProfile.none_expire_credits ?? 0;
-          const afterTotalCredits = credits + noneExpireCredits;
-          console.log(`[Credit System] User credits AFTER deduction: monthly=${credits}, top-up=${noneExpireCredits}, total=${afterTotalCredits}`);
-
-          const isZeroMonthly = credits === 0;
-          const isZeroTotal = afterTotalCredits === 0;
-          const monthlyReachedZero = beforeMonthlyCredits > 0 && credits === 0;
-          const totalReachedZero = beforeTotalCredits > 0 && afterTotalCredits === 0;
-
-          console.log(`[Credit System] Evaluating transition: isZeroMonthly=${isZeroMonthly}, isZeroTotal=${isZeroTotal}, monthlyReachedZero=${monthlyReachedZero}, totalReachedZero=${totalReachedZero}`);
-          if (isZeroMonthly || isZeroTotal || monthlyReachedZero || totalReachedZero) {
-            console.log(`[Credit System] Zero credit threshold met for user: ${updatedProfile.email}`);
-            
-            try {
-              const resendKey = Deno.env.get('RESEND_API_KEY');
-              const emailFrom = Deno.env.get('EMAIL_FROM') || 'Brand Deal Fixer <support@branddealfixer.com>';
-
-              let sentDirectly = false;
-              if (resendKey) {
-                console.log(`[Credit System] Sending zero credits email directly via Resend API to: ${updatedProfile.email}`);
-                const directRes = await fetch('https://api.resend.com/emails', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${resendKey}`,
-                  },
-                  body: JSON.stringify({
-                    from: emailFrom,
-                    to: [updatedProfile.email],
-                    subject: 'You have 0 monthly credits left — Brand Deal Fixer',
-                    html: `<!DOCTYPE html><html><head><meta charset="utf-8"><title>0 Monthly Credits Remaining</title><style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background-color:#0B0826;margin:0;padding:0}.wrapper{width:100%;background-color:#0B0826;padding:40px 20px;box-sizing:border-box}.container{max-width:540px;margin:0 auto;background-color:#15123A;border:1px solid rgba(255,255,255,0.08);border-radius:24px;padding:40px;box-sizing:border-box;color:#FFFFFF;box-shadow:0 10px 30px rgba(0,0,0,0.25)}.header{text-align:center;margin-bottom:32px}.logo{font-size:20px;font-weight:800;color:#D84C9F;letter-spacing:-0.02em;text-decoration:none;display:inline-block;margin-bottom:24px}h1{font-size:26px;font-weight:800;margin:0 0 12px 0;color:#FFFFFF;letter-spacing:-0.02em;text-align:center}.subtitle{font-size:15px;line-height:24px;color:rgba(255,255,255,0.7);margin:0 0 32px 0;text-align:center}.topup-box{background-color:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:24px;margin-bottom:32px}.topup-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#D84C9F;margin-bottom:12px}.topup-text{font-size:14px;line-height:22px;color:rgba(255,255,255,0.85);margin:0}.topup-highlight{font-weight:700;color:#FFFFFF}.btn-container{text-align:center;margin-bottom:32px}.btn{background-color:#D84C9F;color:#FFFFFF;text-decoration:none;font-weight:700;font-size:15px;padding:16px 32px;border-radius:12px;display:inline-block}.footer{font-size:13px;line-height:20px;color:rgba(255,255,255,0.4);text-align:center;border-top:1px solid rgba(255,255,255,0.06);padding-top:24px}</style></head><body><div class="wrapper"><div class="container"><div class="header"><span class="logo">Brand Deal Fixer</span><h1>You Have 0 Monthly Credits Left</h1><p class="subtitle">You have 0 monthly credits left on your account. To continue analyzing brand deal contracts without waiting for your next renewal, you can purchase credit top-ups anytime.</p></div><div class="topup-box"><div class="topup-title">Need More Scans?</div><p class="topup-text">You can purchase <span class="topup-highlight">Credit Top-Up Packs</span> directly to keep analyzing your deal contracts. Top-up credits <span class="topup-highlight">never expire</span> and will stay on your account until you use them.</p></div><div class="btn-container"><a href="https://www.branddealfixer.com/upload?topup=true" class="btn">Buy Credit Top-Ups</a></div><div class="footer">Have questions? Reply directly to this email to contact support.<br>&copy; ${new Date().getFullYear()} Brand Deal Fixer. All rights reserved.</div></div></div></body></html>`,
-                  }),
-                });
-                console.log(`[Credit System] Direct Resend API response status: ${directRes.status}`);
-                if (directRes.ok) {
-                  sentDirectly = true;
-                }
-              }
-
-              // Fallback to application webhook ONLY if direct send was not executed or failed
-              if (!sentDirectly) {
-                const siteUrl = Deno.env.get('NEXT_PUBLIC_SITE_URL') || 'https://www.branddealfixer.com';
-                const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-                console.log(`[Credit System] Direct send omitted/failed; falling back to webhook at: ${siteUrl}/api/send-zero-credits`);
-                
-                const res = await fetch(`${siteUrl}/api/send-zero-credits`, {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${serviceKey}`,
-                  },
-                  body: JSON.stringify({ email: updatedProfile.email }),
-                });
-                console.log(`[Credit System] Webhook fetch response status: ${res.status}`);
-              }
-            } catch (err: any) {
-              console.error('[Credit Check] Error sending out-of-credits email:', err.message || err);
-            }
-          } else {
-            console.log('[Credit System] User still has remaining credits. Skipping zero credit email.');
-          }
-        }
-      } catch (err: any) {
-        console.error('[Credit System] Error checking zero balance or triggering email:', err.message);
-      }
+      console.log(`[CREDITS] RPC deduction returned success: ${success}. Zero credit events are handled automatically by the database trigger.`);
     }
 
     return new Response(JSON.stringify({ success: true }), { headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } });

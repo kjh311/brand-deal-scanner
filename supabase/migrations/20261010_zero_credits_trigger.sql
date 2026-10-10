@@ -1,20 +1,36 @@
--- Migration: Postgres Database Trigger for profiles.credits reaching 0
+-- Migration: Postgres Database Trigger for profiles.credits reaching 0 with atomic deduplication
 
-create table if not exists public.trigger_debug (
-  id uuid default gen_random_uuid() primary key,
-  contract_id uuid,
-  triggered_at timestamp with time zone default timezone('utc'::text, now()) not null
+-- Log table to record when zero credits emails were dispatched
+create table if not exists public.zero_credits_log (
+  email text primary key,
+  sent_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
 create or replace function public.on_credits_reached_zero()
 returns trigger as $$
 declare
   site_url text := 'https://www.branddealfixer.com';
+  recently_sent boolean;
 begin
-  -- Fire when credits transitions to 0 or is set to 0 from a positive number
+  -- Only fire when the 'credits' column transitions to 0
   if (NEW.credits = 0 and (OLD.credits > 0 or OLD.credits is null)) then
-    insert into public.trigger_debug (contract_id, triggered_at)
-    values (null, now());
+    
+    -- Atomically check if an email was already dispatched for this email in the last 2 minutes
+    select exists (
+      select 1 from public.zero_credits_log
+      where email = NEW.email
+      and sent_at > now() - interval '2 minutes'
+    ) into recently_sent;
+
+    -- If already sent recently, suppress duplicate immediately
+    if recently_sent then
+      return NEW;
+    end if;
+
+    -- Record timestamp in zero_credits_log
+    insert into public.zero_credits_log (email, sent_at)
+    values (NEW.email, now())
+    on conflict (email) do update set sent_at = now();
 
     -- Call pg_net HTTP POST to trigger the zero credits email route
     perform net.http_post(
