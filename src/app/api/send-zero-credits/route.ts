@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server';
 import { sendZeroCreditsEmail } from '@/lib/emails/send-zero-credits';
 import { createClient } from '@/lib/supabase/server';
 
+// In-memory debounce cache to prevent duplicate dispatches within 60 seconds
+const recentDispatches = new Map<string, number>();
+const DEBOUNCE_WINDOW_MS = 60 * 1000;
+
 export async function POST(request: Request) {
   console.log('[Send Zero Credits API] POST request received');
   try {
@@ -35,6 +39,28 @@ export async function POST(request: Request) {
     if (!targetEmail) {
       console.warn('[Send Zero Credits API] Bad request: target email is missing');
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
+    }
+
+    // 3. Deduplication / Debounce Check
+    const normalizedEmail = targetEmail.toLowerCase();
+    const now = Date.now();
+    const lastSent = recentDispatches.get(normalizedEmail);
+
+    if (lastSent && now - lastSent < DEBOUNCE_WINDOW_MS) {
+      console.log(`[Send Zero Credits API] Suppressing duplicate send for ${normalizedEmail} (last sent ${now - lastSent}ms ago)`);
+      return NextResponse.json({ success: true, duplicateSuppressed: true });
+    }
+
+    // Record this dispatch
+    recentDispatches.set(normalizedEmail, now);
+
+    // Occasional cleanup of expired cache entries
+    if (recentDispatches.size > 500) {
+      for (const [key, timestamp] of recentDispatches.entries()) {
+        if (now - timestamp > DEBOUNCE_WINDOW_MS) {
+          recentDispatches.delete(key);
+        }
+      }
     }
 
     console.log('[Send Zero Credits API] Triggering sendZeroCreditsEmail for:', targetEmail);

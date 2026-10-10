@@ -380,6 +380,7 @@ Deno.serve(async (req) => {
               const resendKey = Deno.env.get('RESEND_API_KEY');
               const emailFrom = Deno.env.get('EMAIL_FROM') || 'Brand Deal Fixer <support@branddealfixer.com>';
 
+              let sentDirectly = false;
               if (resendKey) {
                 console.log(`[Credit System] Sending zero credits email directly via Resend API to: ${updatedProfile.email}`);
                 const directRes = await fetch('https://api.resend.com/emails', {
@@ -396,22 +397,27 @@ Deno.serve(async (req) => {
                   }),
                 });
                 console.log(`[Credit System] Direct Resend API response status: ${directRes.status}`);
+                if (directRes.ok) {
+                  sentDirectly = true;
+                }
               }
 
-              // Also trigger webhook for application server sync
-              const siteUrl = Deno.env.get('NEXT_PUBLIC_SITE_URL') || 'https://www.branddealfixer.com';
-              const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-              console.log(`[Credit System] Triggering email webhook at: ${siteUrl}/api/send-zero-credits`);
-              
-              const res = await fetch(`${siteUrl}/api/send-zero-credits`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${serviceKey}`,
-                },
-                body: JSON.stringify({ email: updatedProfile.email }),
-              });
-              console.log(`[Credit System] Webhook fetch response status: ${res.status}`);
+              // Fallback to application webhook ONLY if direct send was not executed or failed
+              if (!sentDirectly) {
+                const siteUrl = Deno.env.get('NEXT_PUBLIC_SITE_URL') || 'https://www.branddealfixer.com';
+                const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+                console.log(`[Credit System] Direct send omitted/failed; falling back to webhook at: ${siteUrl}/api/send-zero-credits`);
+                
+                const res = await fetch(`${siteUrl}/api/send-zero-credits`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${serviceKey}`,
+                  },
+                  body: JSON.stringify({ email: updatedProfile.email }),
+                });
+                console.log(`[Credit System] Webhook fetch response status: ${res.status}`);
+              }
             } catch (err: any) {
               console.error('[Credit Check] Error sending out-of-credits email:', err.message || err);
             }
