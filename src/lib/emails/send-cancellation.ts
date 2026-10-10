@@ -179,7 +179,7 @@ export async function sendCancellationEmail({
       </div>
 
       <div class="btn-container">
-        <a href="https://www.branddealfixer.com/dashboard/billing" class="btn">Reactivate Subscription</a>
+        <a href="https://www.branddealfixer.com/plans" class="btn">Reactivate Subscription</a>
       </div>
 
       <div class="footer">

@@ -3,6 +3,7 @@ import Stripe from 'stripe';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { sendPurchaseReceiptEmail } from '@/lib/emails/send-purchase-receipt';
 import { sendCancellationEmail } from '@/lib/emails/send-cancellation';
+import { sendSubscriptionEndedEmail } from '@/lib/emails/send-subscription-ended';
 import { sendPaymentFailedEmail } from '@/lib/emails/send-payment-failed';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
@@ -315,7 +316,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription, even
 
   console.log(`✅ Subscription updated for User ${profile.id}: plan=${updateData.plan || profile.plan}, cancellation_reason=${cancellationReason || 'null'}`);
 
-  // Send cancellation email if isCancelling is true and transitioning/explicitly cancelled
+  // Send cancellation email immediately when cancellation is requested
   const previousAttributes = (event.data.previous_attributes as any);
   const shouldSendCancellationEmail = 
     isCancelling && 
@@ -330,16 +331,16 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription, even
     shouldSendCancellationEmail
   });
 
-  if (shouldSendCancellationEmail) {
+  if (shouldSendCancellationEmail && profile.email) {
     try {
-      console.log('[Stripe Webhook] Triggering sendCancellationEmail for:', profile.email);
+      console.log('[Stripe Webhook] Triggering immediate sendCancellationEmail for:', profile.email);
       await sendCancellationEmail({
-        email: profile.email || '',
+        email: profile.email,
         currentPeriodEnd: periodEnd || Math.floor(Date.now() / 1000),
         creditsRemaining: profile.credits || 0,
         nonExpiringCredits: profile.none_expire_credits || 0,
       });
-      console.log('[Resend] Cancellation email sent successfully to:', profile.email);
+      console.log('[Resend] Immediate cancellation email sent successfully to:', profile.email);
     } catch (emailErr: any) {
       console.log('[Stripe Webhook] Error sending cancellation email:', emailErr.message);
     }
@@ -404,29 +405,22 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
 
   console.log(`✅ Cancellation finalized for Customer ${customerId}: plan set to 'none', credits reset to 0. Non-expiring credits preserved.`);
 
-  console.log('[Stripe Webhook] Evaluated deletion email condition:', {
+  console.log('[Stripe Webhook] Evaluated subscription deletion email condition:', {
     hasProfile: !!profile,
     profileEmail: profile?.email,
-    db_cancellation_reason: profile?.cancellation_reason,
-    shouldSendEmail: !!(profile && !profile.cancellation_reason)
   });
 
-  if (profile && !profile.cancellation_reason) {
+  if (profile && profile.email) {
     try {
-      console.log('[Stripe Webhook] Triggering sendCancellationEmail for deleted sub:', profile.email);
-      const periodEnd = (subscription as any).current_period_end || Math.floor(Date.now() / 1000);
-      await sendCancellationEmail({
-        email: profile.email || '',
-        currentPeriodEnd: periodEnd,
-        creditsRemaining: profile.credits || 0,
+      console.log('[Stripe Webhook] Triggering sendSubscriptionEndedEmail for deleted sub:', profile.email);
+      await sendSubscriptionEndedEmail({
+        email: profile.email,
         nonExpiringCredits: profile.none_expire_credits || 0,
       });
-      console.log('[Resend] Cancellation email sent successfully to:', profile.email);
+      console.log('[Resend] Subscription ended email sent successfully to:', profile.email);
     } catch (emailErr: any) {
-      console.log('[Stripe Webhook] Error sending cancellation email:', emailErr.message);
+      console.log('[Stripe Webhook] Error sending subscription ended email:', emailErr.message);
     }
-  } else if (profile && profile.cancellation_reason) {
-    console.log(`ℹ️ Subscription deletion for User ${profile.id} skipped email dispatch (already sent during cancellation request)`);
   }
 }
 
