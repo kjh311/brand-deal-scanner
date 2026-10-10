@@ -1,25 +1,41 @@
 import { resend, EMAIL_FROM } from '../resend';
 
-interface SendPaymentFailedEmailArgs {
+export interface SendPaymentFailedEmailArgs {
   email: string;
   amountDue: number; // in cents
-  currency: string;
-  billingPortalUrl: string;
+  currency?: string;
+  billingPortalUrl?: string;
+  paymentUpdateUrl?: string;
+  planName?: string;
+  nextPaymentAttempt?: number | null; // Unix timestamp
 }
 
 export async function sendPaymentFailedEmail({
   email,
   amountDue,
-  currency,
+  currency = 'usd',
   billingPortalUrl,
+  paymentUpdateUrl,
+  planName,
+  nextPaymentAttempt,
 }: SendPaymentFailedEmailArgs) {
   try {
-    console.log('[Stripe Webhook] Processing failed payment notification for:', email);
+    console.log('[Stripe Webhook] Processing failed payment notification for:', email, '| From:', EMAIL_FROM);
+
+    const targetUrl = paymentUpdateUrl || billingPortalUrl || 'https://www.branddealfixer.com/settings';
 
     const formattedAmount = new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: currency.toUpperCase(),
+      currency: (currency || 'usd').toUpperCase(),
     }).format(amountDue / 100);
+
+    const formattedRetryDate = nextPaymentAttempt
+      ? new Date(nextPaymentAttempt * 1000).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+        })
+      : null;
 
     const htmlContent = `
 <!DOCTYPE html>
@@ -98,21 +114,25 @@ export async function sendPaymentFailedEmail({
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 12px 0;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    }
+    .details-item:last-child {
+      border-bottom: none;
     }
     .details-label {
       font-size: 14px;
       color: rgba(255, 255, 255, 0.85);
     }
     .details-value {
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 700;
       color: #FFFFFF;
     }
     .warning-text {
       font-size: 13px;
       line-height: 20px;
-      color: rgba(255, 255, 255, 0.5);
+      color: rgba(255, 255, 255, 0.6);
       margin-top: 16px;
       padding-top: 16px;
       border-top: 1px solid rgba(255, 255, 255, 0.06);
@@ -122,15 +142,14 @@ export async function sendPaymentFailedEmail({
       margin-bottom: 32px;
     }
     .btn {
-      background-color: #FFFFFF;
-      color: #15123A;
+      background-color: #D84C9F;
+      color: #FFFFFF;
       text-decoration: none;
       font-weight: 700;
       font-size: 15px;
       padding: 16px 32px;
       border-radius: 12px;
       display: inline-block;
-      transition: transform 0.15s;
     }
     .reassurance {
       font-size: 14px;
@@ -165,18 +184,28 @@ export async function sendPaymentFailedEmail({
       </div>
 
       <div class="details-box">
-        <div class="details-title">Transaction Details</div>
+        <div class="details-title">Billing Details</div>
+        ${planName ? `
+        <div class="details-item">
+          <div class="details-label">Plan</div>
+          <div class="details-value">${planName}</div>
+        </div>` : ''}
         <div class="details-item">
           <div class="details-label">Amount Due</div>
           <div class="details-value">${formattedAmount}</div>
         </div>
+        ${formattedRetryDate ? `
+        <div class="details-item">
+          <div class="details-label">Next Automatic Retry</div>
+          <div class="details-value">${formattedRetryDate}</div>
+        </div>` : ''}
         <div class="warning-text">
           To prevent any interruption to your subscription benefits, please update your payment method. Unpaid plans may have their credit renewals paused.
         </div>
       </div>
 
       <div class="btn-container">
-        <a href="${billingPortalUrl}" class="btn">Update Payment Method</a>
+        <a href="${targetUrl}" class="btn">Update Payment Method</a>
       </div>
 
       <p class="reassurance">Don't worry — your saved contract analysis history and account profile remain completely safe and will be waiting for you once your payment method is updated.</p>

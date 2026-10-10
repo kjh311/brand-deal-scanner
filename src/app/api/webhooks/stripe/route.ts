@@ -545,6 +545,7 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
 async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
   const customerId = typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id;
   
+  // 1. Resolve customer email
   let customerEmail = invoice.customer_email;
   if (!customerEmail && customerId) {
     try {
@@ -555,6 +556,28 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
     }
   }
 
+  let profilePlan: string | undefined = undefined;
+  if (customerId) {
+    try {
+      const { data: profile } = await supabaseAdmin
+        .from('profiles')
+        .select('email, plan')
+        .eq('stripe_customer_id', customerId)
+        .single();
+      if (profile) {
+        if (!customerEmail && profile.email) {
+          customerEmail = profile.email;
+          console.log(`[Stripe Webhook] Resolved customer email from Supabase: ${customerEmail}`);
+        }
+        if (profile.plan && profile.plan !== 'none') {
+          profilePlan = `${profile.plan.charAt(0).toUpperCase() + profile.plan.slice(1)} Plan`;
+        }
+      }
+    } catch (err: any) {
+      console.warn('Failed to retrieve customer profile for failed payment:', err.message);
+    }
+  }
+
   if (!customerEmail) {
     console.warn(`[Stripe Webhook] No customer email found on invoice ${invoice.id}, skipping failed payment email`);
     return;
@@ -562,17 +585,39 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
 
   console.log('[Stripe Webhook] Processing failed payment notification for:', customerEmail);
 
-  let billingPortalUrl = 'https://www.branddealfixer.com/dashboard/billing';
-  if (customerId) {
+  // 2. Resolve plan name
+  const lineItem = invoice.lines?.data?.[0];
+  const planName = lineItem?.description || profilePlan;
+
+  // 3. Resolve direct payment / update link:
+  // Stripe hosted invoice URL is preferred because customers can pay the invoice immediately without login
+  let paymentUpdateUrl = invoice.hosted_invoice_url ?? null;
+
+  if (!paymentUpdateUrl && customerId) {
     try {
       const session = await stripe.billingPortal.sessions.create({
         customer: customerId,
         return_url: 'https://www.branddealfixer.com/settings',
+        flow_data: {
+          type: 'payment_method_update',
+        },
       });
-      billingPortalUrl = session.url;
+      paymentUpdateUrl = session.url;
     } catch (err: any) {
-      console.warn('Failed to create customer portal session:', err.message);
+      try {
+        const session = await stripe.billingPortal.sessions.create({
+          customer: customerId,
+          return_url: 'https://www.branddealfixer.com/settings',
+        });
+        paymentUpdateUrl = session.url;
+      } catch (portalErr: any) {
+        console.warn('Failed to create customer portal session:', portalErr.message);
+      }
     }
+  }
+
+  if (!paymentUpdateUrl) {
+    paymentUpdateUrl = 'https://www.branddealfixer.com/settings';
   }
 
   try {
@@ -580,7 +625,10 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
       email: customerEmail,
       amountDue: invoice.amount_due || 0,
       currency: invoice.currency || 'usd',
-      billingPortalUrl,
+      paymentUpdateUrl,
+      billingPortalUrl: paymentUpdateUrl,
+      planName,
+      nextPaymentAttempt: invoice.next_payment_attempt ?? null,
     });
     console.log('[Resend] Payment failed email sent successfully:', data);
   } catch (emailErr: any) {
