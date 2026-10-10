@@ -323,7 +323,8 @@ Deno.serve(async (req) => {
 
     // 4. Credit System: Deduct 1 scan credit via RPC (consumes subscription credits first, then non-expiring)
     // Fetch credits before deduction to ensure exact transition check
-    let beforeCredits = 0;
+    let beforeMonthlyCredits = 0;
+    let beforeTotalCredits = 0;
     try {
       const { data: beforeProfile } = await supabase
         .from('profiles')
@@ -331,8 +332,9 @@ Deno.serve(async (req) => {
         .eq('id', record.user_id)
         .single();
       if (beforeProfile) {
-        beforeCredits = (beforeProfile.credits ?? 0) + (beforeProfile.none_expire_credits ?? 0);
-        console.log(`[Credit System] User credits BEFORE deduction: ${beforeCredits} (monthly: ${beforeProfile.credits}, top-up: ${beforeProfile.none_expire_credits})`);
+        beforeMonthlyCredits = beforeProfile.credits ?? 0;
+        beforeTotalCredits = (beforeProfile.credits ?? 0) + (beforeProfile.none_expire_credits ?? 0);
+        console.log(`[Credit System] User credits BEFORE deduction: monthly=${beforeMonthlyCredits}, top-up=${beforeProfile.none_expire_credits}, total=${beforeTotalCredits}`);
       } else {
         console.warn(`[Credit System] Could not retrieve profile before deduction for user ${record.user_id}`);
       }
@@ -351,7 +353,7 @@ Deno.serve(async (req) => {
       console.error(`[CREDITS] Insufficient credits for user: ${record.user_id}`);
     } else {
       console.log(`[CREDITS] RPC deduction returned success: ${success}`);
-      // Successful deduction, check if user's credits transitioned exactly to 0
+      // Successful deduction, check if user's monthly credits or total credits transitioned to 0
       try {
         const { data: updatedProfile } = await supabase
           .from('profiles')
@@ -362,12 +364,15 @@ Deno.serve(async (req) => {
         if (updatedProfile) {
           const credits = updatedProfile.credits ?? 0;
           const noneExpireCredits = updatedProfile.none_expire_credits ?? 0;
-          const afterCredits = credits + noneExpireCredits;
-          console.log(`[Credit System] User credits AFTER deduction: ${afterCredits} (monthly: ${credits}, top-up: ${noneExpireCredits})`);
+          const afterTotalCredits = credits + noneExpireCredits;
+          console.log(`[Credit System] User credits AFTER deduction: monthly=${credits}, top-up=${noneExpireCredits}, total=${afterTotalCredits}`);
 
-          console.log(`[Credit System] Evaluating transition condition: beforeCredits (${beforeCredits}) > 0 && afterCredits (${afterCredits}) === 0`);
-          if (beforeCredits > 0 && afterCredits === 0) {
-            console.log(`[Credit System] Zero balance reached (exact transition) for user: ${updatedProfile.email}`);
+          const monthlyReachedZero = beforeMonthlyCredits > 0 && credits === 0;
+          const totalReachedZero = beforeTotalCredits > 0 && afterTotalCredits === 0;
+
+          console.log(`[Credit System] Evaluating transition: monthlyReachedZero=${monthlyReachedZero}, totalReachedZero=${totalReachedZero}`);
+          if (monthlyReachedZero || totalReachedZero) {
+            console.log(`[Credit System] Zero credit threshold reached for user: ${updatedProfile.email}`);
             
             // Await fetch to ensure serverless function does not terminate and abort the request
             try {

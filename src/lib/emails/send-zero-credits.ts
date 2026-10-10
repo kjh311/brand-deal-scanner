@@ -6,14 +6,14 @@ interface SendZeroCreditsEmailArgs {
 
 export async function sendZeroCreditsEmail({ email }: SendZeroCreditsEmailArgs) {
   try {
-    console.log('[Credit System] Zero balance reached for user:', email, '| From:', EMAIL_FROM);
+    console.log('[Credit System] Zero monthly credit balance reached for user:', email, '| From:', EMAIL_FROM);
 
     const htmlContent = `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Out of Credits</title>
+  <title>0 Monthly Credits Remaining</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -84,7 +84,7 @@ export async function sendZeroCreditsEmail({ email }: SendZeroCreditsEmailArgs) 
     .topup-text {
       font-size: 14px;
       line-height: 22px;
-      color: rgba(255, 255, 255, 0.8);
+      color: rgba(255, 255, 255, 0.85);
       margin: 0;
     }
     .topup-highlight {
@@ -96,8 +96,8 @@ export async function sendZeroCreditsEmail({ email }: SendZeroCreditsEmailArgs) 
       margin-bottom: 32px;
     }
     .btn {
-      background-color: #FFFFFF;
-      color: #15123A;
+      background-color: #D84C9F;
+      color: #FFFFFF;
       text-decoration: none;
       font-weight: 700;
       font-size: 15px;
@@ -105,9 +105,6 @@ export async function sendZeroCreditsEmail({ email }: SendZeroCreditsEmailArgs) 
       border-radius: 12px;
       display: inline-block;
       transition: transform 0.15s;
-    }
-    .btn:hover {
-      transform: scale(1.02);
     }
     .sign-off {
       font-size: 14px;
@@ -130,19 +127,19 @@ export async function sendZeroCreditsEmail({ email }: SendZeroCreditsEmailArgs) 
     <div class="container">
       <div class="header">
         <span class="logo">Brand Deal Fixer</span>
-        <h1>You've Used All Your Credits</h1>
-        <p class="subtitle">Both your monthly and non-expiring credit balances have hit 0, meaning new contract scans and counter-offer generations are currently paused.</p>
+        <h1>You Have 0 Monthly Credits Left</h1>
+        <p class="subtitle">You have 0 monthly credits left on your account. To continue analyzing brand deal contracts without waiting for your next renewal, you can purchase credit top-ups anytime.</p>
       </div>
 
       <div class="topup-box">
         <div class="topup-title">Need More Scans?</div>
         <p class="topup-text">
-          You can purchase <span class="topup-highlight">Credit Top-Up Packs</span> directly from your billing dashboard without upgrading your monthly plan. Top-up credits <span class="topup-highlight">never expire</span> and will stay on your account until you need them.
+          You can purchase <span class="topup-highlight">Credit Top-Up Packs</span> directly to keep analyzing your deal contracts. Top-up credits <span class="topup-highlight">never expire</span> and will stay on your account until you use them.
         </p>
       </div>
 
       <div class="btn-container">
-        <a href="https://www.branddealfixer.com/dashboard/billing?topup=true" class="btn">Buy Credit Top-Ups</a>
+        <a href="https://www.branddealfixer.com/plans" class="btn">Buy Credit Top-Ups</a>
       </div>
 
       <div class="sign-off">
@@ -162,7 +159,7 @@ export async function sendZeroCreditsEmail({ email }: SendZeroCreditsEmailArgs) 
     const data = await resend.emails.send({
       from: EMAIL_FROM,
       to: [email],
-      subject: 'You are out of credits — Brand Deal Fixer',
+      subject: 'You have 0 monthly credits left — Brand Deal Fixer',
       html: htmlContent,
     });
 
