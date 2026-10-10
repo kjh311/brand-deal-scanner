@@ -367,18 +367,41 @@ Deno.serve(async (req) => {
           const afterTotalCredits = credits + noneExpireCredits;
           console.log(`[Credit System] User credits AFTER deduction: monthly=${credits}, top-up=${noneExpireCredits}, total=${afterTotalCredits}`);
 
+          const isZeroMonthly = credits === 0;
+          const isZeroTotal = afterTotalCredits === 0;
           const monthlyReachedZero = beforeMonthlyCredits > 0 && credits === 0;
           const totalReachedZero = beforeTotalCredits > 0 && afterTotalCredits === 0;
 
-          console.log(`[Credit System] Evaluating transition: monthlyReachedZero=${monthlyReachedZero}, totalReachedZero=${totalReachedZero}`);
-          if (monthlyReachedZero || totalReachedZero) {
-            console.log(`[Credit System] Zero credit threshold reached for user: ${updatedProfile.email}`);
+          console.log(`[Credit System] Evaluating transition: isZeroMonthly=${isZeroMonthly}, isZeroTotal=${isZeroTotal}, monthlyReachedZero=${monthlyReachedZero}, totalReachedZero=${totalReachedZero}`);
+          if (isZeroMonthly || isZeroTotal || monthlyReachedZero || totalReachedZero) {
+            console.log(`[Credit System] Zero credit threshold met for user: ${updatedProfile.email}`);
             
-            // Await fetch to ensure serverless function does not terminate and abort the request
             try {
+              const resendKey = Deno.env.get('RESEND_API_KEY');
+              const emailFrom = Deno.env.get('EMAIL_FROM') || 'Brand Deal Fixer <support@branddealfixer.com>';
+
+              if (resendKey) {
+                console.log(`[Credit System] Sending zero credits email directly via Resend API to: ${updatedProfile.email}`);
+                const directRes = await fetch('https://api.resend.com/emails', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${resendKey}`,
+                  },
+                  body: JSON.stringify({
+                    from: emailFrom,
+                    to: [updatedProfile.email],
+                    subject: 'You have 0 monthly credits left — Brand Deal Fixer',
+                    html: `<!DOCTYPE html><html><head><meta charset="utf-8"><title>0 Monthly Credits Remaining</title><style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background-color:#0B0826;margin:0;padding:0}.wrapper{width:100%;background-color:#0B0826;padding:40px 20px;box-sizing:border-box}.container{max-width:540px;margin:0 auto;background-color:#15123A;border:1px solid rgba(255,255,255,0.08);border-radius:24px;padding:40px;box-sizing:border-box;color:#FFFFFF;box-shadow:0 10px 30px rgba(0,0,0,0.25)}.header{text-align:center;margin-bottom:32px}.logo{font-size:20px;font-weight:800;color:#D84C9F;letter-spacing:-0.02em;text-decoration:none;display:inline-block;margin-bottom:24px}h1{font-size:26px;font-weight:800;margin:0 0 12px 0;color:#FFFFFF;letter-spacing:-0.02em;text-align:center}.subtitle{font-size:15px;line-height:24px;color:rgba(255,255,255,0.7);margin:0 0 32px 0;text-align:center}.topup-box{background-color:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:24px;margin-bottom:32px}.topup-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#D84C9F;margin-bottom:12px}.topup-text{font-size:14px;line-height:22px;color:rgba(255,255,255,0.85);margin:0}.topup-highlight{font-weight:700;color:#FFFFFF}.btn-container{text-align:center;margin-bottom:32px}.btn{background-color:#D84C9F;color:#FFFFFF;text-decoration:none;font-weight:700;font-size:15px;padding:16px 32px;border-radius:12px;display:inline-block}.footer{font-size:13px;line-height:20px;color:rgba(255,255,255,0.4);text-align:center;border-top:1px solid rgba(255,255,255,0.06);padding-top:24px}</style></head><body><div class="wrapper"><div class="container"><div class="header"><span class="logo">Brand Deal Fixer</span><h1>You Have 0 Monthly Credits Left</h1><p class="subtitle">You have 0 monthly credits left on your account. To continue analyzing brand deal contracts without waiting for your next renewal, you can purchase credit top-ups anytime.</p></div><div class="topup-box"><div class="topup-title">Need More Scans?</div><p class="topup-text">You can purchase <span class="topup-highlight">Credit Top-Up Packs</span> directly to keep analyzing your deal contracts. Top-up credits <span class="topup-highlight">never expire</span> and will stay on your account until you use them.</p></div><div class="btn-container"><a href="https://www.branddealfixer.com/plans" class="btn">Buy Credit Top-Ups</a></div><div class="footer">Have questions? Reply directly to this email to contact support.<br>&copy; ${new Date().getFullYear()} Brand Deal Fixer. All rights reserved.</div></div></div></body></html>`,
+                  }),
+                });
+                console.log(`[Credit System] Direct Resend API response status: ${directRes.status}`);
+              }
+
+              // Also trigger webhook for application server sync
               const siteUrl = Deno.env.get('NEXT_PUBLIC_SITE_URL') || 'https://www.branddealfixer.com';
               const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-              console.log(`[Credit System] Triggering email webhook at: ${siteUrl}/api/send-zero-credits | Token length: ${serviceKey?.length || 0}`);
+              console.log(`[Credit System] Triggering email webhook at: ${siteUrl}/api/send-zero-credits`);
               
               const res = await fetch(`${siteUrl}/api/send-zero-credits`, {
                 method: 'POST',
@@ -388,19 +411,12 @@ Deno.serve(async (req) => {
                 },
                 body: JSON.stringify({ email: updatedProfile.email }),
               });
-              
-              console.log(`[Credit System] Webhook fetch response status: ${res.status} (${res.statusText})`);
-              if (!res.ok) {
-                const errText = await res.text();
-                console.error(`[Credit System] Failed to trigger zero credit email: ${errText}`);
-              } else {
-                console.log(`[Credit System] Successfully triggered zero credit email for ${updatedProfile.email}`);
-              }
+              console.log(`[Credit System] Webhook fetch response status: ${res.status}`);
             } catch (err: any) {
-              console.error('[Credit Check] Failed to send out-of-credits email:', err.message || err);
+              console.error('[Credit Check] Error sending out-of-credits email:', err.message || err);
             }
           } else {
-            console.log('[Credit System] Transition check evaluated to false. Skipping email send.');
+            console.log('[Credit System] User still has remaining credits. Skipping zero credit email.');
           }
         }
       } catch (err: any) {

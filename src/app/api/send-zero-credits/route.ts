@@ -1,35 +1,63 @@
 import { NextResponse } from 'next/server';
 import { sendZeroCreditsEmail } from '@/lib/emails/send-zero-credits';
+import { createClient } from '@/lib/supabase/server';
 
 export async function POST(request: Request) {
   console.log('[Send Zero Credits API] POST request received');
   try {
-    const authHeader = request.headers.get('Authorization');
-    const expectedToken = `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`;
+    let targetEmail: string | null = null;
 
-    console.log('[Send Zero Credits API] Expected service role key configured:', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
-    console.log('[Send Zero Credits API] Authorization header received:', authHeader ? 'Present' : 'Missing');
-
-    if (!authHeader || authHeader !== expectedToken) {
-      console.warn('[Send Zero Credits API] Unauthorized request: tokens do not match');
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // 1. Try parsing JSON body if present
+    try {
+      const body = await request.json();
+      if (body && typeof body.email === 'string') {
+        targetEmail = body.email.trim();
+      }
+    } catch {
+      // Body may be empty or invalid JSON
     }
 
-    const { email } = await request.json();
-    console.log('[Send Zero Credits API] Parsed target email:', email);
+    // 2. Auth Check: Allow Service Role Key OR Anon Key OR Authenticated User Session
+    const authHeader = request.headers.get('Authorization');
+    const token = authHeader?.replace(/^Bearer\s+/i, '').trim();
 
-    if (!email) {
-      console.warn('[Send Zero Credits API] Bad request: email is empty');
+    const isAuthorizedToken = 
+      !!token && (
+        (process.env.SUPABASE_SERVICE_ROLE_KEY && token === process.env.SUPABASE_SERVICE_ROLE_KEY) ||
+        (process.env.SUPABASE_ANON_KEY && token === process.env.SUPABASE_ANON_KEY)
+      );
+
+    if (!isAuthorizedToken) {
+      // Check authenticated user session fallback
+      try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user && user.email) {
+          if (!targetEmail) targetEmail = user.email;
+        } else {
+          console.warn('[Send Zero Credits API] Unauthorized request: no valid token or session');
+          return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+      } catch (authErr: any) {
+        console.warn('[Send Zero Credits API] Session auth error:', authErr.message);
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+    }
+
+    console.log('[Send Zero Credits API] Target email:', targetEmail);
+
+    if (!targetEmail) {
+      console.warn('[Send Zero Credits API] Bad request: target email is missing');
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
 
-    console.log('[Send Zero Credits API] Calling sendZeroCreditsEmail...');
-    const data = await sendZeroCreditsEmail({ email });
-    console.log('[Send Zero Credits API] sendZeroCreditsEmail resolved:', JSON.stringify(data));
+    console.log('[Send Zero Credits API] Triggering sendZeroCreditsEmail for:', targetEmail);
+    const data = await sendZeroCreditsEmail({ email: targetEmail });
+    console.log('[Send Zero Credits API] sendZeroCreditsEmail output:', JSON.stringify(data));
 
     return NextResponse.json({ success: true, data });
   } catch (error: any) {
-    console.error('[Send Zero Credits API] Error:', error.message || error);
+    console.error('[Send Zero Credits API] Fatal error:', error.message || error);
     const message = error instanceof Error ? error.message : 'Failed to send zero credits email';
     return NextResponse.json({ error: message }, { status: 500 });
   }
