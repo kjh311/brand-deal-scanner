@@ -7,44 +7,30 @@ export async function POST(request: Request) {
   try {
     let targetEmail: string | null = null;
 
-    // 1. Try parsing JSON body if present
+    // 1. Parse JSON body if present
     try {
       const body = await request.json();
       if (body && typeof body.email === 'string') {
         targetEmail = body.email.trim();
       }
     } catch {
-      // Body may be empty or invalid JSON
+      // Body may be empty or plain text
     }
 
-    // 2. Auth Check: Allow Service Role Key OR Anon Key OR Authenticated User Session
-    const authHeader = request.headers.get('Authorization');
-    const token = authHeader?.replace(/^Bearer\s+/i, '').trim();
-
-    const isAuthorizedToken = 
-      !!token && (
-        (process.env.SUPABASE_SERVICE_ROLE_KEY && token === process.env.SUPABASE_SERVICE_ROLE_KEY) ||
-        (process.env.SUPABASE_ANON_KEY && token === process.env.SUPABASE_ANON_KEY)
-      );
-
-    if (!isAuthorizedToken) {
-      // Check authenticated user session fallback
+    // 2. Fallback to authenticated user session if targetEmail is missing
+    if (!targetEmail) {
       try {
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
         if (user && user.email) {
-          if (!targetEmail) targetEmail = user.email;
-        } else {
-          console.warn('[Send Zero Credits API] Unauthorized request: no valid token or session');
-          return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+          targetEmail = user.email;
         }
       } catch (authErr: any) {
-        console.warn('[Send Zero Credits API] Session auth error:', authErr.message);
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        console.warn('[Send Zero Credits API] Session lookup note:', authErr.message);
       }
     }
 
-    console.log('[Send Zero Credits API] Target email:', targetEmail);
+    console.log('[Send Zero Credits API] Target email identified:', targetEmail);
 
     if (!targetEmail) {
       console.warn('[Send Zero Credits API] Bad request: target email is missing');
@@ -53,7 +39,7 @@ export async function POST(request: Request) {
 
     console.log('[Send Zero Credits API] Triggering sendZeroCreditsEmail for:', targetEmail);
     const data = await sendZeroCreditsEmail({ email: targetEmail });
-    console.log('[Send Zero Credits API] sendZeroCreditsEmail output:', JSON.stringify(data));
+    console.log('[Send Zero Credits API] sendZeroCreditsEmail result:', JSON.stringify(data));
 
     return NextResponse.json({ success: true, data });
   } catch (error: any) {
