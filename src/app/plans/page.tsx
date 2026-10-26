@@ -185,7 +185,7 @@ export default function PlansPage() {
       <Navbar />
 
       <main className="flex-grow pt-32 pb-12 px-6 shadow-2xl">
-        <div ref={containerRef} className="max-w-[1120px] mx-auto">
+        <div className="max-w-[1120px] mx-auto">
           {/* Hero Title */}
           <div className="text-center mb-12">
             <h1 className="font-headline text-4xl md:text-5xl font-bold tracking-[-0.02em] uppercase mb-4 text-white">
