@@ -140,10 +140,9 @@ export default function PlansPage() {
     window.addEventListener('focus', reset)
 
     const ctx = gsap.context(() => {
-      // Set initial state
-      gsap.set(".plan-card", { opacity: 0, y: 30 });
-
-      // Animate to final state
+      // Cards start hidden via CSS (opacity-0 class on .plan-card).
+      // GSAP animates them in — no gsap.set() needed, eliminating the
+      // flash where cards briefly appear before JS sets opacity:0.
       gsap.to(".plan-card", {
         opacity: 1,
         y: 0,
@@ -221,7 +220,7 @@ export default function PlansPage() {
               <div
                 key={plan.id}
                 onClick={() => handleSelect(plan)}
-                className="plan-card bg-white border-[3px] rounded-2xl p-6 flex flex-col h-full shadow-2xl relative cursor-pointer hover:shadow-[0_0_25px_var(--glow-color),_0_0_45px_var(--glow-color)] transition-all duration-300 hover:scale-[1.02]"
+                className="plan-card opacity-0 translate-y-[30px] bg-white border-[3px] rounded-2xl p-6 flex flex-col h-full shadow-2xl relative cursor-pointer hover:shadow-[0_0_25px_var(--glow-color),_0_0_45px_var(--glow-color)] transition-shadow duration-300 hover:scale-[1.02]"
                 style={{
                   borderColor: plan.color + '60',
                   '--glow-color': plan.color + '55'
