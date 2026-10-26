@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import Image from 'next/image'
 
-export default function AccessGatePage() {
+// Inner component isolated so useSearchParams() is inside a Suspense boundary
+function AccessGateForm() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const next = searchParams.get('next') || '/'
@@ -311,5 +311,40 @@ export default function AccessGatePage() {
         }
       `}</style>
     </div>
+  )
+}
+
+// Suspense wrapper required by Next.js when useSearchParams() is used in a
+// Client Component that is statically prerendered.
+export default function AccessGatePage() {
+  return (
+    <Suspense
+      fallback={
+        <div
+          style={{
+            minHeight: '100vh',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background:
+              'radial-gradient(ellipse at 60% 20%, #3B1D8B 0%, #1E1A5F 45%, #0B0826 100%)',
+          }}
+        >
+          <div
+            style={{
+              width: 36,
+              height: 36,
+              border: '3px solid rgba(216,76,159,0.3)',
+              borderTopColor: '#D84C9F',
+              borderRadius: '50%',
+              animation: 'spin 0.7s linear infinite',
+            }}
+          />
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        </div>
+      }
+    >
+      <AccessGateForm />
+    </Suspense>
   )
 }
