@@ -127,28 +127,28 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // 2. Check for the password cookie to bypass construction block
-  const bypassPassword = request.cookies.get('bypass_password')?.value
-  const correctPassword = process.env.SITE_PASSWORD || 'mysecretpassword'
+  // 2. [TEMPORARILY DISABLED] Password gate — re-enable by uncommenting this block
+  // const bypassPassword = request.cookies.get('bypass_password')?.value
+  // const correctPassword = process.env.SITE_PASSWORD || 'mysecretpassword'
 
-  if (bypassPassword !== correctPassword) {
-    const showValidationError = !!bypassPassword
-    const response = new NextResponse(
-      getUnderConstructionHTML(showValidationError),
-      {
-        status: 401,
-        headers: {
-          'Content-Type': 'text/html',
-        },
-      }
-    )
+  // if (bypassPassword !== correctPassword) {
+  //   const showValidationError = !!bypassPassword
+  //   const response = new NextResponse(
+  //     getUnderConstructionHTML(showValidationError),
+  //     {
+  //       status: 401,
+  //       headers: {
+  //         'Content-Type': 'text/html',
+  //       },
+  //     }
+  //   )
 
-    if (showValidationError) {
-      response.cookies.delete('bypass_password')
-    }
+  //   if (showValidationError) {
+  //     response.cookies.delete('bypass_password')
+  //   }
 
-    return response
-  }
+  //   return response
+  // }
 
   // 3. Supabase session sync & route protection for authorized visitors
   let supabaseResponse = NextResponse.next({
