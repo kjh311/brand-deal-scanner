@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
@@ -112,10 +112,26 @@ export default function PlansPage() {
 
   const isRedirecting = useRef(false)
 
+  // ── GSAP animation runs before the browser paints so cards are never
+  // visible at full opacity before the fade-in starts.
+  useLayoutEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.set(".plan-card", { opacity: 0, y: 30 })
+      gsap.to(".plan-card", {
+        opacity: 1,
+        y: 0,
+        duration: 0.6,
+        stagger: 0.1,
+        ease: "power2.out",
+        clearProps: "all"
+      })
+    }, containerRef)
+    return () => ctx.revert()
+  }, [])
+
+  // ── State reset and async checks (useEffect is fine for async work) ───────
   useEffect(() => {
-    // Force reset everything on mount/visibility change
     const reset = () => {
-      console.log('Plans: Resetting state')
       isRedirecting.current = false
       setLoadingPlanId(null)
     }
@@ -138,25 +154,9 @@ export default function PlansPage() {
 
     window.addEventListener('pageshow', reset)
     window.addEventListener('focus', reset)
-
-    const ctx = gsap.context(() => {
-      // Cards start hidden via CSS (opacity-0 class on .plan-card).
-      // GSAP animates them in — no gsap.set() needed, eliminating the
-      // flash where cards briefly appear before JS sets opacity:0.
-      gsap.to(".plan-card", {
-        opacity: 1,
-        y: 0,
-        duration: 0.6,
-        stagger: 0.1,
-        ease: "power2.out",
-        clearProps: "all"
-      })
-    }, containerRef)
-
     return () => {
       window.removeEventListener('pageshow', reset)
       window.removeEventListener('focus', reset)
-      ctx.revert()
     }
   }, [])
 
@@ -220,7 +220,7 @@ export default function PlansPage() {
               <div
                 key={plan.id}
                 onClick={() => handleSelect(plan)}
-                className="plan-card opacity-0 translate-y-[30px] bg-white border-[3px] rounded-2xl p-6 flex flex-col h-full shadow-2xl relative cursor-pointer hover:shadow-[0_0_25px_var(--glow-color),_0_0_45px_var(--glow-color)] transition-shadow duration-300 hover:scale-[1.02]"
+                className="plan-card bg-white border-[3px] rounded-2xl p-6 flex flex-col h-full shadow-2xl relative cursor-pointer hover:shadow-[0_0_25px_var(--glow-color),_0_0_45px_var(--glow-color)] transition-all duration-300 hover:scale-[1.02]"
                 style={{
                   borderColor: plan.color + '60',
                   '--glow-color': plan.color + '55'
