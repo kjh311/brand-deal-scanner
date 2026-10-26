@@ -9,9 +9,11 @@ const PUBLIC_PATHS = ['/', '/privacy', '/terms', '/support', '/access-gate']
 
 /**
  * Prefix-based public paths (e.g. /access-gate/... API sub-routes).
- * Keeps the gate page and its submission endpoint loop-free.
+ * Keeps the gate page, its submission endpoint, and Stripe webhooks loop-free.
+ * Stripe POSTs to /api/webhooks/stripe have no cookies/session — they must
+ * always bypass the auth gate or they'll get a 307 redirect and fail.
  */
-const PUBLIC_PREFIXES = ['/access-gate', '/api/access-gate']
+const PUBLIC_PREFIXES = ['/access-gate', '/api/access-gate', '/api/webhooks']
 
 function isPublicPath(pathname: string): boolean {
   if (PUBLIC_PATHS.includes(pathname)) return true
