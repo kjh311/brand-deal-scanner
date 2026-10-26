@@ -6,6 +6,15 @@ export async function POST(request: Request) {
     const body = await request.json()
     console.log('[Send Welcome API] Received request payload:', body)
 
+    // ── Supabase DB webhook guard ──────────────────────────────────────────
+    // Supabase sends a `type` field ("INSERT" | "UPDATE" | "DELETE") when this
+    // endpoint is registered as a database webhook. Only fire on INSERT so that
+    // profile updates or re-syncs don't re-send the welcome email.
+    if (body.type && body.type !== 'INSERT') {
+      console.log('[Send Welcome API] Skipping — webhook type is not INSERT:', body.type)
+      return NextResponse.json({ skipped: true, reason: `type=${body.type}` })
+    }
+
     // Handle both direct POST payloads and Supabase webhook payloads
     const email = body.email || body.record?.email
     const name = body.name || body.record?.raw_user_meta_data?.full_name || body.record?.raw_user_meta_data?.user_name

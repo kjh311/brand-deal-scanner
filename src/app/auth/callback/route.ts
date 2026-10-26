@@ -49,30 +49,39 @@ export async function GET(request: NextRequest) {
         return response
       }
 
-      // Non-blocking welcome email trigger
-      try {
-        const email = sessionData.user.email
-        const name =
-          sessionData.user.user_metadata?.full_name ||
-          sessionData.user.user_metadata?.username ||
-          sessionData.user.user_metadata?.name
+      // ── New-user detection ────────────────────────────────────────────────
+      // Check for an existing profile BEFORE sending any email.
+      // A missing profile row means this is a first-time signup; an existing
+      // row means a returning user logging in — skip the welcome email.
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('id, user_name')
+        .eq('id', sessionData.user.id)
+        .maybeSingle()
 
-        if (email) {
-          await sendWelcomeEmail({ email, name })
+      const isNewUser = !existingProfile
+
+      if (isNewUser) {
+        console.log('[Auth Callback] New user detected — sending welcome email:', sessionData.user.email)
+        try {
+          const email = sessionData.user.email
+          const name =
+            sessionData.user.user_metadata?.full_name ||
+            sessionData.user.user_metadata?.username ||
+            sessionData.user.user_metadata?.name
+
+          if (email) {
+            await sendWelcomeEmail({ email, name })
+          }
+        } catch (err) {
+          console.error('[Auth Callback] Welcome email trigger error:', err)
         }
-      } catch (err) {
-        console.error('[Auth Callback] Welcome email trigger error:', err)
+      } else {
+        console.log('[Auth Callback] Returning user — skipping welcome email:', sessionData.user.email)
       }
 
-      // Check if user_name is set in profiles
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('user_name')
-        .eq('id', sessionData.user.id)
-        .single()
-
-      // If user_name is NULL, redirect to settings with attached cookies
-      if (!profile?.user_name) {
+      // Redirect new users (or users with no username yet) to settings
+      if (!existingProfile?.user_name) {
         const settingsResponse = NextResponse.redirect(`${origin}/settings`)
         response.cookies.getAll().forEach((c) => {
           settingsResponse.cookies.set(c.name, c.value, c)
