@@ -1,12 +1,11 @@
 'use client'
 
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { createClient } from '@/lib/supabase/client'
 import { handleCheckout, CheckoutMode, handlePortal } from '@/lib/stripe-client'
-import gsap from 'gsap'
 
 interface Plan {
   id: string
@@ -106,28 +105,11 @@ const plans: Plan[] = [
 
 export default function PlansPage() {
   const router = useRouter()
-  const containerRef = useRef<HTMLDivElement>(null)
   const [loadingPlanId, setLoadingPlanId] = useState<string | null>(null)
   const [userPlan, setUserPlan] = useState<string | null>(null)
 
   const isRedirecting = useRef(false)
 
-  // ── GSAP animation runs before the browser paints so cards are never
-  // visible at full opacity before the fade-in starts.
-  useLayoutEffect(() => {
-    const ctx = gsap.context(() => {
-      gsap.set(".plan-card", { opacity: 0, y: 30 })
-      gsap.to(".plan-card", {
-        opacity: 1,
-        y: 0,
-        duration: 0.6,
-        stagger: 0.1,
-        ease: "power2.out",
-        clearProps: "all"
-      })
-    }, containerRef)
-    return () => ctx.revert()
-  }, [])
 
   // ── State reset and async checks (useEffect is fine for async work) ───────
   useEffect(() => {
@@ -215,16 +197,25 @@ export default function PlansPage() {
           </div>
 
           {/* Pricing Grid */}
+          {/* Keyframe defined here so it works without touching globals.css */}
+          <style>{`
+            @keyframes cardFadeIn {
+              from { opacity: 0; transform: translateY(30px); }
+              to   { opacity: 1; transform: translateY(0); }
+            }
+          `}</style>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {plans.map((plan) => (
+            {plans.map((plan, index) => (
               <div
                 key={plan.id}
                 onClick={() => handleSelect(plan)}
                 className="plan-card bg-white border-[3px] rounded-2xl p-6 flex flex-col h-full shadow-2xl relative cursor-pointer hover:shadow-[0_0_25px_var(--glow-color),_0_0_45px_var(--glow-color)] transition-all duration-300 hover:scale-[1.02]"
                 style={{
                   borderColor: plan.color + '60',
-                  '--glow-color': plan.color + '55'
-                } as any}
+                  '--glow-color': plan.color + '55',
+                  animation: `cardFadeIn 0.6s cubic-bezier(0.16,1,0.3,1) both`,
+                  animationDelay: `${index * 0.1}s`,
+                } as React.CSSProperties}
               >
                 {plan.popular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
