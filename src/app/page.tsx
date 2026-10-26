@@ -1,3 +1,4 @@
+import { Metadata } from 'next'
 import Link from 'next/link'
 import { Navbar } from '@/components/layout/Navbar'
 import { Hero } from '@/components/features/Hero'
@@ -6,11 +7,19 @@ import { TrustSection } from '@/components/features/TrustSection'
 import { TestimonialsSection } from '@/components/features/TestimonialsSection'
 import { Footer } from '@/components/layout/Footer'
 
+export const metadata: Metadata = {
+  title: 'Brand Deal Fixer — Automated Contract Analysis for Creators',
+  description: 'Scan brand agreements, flag predatory clauses, and protect your creator revenue.',
+}
+
 export default function LandingPage() {
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-r from-[#221A7F] via-[#7B2CBF] to-[#D84C9F] text-white">
       <Navbar />
       <main className="flex-grow">
+        {/* Hidden screen-reader heading ensuring automated crawlers extract the exact app name */}
+        <h1 className="sr-only">Brand Deal Fixer</h1>
+
         <Hero />
         <HowItWorks />
         <TrustSection />
@@ -22,7 +31,7 @@ export default function LandingPage() {
               Find Your Plan
             </h2>
             <p className="text-lg text-white/70 mb-8 max-w-2xl mx-auto">
-              Choose the plan that fits your brand partnership needs. Scan deals, negotiate terms, and protect your revenue.
+              Choose the plan that fits your brand partnership needs. Scan deals, negotiate terms, and protect your revenue with Brand Deal Fixer.
             </p>
             <Link
               href="/plans"

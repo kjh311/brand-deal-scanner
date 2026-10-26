@@ -153,9 +153,9 @@ export function Navbar() {
       <nav className="flex justify-between items-center max-w-[1280px] mx-auto px-6 md:px-10 py-4 relative">
 
         {/* Brand */}
-        <Link href="/" className="flex items-center gap-3 active:scale-95 transition-transform group">
+        <Link href="/" aria-label="Brand Deal Fixer" className="flex items-center gap-3 active:scale-95 transition-transform group">
           <div className="w-14 h-14 flex items-center justify-center group-hover:scale-110 transition-all duration-300 pointer-events-none drop-shadow-[0_0_15px_rgba(255,188,43,0.3)]">
-            <img src="/logo.png" alt="Logo" className="w-12 h-12 object-contain" />
+            <img src="/logo.png" alt="Brand Deal Fixer Logo" className="w-12 h-12 object-contain" />
           </div>
           <div className="font-headline text-2xl font-black tracking-tighter text-white">
             Brand Deal <span className="text-primary tracking-normal font-bold">Fixer</span>
@@ -167,7 +167,7 @@ export function Navbar() {
           {!loading && user && (
             <Link
               href="/upload"
-               className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/5 border border-white/10 hover:border-primary/50 text-xs font-black uppercase tracking-[2px] text-white cursor-pointer transition-all"
+              className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/5 border border-white/10 hover:border-primary/50 text-xs font-black uppercase tracking-[2px] text-white cursor-pointer transition-all"
             >
               <span className="material-symbols-outlined text-primary text-sm">token</span>
               <span>{(credits ?? 0) + (noneExpireCredits ?? 0)} Credits</span>
@@ -191,19 +191,19 @@ export function Navbar() {
                   ) : (
                     <span className="material-symbols-outlined text-primary/60">account_circle</span>
                   )}
-                 </Link>
+                </Link>
 
-                 {isAdmin && unreadCount > 0 && (
-                   <Link
-                     href="/admin"
-                     className="relative flex items-center justify-center w-10 h-10 rounded-full border border-white/10 bg-white/5 hover:border-primary/50 transition-all cursor-pointer"
-                   >
-                     <span className="material-symbols-outlined text-white text-xl">notifications</span>
-                     <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
-                       {unreadCount}
-                     </span>
-                   </Link>
-                 )}
+                {isAdmin && unreadCount > 0 && (
+                  <Link
+                    href="/admin"
+                    className="relative flex items-center justify-center w-10 h-10 rounded-full border border-white/10 bg-white/5 hover:border-primary/50 transition-all cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-white text-xl">notifications</span>
+                    <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                      {unreadCount}
+                    </span>
+                  </Link>
+                )}
 
                 <button
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
