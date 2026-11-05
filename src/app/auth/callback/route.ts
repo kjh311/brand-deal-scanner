@@ -8,6 +8,11 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get('code')
   const next = searchParams.get('next') ?? '/history'
 
+  // Checkout intent params — threaded from plans page → signup/login → here
+  const priceId = searchParams.get('priceId')
+  const checkoutMode = searchParams.get('mode')
+  const credits = searchParams.get('credits')
+
   console.log('[Auth Callback] Processing code exchange. Target:', next)
 
   if (code) {
@@ -78,6 +83,20 @@ export async function GET(request: NextRequest) {
         }
       } else {
         console.log('[Auth Callback] Returning user — skipping welcome email:', sessionData.user.email)
+      }
+
+      // ── Checkout intent: user clicked a plan before signing in ──────────
+      // Redirect to /checkout which auto-triggers Stripe on the client.
+      if (priceId) {
+        const p = new URLSearchParams()
+        p.set('priceId', priceId)
+        if (checkoutMode) p.set('mode', checkoutMode)
+        if (credits) p.set('credits', credits)
+        const checkoutResponse = NextResponse.redirect(`${origin}/checkout?${p.toString()}`)
+        response.cookies.getAll().forEach((c) => {
+          checkoutResponse.cookies.set(c.name, c.value, c)
+        })
+        return checkoutResponse
       }
 
       // Redirect new users (or users with no username yet) to settings

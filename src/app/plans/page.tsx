@@ -150,7 +150,13 @@ export default function PlansPage() {
     const { data: { user }, error: userError } = await supabase.auth.getUser()
 
     if (userError || !user) {
-      router.push(`/signup?plan=${plan.id}`)
+      // Pass full checkout params so we can resume Stripe after the user signs in/up
+      const params = new URLSearchParams({
+        priceId: plan.priceId,
+        mode: plan.mode,
+        credits: String(plan.credits),
+      })
+      router.push(`/signup?${params.toString()}`)
       return
     }
 

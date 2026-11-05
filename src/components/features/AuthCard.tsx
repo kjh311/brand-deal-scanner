@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Eye, EyeOff } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -11,8 +11,9 @@ interface AuthCardProps {
   mode: 'login' | 'signup'
 }
 
-export function AuthCard({ mode }: AuthCardProps) {
+function AuthCardInner({ mode }: AuthCardProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [showPassword, setShowPassword] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -22,6 +23,24 @@ export function AuthCard({ mode }: AuthCardProps) {
   const [signUpSuccess, setSignUpSuccess] = useState(false)
 
   const isLogin = mode === 'login'
+
+  // Checkout params passed from the plans page — preserved through the full auth flow
+  const priceId = searchParams.get('priceId')
+  const checkoutMode = searchParams.get('mode')
+  const credits = searchParams.get('credits')
+  const hasCheckoutIntent = !!priceId
+
+  // Build the callback URL, including checkout params when present so the
+  // server-side auth callback can resume Stripe after auth completes.
+  const buildCallbackUrl = () => {
+    const base = `${window.location.origin}/auth/callback`
+    if (!hasCheckoutIntent) return base
+    const p = new URLSearchParams()
+    if (priceId) p.set('priceId', priceId)
+    if (checkoutMode) p.set('mode', checkoutMode)
+    if (credits) p.set('credits', credits)
+    return `${base}?${p.toString()}`
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -40,7 +59,7 @@ export function AuthCard({ mode }: AuthCardProps) {
             data: {
               user_name: username.trim(),
             },
-            emailRedirectTo: `${window.location.origin}/auth/callback`,
+            emailRedirectTo: buildCallbackUrl(),
           },
         })
 
@@ -79,7 +98,17 @@ export function AuthCard({ mode }: AuthCardProps) {
           return;
         }
 
-        // Successful login - check if first time (user_name not set in profiles)
+        // Successful login — if the user came from the plans page, send them
+        // straight to checkout. Otherwise check profile completeness.
+        if (hasCheckoutIntent) {
+          const p = new URLSearchParams()
+          if (priceId) p.set('priceId', priceId)
+          if (checkoutMode) p.set('mode', checkoutMode)
+          if (credits) p.set('credits', credits)
+          router.push(`/checkout?${p.toString()}`)
+          return
+        }
+
         if (signInData?.user?.id) {
           const { data: profile } = await supabase
             .from('profiles')
@@ -92,8 +121,8 @@ export function AuthCard({ mode }: AuthCardProps) {
             return
           }
         }
-        
-        router.push('/history');
+
+        router.push('/history')
       }
     } catch (err: any) {
       setError(err.message || 'An unexpected error occurred.')
@@ -112,7 +141,7 @@ export function AuthCard({ mode }: AuthCardProps) {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: buildCallbackUrl(),
           queryParams: {
             prompt: 'select_account',
           },
@@ -308,5 +337,15 @@ export function AuthCard({ mode }: AuthCardProps) {
         </div>
       </div>
     </div>
+  )
+}
+
+// useSearchParams() requires a Suspense boundary — AuthCardInner is the real
+// implementation; AuthCard is the exported wrapper that provides it.
+export function AuthCard({ mode }: AuthCardProps) {
+  return (
+    <Suspense fallback={null}>
+      <AuthCardInner mode={mode} />
+    </Suspense>
   )
 }
