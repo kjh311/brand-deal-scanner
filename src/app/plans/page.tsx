@@ -150,13 +150,16 @@ export default function PlansPage() {
     const { data: { user }, error: userError } = await supabase.auth.getUser()
 
     if (userError || !user) {
-      // Pass full checkout params so we can resume Stripe after the user signs in/up
-      const params = new URLSearchParams({
+      // Store the checkout intent in a cookie so it survives the OAuth redirect
+      // loop. URL params can be dropped by Supabase's OAuth handling.
+      const intent = JSON.stringify({
         priceId: plan.priceId,
         mode: plan.mode,
-        credits: String(plan.credits),
+        credits: plan.credits,
       })
-      router.push(`/signup?${params.toString()}`)
+      document.cookie = `checkout_intent=${encodeURIComponent(intent)}; path=/; max-age=3600; SameSite=Lax`
+
+      router.push('/signup')
       return
     }
 

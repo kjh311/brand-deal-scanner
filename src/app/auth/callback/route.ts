@@ -86,16 +86,36 @@ export async function GET(request: NextRequest) {
       }
 
       // ── Checkout intent: user clicked a plan before signing in ──────────
-      // Redirect to /checkout which auto-triggers Stripe on the client.
-      if (priceId) {
+      // Primary source: cookie (survives OAuth redirect loop reliably).
+      // Fallback: URL params (works for email+password login path).
+      let checkoutPriceId = priceId
+      let checkoutModeResolved = checkoutMode
+      let checkoutCredits = credits
+
+      const intentCookie = cookieStore.get('checkout_intent')?.value
+      if (intentCookie && !checkoutPriceId) {
+        try {
+          const parsed = JSON.parse(decodeURIComponent(intentCookie))
+          checkoutPriceId = parsed.priceId
+          checkoutModeResolved = parsed.mode
+          checkoutCredits = String(parsed.credits ?? 0)
+        } catch {
+          console.warn('[Auth Callback] Failed to parse checkout_intent cookie')
+        }
+      }
+
+      if (checkoutPriceId) {
         const p = new URLSearchParams()
-        p.set('priceId', priceId)
-        if (checkoutMode) p.set('mode', checkoutMode)
-        if (credits) p.set('credits', credits)
+        p.set('priceId', checkoutPriceId)
+        if (checkoutModeResolved) p.set('mode', checkoutModeResolved)
+        if (checkoutCredits) p.set('credits', checkoutCredits)
         const checkoutResponse = NextResponse.redirect(`${origin}/checkout?${p.toString()}`)
+        // Copy session cookies
         response.cookies.getAll().forEach((c) => {
           checkoutResponse.cookies.set(c.name, c.value, c)
         })
+        // Clear the intent cookie
+        checkoutResponse.cookies.set('checkout_intent', '', { path: '/', maxAge: 0 })
         return checkoutResponse
       }
 

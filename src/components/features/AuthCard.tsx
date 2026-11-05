@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, Suspense } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { Eye, EyeOff } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -11,9 +11,8 @@ interface AuthCardProps {
   mode: 'login' | 'signup'
 }
 
-function AuthCardInner({ mode }: AuthCardProps) {
+export function AuthCard({ mode }: AuthCardProps) {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [showPassword, setShowPassword] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -24,21 +23,36 @@ function AuthCardInner({ mode }: AuthCardProps) {
 
   const isLogin = mode === 'login'
 
-  // Checkout params passed from the plans page — preserved through the full auth flow
-  const priceId = searchParams.get('priceId')
-  const checkoutMode = searchParams.get('mode')
-  const credits = searchParams.get('credits')
-  const hasCheckoutIntent = !!priceId
+  // Reads the checkout_intent cookie set by the plans page when an
+  // unauthenticated user clicks a plan. The cookie survives the full OAuth
+  // redirect loop, unlike URL params which Supabase may drop.
+  const readCheckoutCookie = () => {
+    try {
+      const raw = document.cookie
+        .split('; ')
+        .find((c) => c.startsWith('checkout_intent='))
+        ?.split('=')[1]
+      if (!raw) return null
+      return JSON.parse(decodeURIComponent(raw)) as {
+        priceId: string
+        mode: string
+        credits: number
+      }
+    } catch {
+      return null
+    }
+  }
 
-  // Build the callback URL, including checkout params when present so the
-  // server-side auth callback can resume Stripe after auth completes.
+  // Build the auth callback URL. Threads the priceId into the URL so the
+  // email-confirmation link also carries the checkout intent server-side.
   const buildCallbackUrl = () => {
     const base = `${window.location.origin}/auth/callback`
-    if (!hasCheckoutIntent) return base
+    const intent = readCheckoutCookie()
+    if (!intent?.priceId) return base
     const p = new URLSearchParams()
-    if (priceId) p.set('priceId', priceId)
-    if (checkoutMode) p.set('mode', checkoutMode)
-    if (credits) p.set('credits', credits)
+    p.set('priceId', intent.priceId)
+    if (intent.mode) p.set('mode', intent.mode)
+    if (intent.credits !== undefined) p.set('credits', String(intent.credits))
     return `${base}?${p.toString()}`
   }
 
@@ -98,13 +112,14 @@ function AuthCardInner({ mode }: AuthCardProps) {
           return;
         }
 
-        // Successful login — if the user came from the plans page, send them
-        // straight to checkout. Otherwise check profile completeness.
-        if (hasCheckoutIntent) {
+        // Successful login — if the user came from the plans page, resume checkout.
+        const intent = readCheckoutCookie()
+        if (intent?.priceId) {
+          document.cookie = 'checkout_intent=; path=/; max-age=0'
           const p = new URLSearchParams()
-          if (priceId) p.set('priceId', priceId)
-          if (checkoutMode) p.set('mode', checkoutMode)
-          if (credits) p.set('credits', credits)
+          p.set('priceId', intent.priceId)
+          if (intent.mode) p.set('mode', intent.mode)
+          if (intent.credits !== undefined) p.set('credits', String(intent.credits))
           router.push(`/checkout?${p.toString()}`)
           return
         }
@@ -337,15 +352,5 @@ function AuthCardInner({ mode }: AuthCardProps) {
         </div>
       </div>
     </div>
-  )
-}
-
-// useSearchParams() requires a Suspense boundary — AuthCardInner is the real
-// implementation; AuthCard is the exported wrapper that provides it.
-export function AuthCard({ mode }: AuthCardProps) {
-  return (
-    <Suspense fallback={null}>
-      <AuthCardInner mode={mode} />
-    </Suspense>
   )
 }
