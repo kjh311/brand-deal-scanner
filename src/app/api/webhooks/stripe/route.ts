@@ -459,7 +459,7 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
   let profile = null;
   const { data: existingProfile } = await supabaseAdmin
     .from('profiles')
-    .select('id, plan')
+    .select('id, plan, email')
     .eq('stripe_customer_id', customerId)
     .single();
 
@@ -540,6 +540,48 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
   }
 
   console.log(`✅ Renewal successful for User ${profile.id}: ${creditsToGrant} credits granted`);
+
+  // ── Send renewal receipt email ───────────────────────────────────────────
+  // Runs non-blocking — a failed email must not cause the webhook to 500.
+  const profileEmail = (profile as any).email ||
+    (await (async () => {
+      try {
+        const c = await stripe.customers.retrieve(customerId);
+        return (c as Stripe.Customer).email;
+      } catch { return null; }
+    })());
+
+  if (profileEmail) {
+    try {
+      const planLabel =
+        plan === 'agency' ? 'Agency Plan'
+        : plan === 'professional' ? 'Professional Plan'
+        : 'Plus Plan';
+
+      // Resolve the hosted invoice URL so the user can download their receipt
+      let hostedInvoiceUrl: string | null = invoice.hosted_invoice_url ?? null;
+      if (!hostedInvoiceUrl && invoice.id) {
+        try {
+          const freshInvoice = await stripe.invoices.retrieve(invoice.id);
+          hostedInvoiceUrl = freshInvoice.hosted_invoice_url ?? null;
+        } catch (err: any) {
+          console.warn('[Stripe Webhook] Could not refresh invoice URL:', err.message);
+        }
+      }
+
+      await sendPurchaseReceiptEmail({
+        email: profileEmail,
+        planName: planLabel,
+        amountPaid: invoice.amount_paid || 0,
+        hostedInvoiceUrl,
+        isSubscription: true,
+      });
+
+      console.log(`📧 Renewal receipt sent to ${profileEmail}`);
+    } catch (emailErr: any) {
+      console.error('[Stripe Webhook] Failed to send renewal receipt:', emailErr.message);
+    }
+  }
 }
 
 async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
