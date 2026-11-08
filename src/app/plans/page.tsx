@@ -6,6 +6,7 @@ import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { createClient } from '@/lib/supabase/client'
 import { handleCheckout, CheckoutMode, handlePortal } from '@/lib/stripe-client'
+import { getCheckoutPlanId } from '@/lib/stripe-config'
 
 interface Plan {
   id: string
@@ -39,7 +40,7 @@ const plans: Plan[] = [
       'Advanced Missing Clause Detection AI',
       'Brand-Specific Insight Reports',
     ],
-    priceId: 'prod_Ueztggr15cNscz',
+    priceId: getCheckoutPlanId('individual'),
     mode: 'payment',
     credits: 1,
   },
@@ -58,7 +59,7 @@ const plans: Plan[] = [
       'Advanced Missing Clause Detection AI',
       'Brand-Specific Insight Reports',
     ],
-    priceId: 'prod_Uezx3sCcamylDq',
+    priceId: getCheckoutPlanId('plus'),
     mode: 'subscription',
     credits: 5,
   },
@@ -77,7 +78,7 @@ const plans: Plan[] = [
       'Advanced Missing Clause Detection AI',
       'Brand-Specific Insight Reports',
     ],
-    priceId: 'prod_Uf01XdkL0cOXn6',
+    priceId: getCheckoutPlanId('professional'),
     mode: 'subscription',
     credits: 20,
     popular: true,
@@ -97,7 +98,7 @@ const plans: Plan[] = [
       'Advanced Missing Clause Detection AI',
       'Full Dashboard History Access',
     ],
-    priceId: 'prod_Uf03Msy5G3OZn2',
+    priceId: getCheckoutPlanId('agency'),
     mode: 'subscription',
     credits: 100,
   },

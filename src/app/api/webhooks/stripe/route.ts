@@ -5,6 +5,7 @@ import { sendPurchaseReceiptEmail } from '@/lib/emails/send-purchase-receipt';
 import { sendCancellationEmail } from '@/lib/emails/send-cancellation';
 import { sendSubscriptionEndedEmail } from '@/lib/emails/send-subscription-ended';
 import { sendPaymentFailedEmail } from '@/lib/emails/send-payment-failed';
+import { getPlanFromStripeId, getCreditsForPlanOrId } from '@/lib/stripe-config';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2026-05-27.dahlia',
@@ -22,12 +23,9 @@ const RELEVANT_EVENTS = new Set([
 ]);
 
 const PLAN_CREDITS: Record<string, number> = {
-  'prod_Uezx3sCcamylDq': 5,
-  'prod_Uf01XdkL0cOXn6': 20,
-  'prod_Uf03Msy5G3OZn2': 100,
-  'plus': 5,
-  'professional': 20,
-  'agency': 100,
+  plus: 5,
+  professional: 20,
+  agency: 100,
 };
 
 const processedEventIds = new Set<string>();
@@ -230,9 +228,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       }
     }
 
-    const plan = productId === 'prod_Uf03Msy5G3OZn2' ? 'agency' 
-      : productId === 'prod_Uf01XdkL0cOXn6' ? 'professional' 
-      : 'plus';
+    const plan = getPlanFromStripeId(productId);
 
     console.log(`📦 Subscription mode: resolved productId to ${productId || 'none'} -> plan: ${plan}`);
 
@@ -450,9 +446,7 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
     ? invoiceLineItem.price.product 
     : invoiceLineItem?.price?.product?.id;
 
-  const plan = productId === 'prod_Uf03Msy5G3OZn2' ? 'agency' 
-    : productId === 'prod_Uf01XdkL0cOXn6' ? 'professional' 
-    : 'plus';
+  const plan = getPlanFromStripeId(productId);
 
   console.log(`🔍 Derived Product ID: ${productId || 'unknown'} -> plan: ${plan}`);
 
@@ -525,7 +519,7 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
     }
   }
 
-  const creditsToGrant = (productId && PLAN_CREDITS[productId]) || PLAN_CREDITS[profile.plan] || 5;
+  const creditsToGrant = (productId && getCreditsForPlanOrId(productId)) || getCreditsForPlanOrId(profile.plan) || 5;
 
   console.log(`🔄 Renewal for User ${profile.id} (productId: ${productId || 'none'}, plan: ${profile.plan || 'none'}): Granting ${creditsToGrant} credits`);
 

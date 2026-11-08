@@ -6,6 +6,7 @@ import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { uploadContract, registerManualContract } from '@/lib/actions/contracts'
 import { handleCheckout } from '@/lib/stripe-client'
+import { STRIPE_TOPUPS } from '@/lib/stripe-config'
 import { LegalComplianceModal } from '@/components/legal/LegalComplianceModal'
 import { createClient } from '@/lib/supabase/client'
 import ContractMonitor from '@/components/features/ContractMonitor'
@@ -134,13 +135,13 @@ export default function UploadPage() {
   const getTopUpDetails = (tier: string) => {
     switch (tier.toLowerCase()) {
       case 'agency':
-        return { productId: 'prod_UfT1DRTXQOzn94', pricePerUnit: 0.79, name: 'Agency Tier' };
+        return { productId: STRIPE_TOPUPS.AGENCY, pricePerUnit: 0.79, name: 'Agency Tier' };
       case 'professional':
-        return { productId: 'prod_UfT00V9zFyJOM7', pricePerUnit: 1.45, name: 'Professional Tier' };
+        return { productId: STRIPE_TOPUPS.PROFESSIONAL, pricePerUnit: 1.45, name: 'Professional Tier' };
       case 'plus':
-        return { productId: 'prod_UfSyVFRhZUqdiq', pricePerUnit: 3.00, name: 'Plus Tier' };
+        return { productId: STRIPE_TOPUPS.PLUS, pricePerUnit: 3.00, name: 'Plus Tier' };
       default:
-        return { productId: 'prod_Ueztggr15cNscz', pricePerUnit: 5.00, name: 'No Active Plan' };
+        return { productId: STRIPE_TOPUPS.INDIVIDUAL, pricePerUnit: 5.00, name: 'No Active Plan' };
     }
   }
 
