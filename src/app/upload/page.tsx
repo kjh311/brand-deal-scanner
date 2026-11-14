@@ -71,59 +71,76 @@ export default function UploadPage() {
   useEffect(() => {
     const initPage = async () => {
       try {
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+
+        // 1. Authentication Check: If not logged in, redirect to login
+        if (!user) {
+          router.replace('/login')
+          return
+        }
+
+        // 2. Plan & Scan Credit Check
         const res = await fetch('/api/subscription-status')
-        if (res.ok) {
-          const data = await res.json()
-          setSubStatus(data)
-
-          const isTopUp = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('topup') === 'true'
-          const userCredits = (data.credits || 0) + (data.none_expire_credits || 0)
-
-          if (userCredits === 0 && !isTopUp) {
-            // Scenario A (No Stripe Customer ID): If credits === 0 AND stripe_customer_id IS NULL, redirect to /plans
-            if (!data.stripe_customer_id) {
-              router.replace('/plans')
-              // Don't set isLoadingSub to false so loading spinner persists during transition
-              return
-            }
-            // Scenario B (Has Stripe Customer ID): If credits === 0 AND stripe_customer_id IS NOT NULL,
-            // they will remain on this page to view the top-up scans purchasing slider.
+        if (!res.ok) {
+          if (res.status === 401) {
+            router.replace('/login')
+            return
           }
+          router.replace('/plans')
+          return
+        }
 
-          // Existing Customers / Active Users (Scenario C): Check terms / privacy policy acceptance
-          const supabase = createClient()
-          const { data: { user } } = await supabase.auth.getUser()
+        const data = await res.json()
+        setSubStatus(data)
 
-          if (user) {
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('terms_accepted_at')
-              .eq('id', user.id)
-              .single()
+        const isTopUp = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('topup') === 'true'
+        const userCredits = (data.credits || 0) + (data.none_expire_credits || 0)
+        const hasActiveSubscription =
+          Boolean(data.hasActiveSubscription) ||
+          Boolean(data.currentPeriodEnd) ||
+          (Boolean(data.plan) &&
+            data.plan.toLowerCase() !== 'free' &&
+            data.plan.toLowerCase() !== 'none')
 
-            const { data: version } = await supabase
-              .from('terms_versions')
-              .select('terms_text, privacy_text, published_at')
-              .order('published_at', { ascending: false })
-              .limit(1)
-              .maybeSingle()
+        // 3. Subscription/Scan Gate: If user has 0 credits and no active subscription, redirect to /plans
+        if (userCredits === 0 && !isTopUp) {
+          if (!data.stripe_customer_id || !hasActiveSubscription) {
+            router.replace('/plans')
+            return
+          }
+          // If they have an active paid subscription, they remain on this page to view the top-up scans purchasing slider.
+        }
 
-            const acceptedAt = profile?.terms_accepted_at ?? null
-            const publishedAt = version?.published_at ?? null
+        // Existing Customers / Active Users: Check terms / privacy policy acceptance
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('terms_accepted_at')
+          .eq('id', user.id)
+          .single()
 
-            setLatestTermsText(version?.terms_text ?? '')
-            setLatestPrivacyText(version?.privacy_text ?? '')
+        const { data: version } = await supabase
+          .from('terms_versions')
+          .select('terms_text, privacy_text, published_at')
+          .order('published_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
 
-            if (publishedAt) {
-              if (!acceptedAt || new Date(acceptedAt).toISOString() < new Date(publishedAt).toISOString()) {
-                setLegalVariant(!acceptedAt ? 'initial' : 'updated')
-                setLegalModalOpen(true)
-              }
-            }
+        const acceptedAt = profile?.terms_accepted_at ?? null
+        const publishedAt = version?.published_at ?? null
+
+        setLatestTermsText(version?.terms_text ?? '')
+        setLatestPrivacyText(version?.privacy_text ?? '')
+
+        if (publishedAt) {
+          if (!acceptedAt || new Date(acceptedAt).toISOString() < new Date(publishedAt).toISOString()) {
+            setLegalVariant(!acceptedAt ? 'initial' : 'updated')
+            setLegalModalOpen(true)
           }
         }
       } catch (err) {
         console.error('Error initializing upload page:', err)
+        router.replace('/plans')
       } finally {
         setIsLoadingSub(false)
       }
@@ -287,12 +304,12 @@ export default function UploadPage() {
       <Navbar />
 
       <main className="relative z-10 flex-1 pt-32 pb-20 px-4 sm:px-6 md:px-10 max-w-[850px] mx-auto">
-        {isLoadingSub ? (
+        {isLoadingSub || !subStatus ? (
           <div className="flex flex-col items-center justify-center min-h-[400px] text-center space-y-4">
             <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
             <p className="text-sm font-bold uppercase tracking-widest text-slate-400">Loading profile...</p>
           </div>
-        ) : subStatus && (isTopUpRequested || ((subStatus.credits || 0) + (subStatus.none_expire_credits || 0)) === 0) ? (
+        ) : (isTopUpRequested || ((subStatus.credits || 0) + (subStatus.none_expire_credits || 0)) === 0) ? (
           <div className="bg-white border border-[#E2E8F0] rounded-[3rem] p-5 sm:p-10 md:p-12 shadow-lg space-y-8 relative overflow-hidden group text-center py-16 animate-in fade-in zoom-in duration-500">
             <div className="relative z-10 max-w-md mx-auto space-y-6">
               <div className="w-20 h-20 rounded-2xl bg-[#FFFBEB] border border-[#FDE68A] flex items-center justify-center mx-auto shadow-sm">

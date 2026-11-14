@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { BlogMarkdown } from '@/components/blog/BlogMarkdown'
+import { UploadContractButton } from '@/components/ui/UploadContractButton'
 import { ArrowLeft, Calendar, ShieldCheck, ArrowRight } from 'lucide-react'
 import type { BlogPost } from '@/lib/blog'
 
@@ -137,13 +138,12 @@ export default async function BlogPostPage({ params }: Props) {
                     Upload your contract to scan for perpetual rights, exclusivity traps, and missing indemnity protection in 60 seconds.
                   </p>
                 </div>
-                <Link
-                  href="/upload"
+                <UploadContractButton
                   className="px-6 py-3.5 rounded-xl bg-white text-[#1E1A5F] hover:bg-slate-100 font-bold text-sm tracking-wide transition-all shadow-lg shrink-0 flex items-center gap-2 cursor-pointer hover:scale-105 active:scale-95"
+                  icon={<ArrowRight className="w-4 h-4 text-[#7B2CBF]" />}
                 >
-                  <span>Upload Contract</span>
-                  <ArrowRight className="w-4 h-4 text-[#7B2CBF]" />
-                </Link>
+                  Upload Contract
+                </UploadContractButton>
               </div>
             </div>
           </article>

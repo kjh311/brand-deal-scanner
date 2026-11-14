@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
+import { UploadContractButton } from '@/components/ui/UploadContractButton'
 import { ArrowRight, Calendar, BookOpen } from 'lucide-react'
 import type { BlogPost } from '@/lib/blog'
 
@@ -65,13 +66,12 @@ export default async function BlogIndexPage() {
               <p className="text-white/70 text-sm leading-relaxed mb-6">
                 Our legal and AI deal analysts are drafting comprehensive contract teardowns and creator guides. Check back soon!
               </p>
-              <Link
-                href="/upload"
+              <UploadContractButton
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-[#1E1A5F] font-bold text-sm tracking-wide hover:bg-white/90 transition-all shadow-lg cursor-pointer"
+                icon={<ArrowRight className="w-4 h-4" />}
               >
-                <span>Audit a Contract Now</span>
-                <ArrowRight className="w-4 h-4" />
-              </Link>
+                Audit a Contract Now
+              </UploadContractButton>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

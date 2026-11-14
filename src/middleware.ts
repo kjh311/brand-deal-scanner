@@ -55,7 +55,19 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  // ── Access control: Protect /upload route ─────────────────────────────
+  if (pathname.startsWith('/upload')) {
+    if (!user) {
+      const loginUrl = request.nextUrl.clone()
+      loginUrl.pathname = '/login'
+      return NextResponse.redirect(loginUrl)
+    }
+  }
+
   return supabaseResponse
 
   /* ── RE-ENABLE START ──────────────────────────────────────────────────────
@@ -122,7 +134,19 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  // ── Access control: Protect /upload route ─────────────────────────────
+  if (pathname.startsWith('/upload')) {
+    if (!user) {
+      const loginUrl = request.nextUrl.clone()
+      loginUrl.pathname = '/login'
+      return NextResponse.redirect(loginUrl)
+    }
+  }
+
   return supabaseResponse
 
   ── RE-ENABLE END ─────────────────────────────────────────────────────── */

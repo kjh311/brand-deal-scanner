@@ -26,6 +26,7 @@ export async function GET(req: NextRequest) {
     }
 
     let currentPeriodEnd: number | null = null;
+    let hasActiveSubscription = false;
 
     if (profile?.stripe_customer_id) {
       const subscriptions = await stripe.subscriptions.list({
@@ -37,8 +38,15 @@ export async function GET(req: NextRequest) {
       if (subscriptions.data.length > 0) {
         const sub = subscriptions.data[0] as any;
         currentPeriodEnd = sub.current_period_end || sub.currentPeriodEnd || null;
+        hasActiveSubscription = true;
       }
     }
+
+    const isPaidTier = Boolean(
+      profile?.plan &&
+      profile.plan.toLowerCase() !== 'free' &&
+      profile.plan.toLowerCase() !== 'none'
+    );
 
     return NextResponse.json({
       plan: profile.plan || 'Free',
@@ -46,6 +54,7 @@ export async function GET(req: NextRequest) {
       none_expire_credits: profile.none_expire_credits || 0,
       stripe_customer_id: profile.stripe_customer_id,
       currentPeriodEnd,
+      hasActiveSubscription: hasActiveSubscription || isPaidTier,
       nextBillingDate: profile.next_billing_date,
     });
   } catch (err: any) {
