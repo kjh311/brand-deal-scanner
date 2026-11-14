@@ -11,6 +11,7 @@ import { getCheckoutPlanId } from '@/lib/stripe-config'
 interface Plan {
   id: string
   name: string
+  subtitle?: string
   price: string
   period: string
   badge?: string
@@ -22,85 +23,91 @@ interface Plan {
   mode: CheckoutMode
   credits: number
   popular?: boolean
+  cta?: string
 }
 
 const plans: Plan[] = [
   {
     id: 'individual',
     name: 'INDIVIDUAL CREATOR',
+    subtitle: 'For testing the waters on a single deal',
     price: '$5',
     period: 'PER SCAN',
     color: '#FF4D4D',
     icon: 'build',
     scans: '1 SCAN ONLY',
     features: [
-      'Red Flag Analysis',
+      '1 Contract Scan (Never expires)',
       'Red Flag Analysis & Explanations',
       'Counter-Offer Generator',
-      'Advanced Missing Clause Detection AI',
-      '$5.00 / Top-Up Scan',
+      'Missing Clause Detection AI',
+      'No recurring commitment',
     ],
     priceId: getCheckoutPlanId('individual'),
     mode: 'payment',
     credits: 1,
+    cta: 'BUY 1 SCAN',
   },
   {
     id: 'plus',
     name: 'CREATOR PLUS',
+    subtitle: 'For active creators closing weekly deals',
     price: '$15',
     period: '/mo',
     color: '#00C853',
-    icon: 'bomb',
+    icon: 'bolt',
     scans: '5 SCANS / MONTH',
     features: [
-      'Red Flag Analysis',
-      'Red Flag Analysis & Explanations',
-      'Counter-Offer Generator',
-      'Advanced Missing Clause Detection AI',
-      '$3.00 / Top-Up Scan',
+      '5 Scans / Month ($3.00/scan)',
+      'Everything in Individual Creator',
+      'Priority scan processing',
+      '$3.00 extra top-up scans',
     ],
     priceId: getCheckoutPlanId('plus'),
     mode: 'subscription',
     credits: 5,
+    cta: 'START PLAN',
   },
   {
     id: 'professional',
     name: 'CREATOR PROFESSIONAL',
+    subtitle: 'For full-time creators & managers',
     price: '$29',
     period: '/mo',
     color: '#A855F1',
     icon: 'auto_awesome',
     scans: '20 SCANS / MONTH',
     features: [
-      'Red Flag Analysis',
-      'Red Flag Analysis & Explanations',
-      'Counter-Offer Generator',
-      'Advanced Missing Clause Detection AI',
-      '$1.45 / Top-Up Scan',
+      '20 Scans / Month ($1.45/scan)',
+      'Everything in Creator Plus',
+      'Contract history & comparison archive',
+      '$1.45 extra top-up scans',
     ],
     priceId: getCheckoutPlanId('professional'),
     mode: 'subscription',
     credits: 20,
     popular: true,
+    cta: 'START PLAN',
   },
   {
     id: 'agency',
-    name: 'AG AGENCY',
+    name: 'TALENT AGENCY',
+    subtitle: 'For agencies & multi-creator rosters',
     price: '$79',
     period: '/mo',
     color: '#2196F3',
     icon: 'diamond',
     scans: '100 SCANS / MONTH',
     features: [
-      'Red Flag Analysis',
-      'Red Flag Analysis & Explanations',
-      'Counter-Offer Generator',
-      'Advanced Missing Clause Detection AI',
-      '$0.79 / Top-Up Scan',
+      '100 Scans / Month ($0.79/scan)',
+      'Everything in Professional',
+      'Multi-talent roster management',
+      '$0.79 extra top-up scans',
     ],
     priceId: getCheckoutPlanId('agency'),
     mode: 'subscription',
     credits: 100,
+    cta: 'START PLAN',
   },
 ]
 
@@ -245,9 +252,14 @@ export default function PlansPage() {
                   >
                     {plan.icon}
                   </span>
-                  <h3 className="font-mono text-xs uppercase tracking-[2px] font-bold mb-2 text-[#1E1A5F]" style={{ color: plan.color }}>
+                  <h3 className="font-mono text-xs uppercase tracking-[2px] font-bold mb-1 text-[#1E1A5F]" style={{ color: plan.color }}>
                     {plan.name}
                   </h3>
+                  {plan.subtitle && (
+                    <p className="text-[11px] text-[#64748B] font-medium mb-3 min-h-[28px] flex items-center justify-center leading-snug">
+                      {plan.subtitle}
+                    </p>
+                  )}
                   <div className="flex items-baseline justify-center gap-1">
                     <span className="font-headline text-4xl font-semibold tracking-tight text-[#1E1A5F]">{plan.price}</span>
                     <span className="text-[#64748B] text-sm font-medium">{plan.period}</span>
@@ -290,7 +302,7 @@ export default function PlansPage() {
                       <span>Processing...</span>
                     </>
                   ) : (
-                    'Select Plan'
+                    plan.cta || 'Select Plan'
                   )}
                 </button>
               </div>
