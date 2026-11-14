@@ -140,11 +140,13 @@ export function Navbar() {
   const menuItems = user ? [
     { label: 'New Scan', icon: 'upload_file', href: '/upload' },
     { label: 'Scan History', icon: 'inventory_2', href: '/history' },
+    { label: 'Blog', icon: 'article', href: '/blog' },
     { label: 'Settings', icon: 'settings', href: '/settings' },
     ...(isAdmin ? [{ label: 'Admin', icon: 'admin_panel_settings', href: '/admin' }] : []),
   ] : [
     { label: 'How it Works', icon: 'lightbulb', href: '/#how-it-works' },
     { label: 'Plans', icon: 'payments', href: '/plans' },
+    { label: 'Blog', icon: 'article', href: '/blog' },
     { label: 'Success Stories', icon: 'verified', href: '/#testimonials' },
   ]
 

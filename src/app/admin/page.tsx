@@ -4,6 +4,7 @@ import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { AdminFeedbackView } from '@/components/admin/AdminFeedbackView'
 import { AdminLegalManager } from '@/components/admin/AdminLegalManager'
+import { AdminBlogManager } from '@/components/admin/AdminBlogManager'
 
 export default async function AdminPage() {
   const supabase = await createClient()
@@ -40,6 +41,15 @@ export default async function AdminPage() {
     .limit(1)
     .maybeSingle()
 
+  const { data: blogs, error: blogsError } = await supabase
+    .from('blogs')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  if (blogsError) {
+    console.error('Failed to load blogs for admin:', blogsError)
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-r from-[#221A7F] via-[#7B2CBF] to-[#D84C9F] text-white">
       <Navbar />
@@ -64,6 +74,8 @@ export default async function AdminPage() {
               <p className="text-[#64748B] text-sm">Configure application settings and features.</p>
             </div>
           </div>
+
+          <AdminBlogManager initialPosts={blogs || []} />
 
           <AdminLegalManager initialVersion={latestVersion} />
 

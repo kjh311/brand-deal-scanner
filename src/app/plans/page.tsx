@@ -101,7 +101,6 @@ const plans: Plan[] = [
     features: [
       '100 Scans / Month ($0.79/scan)',
       'Everything in Professional',
-      'Multi-talent roster management',
       '$0.79 extra top-up scans',
     ],
     priceId: getCheckoutPlanId('agency'),

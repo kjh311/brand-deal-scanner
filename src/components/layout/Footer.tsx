@@ -50,6 +50,9 @@ export function Footer({ className = '' }: FooterProps) {
             <Link href="/terms" className="text-[10px] font-black uppercase tracking-[3px] text-white/80 hover:text-white transition-colors duration-200">
               Terms
             </Link>
+            <Link href="/blog" className="text-[10px] font-black uppercase tracking-[3px] text-white/80 hover:text-white transition-colors duration-200">
+              Blog
+            </Link>
             <Link href="/support" className="text-[10px] font-black uppercase tracking-[3px] text-white/80 hover:text-white transition-colors duration-200">
               Support
             </Link>
